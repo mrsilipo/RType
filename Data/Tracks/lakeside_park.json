@@ -1,0 +1,363 @@
+{
+  "$schema": "../Schemas/track_definition_v1.json",
+  "formatVersion": 1,
+  "sortOrder": 0,
+  "id": "lakeside_park",
+  "displayName": "Lakeside Park",
+  "layout": "customSpline",
+  "roadWidthMeters": 31.947369,
+  "terrainWidthMeters": 1420,
+  "terrainDepthMeters": 820,
+  "lengthMeters": 2410,
+  "longestStraightMeters": 600,
+  "elevationDifferenceMeters": 30,
+  "sectorMarkers": [
+    0.36,
+    0.74
+  ],
+  "controlPoints": [
+    {
+      "x": 384.28207,
+      "z": -265.21277,
+      "elevationMeters": 17
+    },
+    {
+      "x": -188.27452,
+      "z": -257.01807,
+      "elevationMeters": 11
+    },
+    {
+      "x": -420.1358,
+      "z": -240.91656,
+      "elevationMeters": 1
+    },
+    {
+      "x": -525.3478,
+      "z": -159.2525,
+      "elevationMeters": 0.5
+    },
+    {
+      "x": -595.85364,
+      "z": -46.115242,
+      "elevationMeters": 0
+    },
+    {
+      "x": -627.6752,
+      "z": 29.296814,
+      "elevationMeters": 1
+    },
+    {
+      "x": -577.9303,
+      "z": 106.87535,
+      "elevationMeters": 2
+    },
+    {
+      "x": -387.93283,
+      "z": 185.77257,
+      "elevationMeters": 3.5
+    },
+    {
+      "x": -262.3413,
+      "z": 187.38274,
+      "elevationMeters": 14
+    },
+    {
+      "x": -110.98744,
+      "z": 110.09563,
+      "elevationMeters": 22.5
+    },
+    {
+      "x": 21.044678,
+      "z": 122.976814,
+      "elevationMeters": 22
+    },
+    {
+      "x": 40.36645,
+      "z": 290.4322,
+      "elevationMeters": 17
+    },
+    {
+      "x": 124.09413,
+      "z": 343.56708,
+      "elevationMeters": 15.5
+    },
+    {
+      "x": 259.34656,
+      "z": 282.38144,
+      "elevationMeters": 14
+    },
+    {
+      "x": 615.1892,
+      "z": 346.78735,
+      "elevationMeters": 7
+    },
+    {
+      "x": 735.5588,
+      "z": 309.69324,
+      "elevationMeters": 15.5
+    },
+    {
+      "x": 753.09735,
+      "z": 149.28067,
+      "elevationMeters": 20
+    },
+    {
+      "x": 754.26294,
+      "z": -110.805786,
+      "elevationMeters": 30
+    },
+    {
+      "x": 707.82825,
+      "z": -250.38666,
+      "elevationMeters": 21
+    }
+  ],
+  "bankProfile": [
+    {
+      "progress": 0,
+      "bankDegrees": -0.75
+    },
+    {
+      "progress": 0.05,
+      "bankDegrees": -0.34403935
+    },
+    {
+      "progress": 0.12,
+      "bankDegrees": -0.25
+    },
+    {
+      "progress": 0.18,
+      "bankDegrees": 2
+    },
+    {
+      "progress": 0.27,
+      "bankDegrees": 4
+    },
+    {
+      "progress": 0.37,
+      "bankDegrees": 0
+    },
+    {
+      "progress": 0.49,
+      "bankDegrees": -3.5
+    },
+    {
+      "progress": 0.6,
+      "bankDegrees": 1.5
+    },
+    {
+      "progress": 0.7,
+      "bankDegrees": 2
+    },
+    {
+      "progress": 0.7368421,
+      "bankDegrees": 1.5250995
+    },
+    {
+      "progress": 0.82,
+      "bankDegrees": 1
+    },
+    {
+      "progress": 0.92,
+      "bankDegrees": 3
+    },
+    {
+      "progress": 1,
+      "bankDegrees": 0
+    }
+  ],
+  "segments": [
+    {
+      "fromControlPoint": 0,
+      "shape": "straight"
+    },
+    {
+      "fromControlPoint": 1,
+      "shape": "curve"
+    },
+    {
+      "fromControlPoint": 2,
+      "shape": "curve"
+    },
+    {
+      "fromControlPoint": 3,
+      "shape": "straight"
+    },
+    {
+      "fromControlPoint": 4,
+      "shape": "curve"
+    },
+    {
+      "fromControlPoint": 5,
+      "shape": "curve"
+    },
+    {
+      "fromControlPoint": 6,
+      "shape": "straight"
+    },
+    {
+      "fromControlPoint": 7,
+      "shape": "curve"
+    },
+    {
+      "fromControlPoint": 8,
+      "shape": "curve"
+    },
+    {
+      "fromControlPoint": 9,
+      "shape": "curve"
+    },
+    {
+      "fromControlPoint": 10,
+      "shape": "curve"
+    },
+    {
+      "fromControlPoint": 11,
+      "shape": "curve"
+    },
+    {
+      "fromControlPoint": 12,
+      "shape": "curve"
+    },
+    {
+      "fromControlPoint": 13,
+      "shape": "straight"
+    },
+    {
+      "fromControlPoint": 14,
+      "shape": "curve"
+    },
+    {
+      "fromControlPoint": 15,
+      "shape": "curve"
+    },
+    {
+      "fromControlPoint": 16,
+      "shape": "straight"
+    },
+    {
+      "fromControlPoint": 17,
+      "shape": "curve"
+    },
+    {
+      "fromControlPoint": 18,
+      "shape": "curve"
+    }
+  ],
+  "widthPoints": [
+    {
+      "controlPoint": 0,
+      "roadWidthMeters": 25,
+      "grassWidthMeters": 40,
+      "wallOffsetMeters": 39.95
+    },
+    {
+      "controlPoint": 1,
+      "roadWidthMeters": 25,
+      "grassWidthMeters": 40,
+      "wallOffsetMeters": 39.95
+    },
+    {
+      "controlPoint": 2,
+      "roadWidthMeters": 35,
+      "grassWidthMeters": 40,
+      "wallOffsetMeters": 39.95
+    },
+    {
+      "controlPoint": 3,
+      "roadWidthMeters": 35,
+      "grassWidthMeters": 40,
+      "wallOffsetMeters": 5.95
+    },
+    {
+      "controlPoint": 4,
+      "roadWidthMeters": 35,
+      "grassWidthMeters": 26,
+      "wallOffsetMeters": 1.45
+    },
+    {
+      "controlPoint": 5,
+      "roadWidthMeters": 35,
+      "grassWidthMeters": 26,
+      "wallOffsetMeters": 1.45
+    },
+    {
+      "controlPoint": 6,
+      "roadWidthMeters": 35,
+      "grassWidthMeters": 26,
+      "wallOffsetMeters": 1.45
+    },
+    {
+      "controlPoint": 7,
+      "roadWidthMeters": 28,
+      "grassWidthMeters": 26,
+      "wallOffsetMeters": 1.45
+    },
+    {
+      "controlPoint": 8,
+      "roadWidthMeters": 28,
+      "grassWidthMeters": 26,
+      "wallOffsetMeters": 25.95
+    },
+    {
+      "controlPoint": 9,
+      "roadWidthMeters": 28,
+      "grassWidthMeters": 26,
+      "wallOffsetMeters": 25.95
+    },
+    {
+      "controlPoint": 10,
+      "roadWidthMeters": 28,
+      "grassWidthMeters": 26,
+      "wallOffsetMeters": 25.95
+    },
+    {
+      "controlPoint": 11,
+      "roadWidthMeters": 30,
+      "grassWidthMeters": 26,
+      "wallOffsetMeters": 25.95
+    },
+    {
+      "controlPoint": 12,
+      "roadWidthMeters": 30,
+      "grassWidthMeters": 26,
+      "wallOffsetMeters": 25.95
+    },
+    {
+      "controlPoint": 13,
+      "roadWidthMeters": 35,
+      "grassWidthMeters": 26,
+      "wallOffsetMeters": 7.95
+    },
+    {
+      "controlPoint": 14,
+      "roadWidthMeters": 35,
+      "grassWidthMeters": 26,
+      "wallOffsetMeters": 8.450001
+    },
+    {
+      "controlPoint": 15,
+      "roadWidthMeters": 35,
+      "grassWidthMeters": 26,
+      "wallOffsetMeters": 25.95
+    },
+    {
+      "controlPoint": 16,
+      "roadWidthMeters": 35,
+      "grassWidthMeters": 26,
+      "wallOffsetMeters": 25.95
+    },
+    {
+      "controlPoint": 17,
+      "roadWidthMeters": 35,
+      "grassWidthMeters": 40,
+      "wallOffsetMeters": 39.95
+    },
+    {
+      "controlPoint": 18,
+      "roadWidthMeters": 35,
+      "grassWidthMeters": 40,
+      "wallOffsetMeters": 39.95
+    }
+  ]
+}

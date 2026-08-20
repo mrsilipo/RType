@@ -1,0 +1,147 @@
+{
+  "schemaVersion": 1,
+  "id": "universal_chassis_upgrades",
+  "effectModel": "component_mass_and_stiffness_changes_by_location",
+  "categories": {
+    "weightReduction": {
+      "label": "Weight Reduction",
+      "stages": {
+        "stage_0": {
+          "label": "Stock",
+          "procedures": {}
+        },
+        "stage_1": {
+          "label": "Lightweight Interior",
+          "procedures": {
+            "removeSoundDeadeningFraction": 0.3,
+            "removeMinorTrimFraction": 0.25,
+            "replaceBattery": "lightweight"
+          },
+          "effects": {
+            "comfortEquipmentMassMultiplier": 0.82
+          }
+        },
+        "stage_2": {
+          "label": "Performance Weight Reduction",
+          "procedures": {
+            "removeSoundDeadeningFraction": 0.6,
+            "removeRearInteriorFraction": 0.75,
+            "replaceSeats": "lightweight_sports",
+            "replaceSelectedPanels": "lightweight"
+          },
+          "effects": {
+            "interiorMassMultiplier": 0.68
+          }
+        },
+        "stage_3": {
+          "label": "Competition Weight Reduction",
+          "procedures": {
+            "removeSoundDeadeningFraction": 1,
+            "removeRearInteriorFraction": 1,
+            "replaceGlass": "lightweight",
+            "replacePanels": "composite"
+          },
+          "effects": {
+            "interiorMassMultiplier": 0.42,
+            "bodyPanelMassMultiplier": 0.78
+          }
+        },
+        "stage_4": {
+          "label": "Race Conversion",
+          "procedures": {
+            "stripShell": true,
+            "raceInterior": true,
+            "replacePanels": "maximum_practical_composite"
+          },
+          "effects": {
+            "interiorMassMultiplier": 0.22,
+            "bodyPanelMassMultiplier": 0.62,
+            "requiresBracingStage": 3
+          }
+        }
+      }
+    },
+    "bracing": {
+      "label": "Chassis Bracing / Rigidity",
+      "stages": {
+        "stage_0": {
+          "label": "Factory",
+          "effects": {}
+        },
+        "stage_1": {
+          "label": "Strut / Chassis Braces",
+          "effects": {
+            "torsionalRigidityMultiplier": 1.08,
+            "massDeltaKg": 3
+          }
+        },
+        "stage_2": {
+          "label": "Reinforced Chassis",
+          "effects": {
+            "torsionalRigidityMultiplier": 1.18,
+            "massDeltaKg": 8,
+            "suspensionMountComplianceMultiplier": 0.88
+          }
+        },
+        "stage_3": {
+          "label": "Seam Weld / Cage Reinforcement",
+          "effects": {
+            "torsionalRigidityMultiplier": 1.36,
+            "massDeltaKg": 18,
+            "suspensionMountComplianceMultiplier": 0.72
+          }
+        },
+        "stage_4": {
+          "label": "Competition Shell",
+          "effects": {
+            "torsionalRigidityMultiplier": 1.58,
+            "massDeltaKg": 25,
+            "suspensionMountComplianceMultiplier": 0.58,
+            "safetyCellAvailable": true
+          }
+        }
+      }
+    },
+    "wheels": {
+      "label": "Wheels",
+      "stages": {
+        "stage_0": {
+          "label": "Factory",
+          "effects": {}
+        },
+        "stage_1": {
+          "label": "Sports Alloy",
+          "effects": {
+            "wheelMassMultiplier": 0.94,
+            "wheelInertiaMultiplier": 0.93
+          }
+        },
+        "stage_2": {
+          "label": "Lightweight Forged",
+          "effects": {
+            "wheelMassMultiplier": 0.84,
+            "wheelInertiaMultiplier": 0.82,
+            "strengthMultiplier": 1.12
+          }
+        },
+        "stage_3": {
+          "label": "Competition Forged",
+          "effects": {
+            "wheelMassMultiplier": 0.76,
+            "wheelInertiaMultiplier": 0.73,
+            "strengthMultiplier": 1.2
+          }
+        },
+        "stage_4": {
+          "label": "Motorsport Ultra-Light",
+          "effects": {
+            "wheelMassMultiplier": 0.68,
+            "wheelInertiaMultiplier": 0.64,
+            "strengthMultiplier": 1.08,
+            "impactDurabilityMultiplier": 0.9
+          }
+        }
+      }
+    }
+  }
+}

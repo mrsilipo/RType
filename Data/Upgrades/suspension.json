@@ -1,0 +1,251 @@
+{
+  "schemaVersion": 1,
+  "id": "universal_suspension_upgrades",
+  "effectModel": "universal_capability_ranges_relative_to_vehicle_baseline",
+  "categories": {
+    "coilovers": {
+      "label": "Coilovers",
+      "stages": {
+        "stage_0": {
+          "label": "Factory Suspension",
+          "capabilities": {}
+        },
+        "stage_1": {
+          "label": "Street",
+          "capabilities": {
+            "rideHeightAdjustment": true,
+            "springPerchHeightAdjustment": true,
+            "singleAdjustableDamping": true
+          },
+          "ranges": {
+            "springRateRelativeToStock": [
+              1.05,
+              1.55
+            ],
+            "rideHeightChangeMm": [
+              -35,
+              5
+            ],
+            "dampingAdjustment": [
+              0.75,
+              1.45
+            ]
+          }
+        },
+        "stage_2": {
+          "label": "Track / Intermediate",
+          "capabilities": {
+            "independentRideHeight": true,
+            "independentPreload": true,
+            "reboundAdjustment": true,
+            "compressionAdjustment": true,
+            "replaceableSpringRates": true
+          },
+          "ranges": {
+            "springRateRelativeToStock": [
+              1.15,
+              2.25
+            ],
+            "rideHeightChangeMm": [
+              -70,
+              10
+            ],
+            "reboundAdjustment": [
+              0.7,
+              1.8
+            ],
+            "compressionAdjustment": [
+              0.7,
+              1.8
+            ]
+          }
+        },
+        "stage_3": {
+          "label": "Full Race / Multi-Way",
+          "capabilities": {
+            "independentRideHeight": true,
+            "independentPreload": true,
+            "highSpeedCompressionAdjustment": true,
+            "lowSpeedCompressionAdjustment": true,
+            "highSpeedReboundAdjustment": true,
+            "lowSpeedReboundAdjustment": true,
+            "customSpringRates": true
+          },
+          "ranges": {
+            "springRateRelativeToStock": [
+              1.35,
+              3.2
+            ],
+            "rideHeightChangeMm": [
+              -95,
+              20
+            ],
+            "dampingAdjustment": [
+              0.55,
+              2.4
+            ]
+          }
+        }
+      }
+    },
+    "camberAdjustment": {
+      "label": "Camber Adjustment",
+      "front": {
+        "stock": {
+          "label": "Stock",
+          "adjustable": false
+        },
+        "adjustable": {
+          "label": "Front Adjustable",
+          "adjustable": true,
+          "rangeDegrees": [
+            -5,
+            2
+          ]
+        }
+      },
+      "rear": {
+        "stock": {
+          "label": "Stock",
+          "adjustable": false
+        },
+        "adjustable": {
+          "label": "Rear Adjustable",
+          "adjustable": true,
+          "rangeDegrees": [
+            -5,
+            2
+          ]
+        }
+      }
+    },
+    "swayBars": {
+      "label": "Sway Bars",
+      "front": {
+        "stage_0": {
+          "label": "Stock",
+          "effects": {}
+        },
+        "stage_1": {
+          "label": "Sports",
+          "effects": {
+            "arbRateMultiplier": 1.22
+          }
+        },
+        "stage_2": {
+          "label": "Heavy Duty",
+          "effects": {
+            "arbRateMultiplier": 1.55
+          }
+        },
+        "stage_3": {
+          "label": "Adjustable Racing",
+          "effects": {
+            "arbRateMultiplier": 1.85,
+            "adjustmentPositions": [
+              "soft",
+              "medium",
+              "hard"
+            ]
+          }
+        }
+      },
+      "rear": {
+        "stage_0": {
+          "label": "Stock",
+          "effects": {}
+        },
+        "stage_1": {
+          "label": "Sports",
+          "effects": {
+            "arbRateMultiplier": 1.25
+          }
+        },
+        "stage_2": {
+          "label": "Heavy Duty",
+          "effects": {
+            "arbRateMultiplier": 1.62
+          }
+        },
+        "stage_3": {
+          "label": "Adjustable Racing",
+          "effects": {
+            "arbRateMultiplier": 1.95,
+            "adjustmentPositions": [
+              "soft",
+              "medium",
+              "hard"
+            ]
+          }
+        }
+      }
+    },
+    "bushes": {
+      "label": "Bushes",
+      "options": {
+        "stock": {
+          "label": "Stock",
+          "effects": {}
+        },
+        "semi_hard": {
+          "label": "Semi-Hard",
+          "effects": {
+            "complianceMultiplier": 0.72,
+            "steeringPrecisionMultiplier": 1.05,
+            "nvgMultiplier": 1.12
+          }
+        },
+        "hard": {
+          "label": "Hard",
+          "effects": {
+            "complianceMultiplier": 0.48,
+            "steeringPrecisionMultiplier": 1.1,
+            "nvgMultiplier": 1.28
+          }
+        },
+        "solid": {
+          "label": "Solid",
+          "effects": {
+            "complianceMultiplier": 0.18,
+            "steeringPrecisionMultiplier": 1.16,
+            "nvgMultiplier": 1.65
+          }
+        }
+      }
+    },
+    "geometryComponents": {
+      "label": "Suspension Arms / Geometry Components",
+      "stages": {
+        "stage_0": {
+          "label": "Stock",
+          "effects": {}
+        },
+        "stage_1": {
+          "label": "Reinforced Steel / Performance Arms",
+          "effects": {
+            "geometryComplianceMultiplier": 0.82,
+            "strengthMultiplier": 1.25,
+            "massDeltaKg": 1.5
+          }
+        },
+        "stage_2": {
+          "label": "Billet Aluminium",
+          "effects": {
+            "geometryComplianceMultiplier": 0.58,
+            "strengthMultiplier": 1.45,
+            "unsprungMassDeltaKgPerCorner": -0.35
+          }
+        },
+        "stage_3": {
+          "label": "Reinforced Composite / Carbon Motorsport Components",
+          "effects": {
+            "geometryComplianceMultiplier": 0.38,
+            "strengthMultiplier": 1.55,
+            "unsprungMassDeltaKgPerCorner": -0.75,
+            "impactDurabilityMultiplier": 0.9
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,602 @@
+{
+  "schemaVersion": 1,
+  "id": "universal_engine_upgrades",
+  "effectModel": "universal_procedure_with_vehicle_response_scaling",
+  "notes": [
+    "These are reusable upgrade stage definitions. They describe physical changes, not final horsepower gains.",
+    "Vehicle files can scale these effects through upgradeResponse and override rare exceptions through upgradeOverrides."
+  ],
+  "categories": {
+    "computer": {
+      "label": "Computer",
+      "stages": {
+        "stage_0": {
+          "label": "Stock ECU",
+          "effects": {}
+        },
+        "stage_1": {
+          "label": "Performance Chip / ROM Tune",
+          "effects": {
+            "fuelIgnitionOptimization": 0.35,
+            "revLimiterAdjustmentRpm": 100,
+            "throttleResponseMultiplier": 1.03
+          }
+        },
+        "stage_2": {
+          "label": "Piggyback ECU",
+          "effects": {
+            "fuelIgnitionOptimization": 0.65,
+            "camSwitchControlAuthority": 0.4,
+            "boostControlAuthority": 0.35,
+            "throttleResponseMultiplier": 1.05
+          }
+        },
+        "stage_3": {
+          "label": "Standalone Engine Management",
+          "effects": {
+            "fuelIgnitionOptimization": 1,
+            "camSwitchControlAuthority": 1,
+            "boostControlAuthority": 1,
+            "launchControlAvailable": true,
+            "revLimiterAdjustmentRpm": 400,
+            "throttleResponseMultiplier": 1.08
+          }
+        }
+      }
+    },
+    "portPolishing": {
+      "label": "Port Polishing / Cylinder Head",
+      "responseKey": "headPorting",
+      "stages": {
+        "stage_0": {
+          "label": "Stock",
+          "effects": {}
+        },
+        "stage_1": {
+          "label": "Cleanup & Deburring",
+          "effects": {
+            "volumetricEfficiencyMultiplier": 1.012,
+            "highRpmFlowMultiplier": 1.018,
+            "lowRpmFlowMultiplier": 1.004
+          }
+        },
+        "stage_2": {
+          "label": "Bowl Blending",
+          "effects": {
+            "volumetricEfficiencyMultiplier": 1.028,
+            "highRpmFlowMultiplier": 1.045,
+            "lowRpmFlowMultiplier": 1.005
+          }
+        },
+        "stage_3": {
+          "label": "Full Porting & Shaping",
+          "effects": {
+            "volumetricEfficiencyMultiplier": 1.046,
+            "highRpmFlowMultiplier": 1.075,
+            "lowRpmFlowMultiplier": 0.995
+          }
+        },
+        "stage_4": {
+          "label": "Competition Porting & Surface Finishing",
+          "effects": {
+            "volumetricEfficiencyMultiplier": 1.062,
+            "highRpmFlowMultiplier": 1.105,
+            "lowRpmFlowMultiplier": 0.985
+          }
+        }
+      }
+    },
+    "engineBalancing": {
+      "label": "Engine Balancing",
+      "responseKey": "engineBalancing",
+      "stages": {
+        "stage_0": {
+          "label": "Stock",
+          "effects": {}
+        },
+        "stage_1": {
+          "label": "Piston Matching",
+          "effects": {
+            "safeRpmMultiplier": 1.006,
+            "vibrationMultiplier": 0.92
+          }
+        },
+        "stage_2": {
+          "label": "Connecting Rod Matching",
+          "effects": {
+            "safeRpmMultiplier": 1.012,
+            "vibrationMultiplier": 0.84,
+            "internalFrictionMultiplier": 0.995
+          }
+        },
+        "stage_3": {
+          "label": "Full Rotating/Reciprocating Assembly Balance",
+          "effects": {
+            "safeRpmMultiplier": 1.028,
+            "vibrationMultiplier": 0.72,
+            "internalFrictionMultiplier": 0.988
+          }
+        },
+        "stage_4": {
+          "label": "Competition / Over-Under Balance",
+          "effects": {
+            "safeRpmMultiplier": 1.042,
+            "vibrationMultiplier": 0.62,
+            "internalFrictionMultiplier": 0.982,
+            "durabilityAtIdleMultiplier": 0.96
+          }
+        }
+      }
+    },
+    "displacement": {
+      "label": "Increase Displacement",
+      "responseKey": "displacementIncrease",
+      "stages": {
+        "stage_0": {
+          "label": "Stock",
+          "effects": {}
+        },
+        "stage_1": {
+          "label": "Minor Overbore",
+          "procedure": {
+            "maxBoreIncreaseMm": 0.5
+          },
+          "effects": {
+            "reciprocatingMassMultiplier": 1.006
+          }
+        },
+        "stage_2": {
+          "label": "Big Bore",
+          "procedure": {
+            "maxBoreIncreaseMm": 1
+          },
+          "effects": {
+            "reciprocatingMassMultiplier": 1.012,
+            "safeRpmMultiplier": 0.995
+          }
+        },
+        "stage_3": {
+          "label": "Stroker Build",
+          "procedure": {
+            "strokeIncreaseMm": 4
+          },
+          "effects": {
+            "reciprocatingMassMultiplier": 1.04,
+            "safeRpmMultiplier": 0.965,
+            "lowMidTorqueShapeMultiplier": 1.08
+          }
+        },
+        "stage_4": {
+          "label": "Big Bore + Stroker",
+          "procedure": {
+            "maxBoreIncreaseMm": 1,
+            "strokeIncreaseMm": 4
+          },
+          "effects": {
+            "reciprocatingMassMultiplier": 1.055,
+            "safeRpmMultiplier": 0.955,
+            "lowMidTorqueShapeMultiplier": 1.1
+          }
+        }
+      }
+    },
+    "intake": {
+      "label": "Intake",
+      "responseKey": "intakeFlow",
+      "stages": {
+        "stage_0": {
+          "label": "Stock Intake",
+          "effects": {}
+        },
+        "stage_1": {
+          "label": "High-Flow Panel / Short Ram",
+          "effects": {
+            "intakeRestrictionMultiplier": 0.92,
+            "intakeAirTemperatureOffsetC": 2,
+            "throttleResponseMultiplier": 1.01
+          }
+        },
+        "stage_2": {
+          "label": "Cold Air Intake",
+          "effects": {
+            "intakeRestrictionMultiplier": 0.84,
+            "intakeAirTemperatureOffsetC": -3,
+            "throttleResponseMultiplier": 1.02
+          }
+        },
+        "stage_3": {
+          "label": "Competition Intake System",
+          "effects": {
+            "intakeRestrictionMultiplier": 0.74,
+            "highRpmFlowMultiplier": 1.035,
+            "throttleResponseMultiplier": 1.035
+          }
+        },
+        "stage_4": {
+          "label": "Individual Throttle Bodies / Motorsport Intake",
+          "effects": {
+            "intakeRestrictionMultiplier": 0.58,
+            "highRpmFlowMultiplier": 1.07,
+            "lowRpmFlowMultiplier": 0.985,
+            "throttleResponseMultiplier": 1.12
+          }
+        }
+      }
+    },
+    "headers": {
+      "label": "Exhaust Manifold / Headers",
+      "responseKey": "exhaustFlow",
+      "stages": {
+        "stage_0": {
+          "label": "Stock Manifold",
+          "effects": {}
+        },
+        "stage_1": {
+          "label": "Sports Header / Manifold",
+          "effects": {
+            "exhaustRestrictionMultiplier": 0.92,
+            "midRpmFlowMultiplier": 1.01
+          }
+        },
+        "stage_2": {
+          "label": "Tuned-Length Header / Performance Manifold",
+          "effects": {
+            "exhaustRestrictionMultiplier": 0.84,
+            "midRpmFlowMultiplier": 1.025,
+            "highRpmFlowMultiplier": 1.025
+          }
+        },
+        "stage_3": {
+          "label": "Competition Header / Turbo Manifold",
+          "effects": {
+            "exhaustRestrictionMultiplier": 0.74,
+            "highRpmFlowMultiplier": 1.055,
+            "lowRpmFlowMultiplier": 0.99
+          }
+        }
+      }
+    },
+    "exhaust": {
+      "label": "Exhaust",
+      "responseKey": "exhaustFlow",
+      "stages": {
+        "stage_0": {
+          "label": "Stock Exhaust",
+          "effects": {}
+        },
+        "stage_1": {
+          "label": "Sports Rear / Axle-Back Exhaust",
+          "effects": {
+            "exhaustRestrictionMultiplier": 0.94,
+            "massDeltaKg": -3
+          }
+        },
+        "stage_2": {
+          "label": "High-Flow Cat-Back Exhaust",
+          "effects": {
+            "exhaustRestrictionMultiplier": 0.86,
+            "massDeltaKg": -5,
+            "highRpmFlowMultiplier": 1.015
+          }
+        },
+        "stage_3": {
+          "label": "Full Performance Exhaust",
+          "effects": {
+            "exhaustRestrictionMultiplier": 0.76,
+            "massDeltaKg": -7,
+            "highRpmFlowMultiplier": 1.035
+          }
+        },
+        "stage_4": {
+          "label": "Competition Exhaust System",
+          "effects": {
+            "exhaustRestrictionMultiplier": 0.62,
+            "massDeltaKg": -9,
+            "highRpmFlowMultiplier": 1.055,
+            "lowRpmFlowMultiplier": 0.99
+          }
+        }
+      }
+    },
+    "catalyst": {
+      "label": "Catalytic Converter",
+      "stages": {
+        "stage_0": {
+          "label": "Stock Catalyst",
+          "effects": {}
+        },
+        "stage_1": {
+          "label": "High-Flow Sports Catalyst",
+          "effects": {
+            "catalystRestrictionMultiplier": 0.82
+          }
+        },
+        "stage_2": {
+          "label": "Competition Catalyst",
+          "effects": {
+            "catalystRestrictionMultiplier": 0.68
+          }
+        },
+        "stage_3": {
+          "label": "Race / Unrestricted Exhaust",
+          "eventLegalityTag": "race_only",
+          "effects": {
+            "catalystRestrictionMultiplier": 0.25,
+            "emissionsLegality": false
+          }
+        }
+      }
+    },
+    "camshafts": {
+      "label": "Camshafts",
+      "responseKey": "camshaft",
+      "stages": {
+        "stage_0": {
+          "label": "Stock Camshafts",
+          "effects": {}
+        },
+        "stage_1": {
+          "label": "Street Performance Cams",
+          "effects": {
+            "highRpmFlowMultiplier": 1.025,
+            "idleStabilityMultiplier": 0.98
+          }
+        },
+        "stage_2": {
+          "label": "Sports / Track Cams",
+          "effects": {
+            "highRpmFlowMultiplier": 1.055,
+            "lowRpmFlowMultiplier": 0.985,
+            "idleStabilityMultiplier": 0.94
+          }
+        },
+        "stage_3": {
+          "label": "Race Camshafts",
+          "effects": {
+            "highRpmFlowMultiplier": 1.085,
+            "lowRpmFlowMultiplier": 0.965,
+            "idleStabilityMultiplier": 0.88,
+            "requiresValvetrainStage": 2
+          }
+        },
+        "stage_4": {
+          "label": "Competition Camshaft Package",
+          "effects": {
+            "highRpmFlowMultiplier": 1.12,
+            "lowRpmFlowMultiplier": 0.94,
+            "idleStabilityMultiplier": 0.78,
+            "requiresValvetrainStage": 3
+          }
+        }
+      }
+    },
+    "valvetrain": {
+      "label": "Valvetrain",
+      "stages": {
+        "stage_0": {
+          "label": "Stock",
+          "effects": {}
+        },
+        "stage_1": {
+          "label": "Performance Springs",
+          "effects": {
+            "safeRpmMultiplier": 1.012,
+            "valveFloatResistanceMultiplier": 1.2
+          }
+        },
+        "stage_2": {
+          "label": "Springs + Lightweight Retainers",
+          "effects": {
+            "safeRpmMultiplier": 1.025,
+            "valveFloatResistanceMultiplier": 1.45,
+            "valvetrainInertiaMultiplier": 0.92
+          }
+        },
+        "stage_3": {
+          "label": "Competition Valvetrain",
+          "effects": {
+            "safeRpmMultiplier": 1.045,
+            "valveFloatResistanceMultiplier": 1.8,
+            "valvetrainInertiaMultiplier": 0.86
+          }
+        },
+        "stage_4": {
+          "label": "Full Race / High-RPM Valvetrain",
+          "effects": {
+            "safeRpmMultiplier": 1.065,
+            "valveFloatResistanceMultiplier": 2.2,
+            "valvetrainInertiaMultiplier": 0.8
+          }
+        }
+      }
+    },
+    "turbocharger": {
+      "label": "Turbocharger",
+      "responseKey": "forcedInduction",
+      "stages": {
+        "stage_0": {
+          "label": "Stock / No Turbo Upgrade",
+          "effects": {}
+        },
+        "stage_1": {
+          "label": "Street Turbo",
+          "effects": {
+            "compressorFlowClass": "small",
+            "boostCapabilityKpa": 55,
+            "turboInertiaClass": "low",
+            "thermalLoadMultiplier": 1.15
+          }
+        },
+        "stage_2": {
+          "label": "Sports Turbo",
+          "effects": {
+            "compressorFlowClass": "medium",
+            "boostCapabilityKpa": 85,
+            "turboInertiaClass": "medium",
+            "thermalLoadMultiplier": 1.35
+          }
+        },
+        "stage_3": {
+          "label": "Race Turbo",
+          "effects": {
+            "compressorFlowClass": "large",
+            "boostCapabilityKpa": 125,
+            "turboInertiaClass": "high",
+            "thermalLoadMultiplier": 1.65
+          }
+        },
+        "stage_4": {
+          "label": "Extreme / Competition Turbo",
+          "effects": {
+            "compressorFlowClass": "extreme",
+            "boostCapabilityKpa": 180,
+            "turboInertiaClass": "veryHigh",
+            "thermalLoadMultiplier": 2.1
+          }
+        }
+      }
+    },
+    "boostController": {
+      "label": "Turbo Boost Controller",
+      "stages": {
+        "stage_0": {
+          "label": "Stock Boost Control",
+          "effects": {}
+        },
+        "stage_1": {
+          "label": "Manual Boost Controller",
+          "effects": {
+            "boostTargetControlAuthority": 0.35
+          }
+        },
+        "stage_2": {
+          "label": "Electronic Boost Controller",
+          "effects": {
+            "boostTargetControlAuthority": 0.7,
+            "boostResponseStabilityMultiplier": 1.08
+          }
+        },
+        "stage_3": {
+          "label": "ECU Integrated / Competition Boost Control",
+          "effects": {
+            "boostTargetControlAuthority": 1,
+            "boostByGearAvailable": true,
+            "boostByRpmAvailable": true
+          }
+        }
+      }
+    },
+    "intercooler": {
+      "label": "Intercooler",
+      "stages": {
+        "stage_0": {
+          "label": "Stock",
+          "effects": {}
+        },
+        "stage_1": {
+          "label": "Upgraded Side/Top Mount",
+          "effects": {
+            "chargeCoolingEfficiency": 0.58,
+            "pressureLossKpa": 3,
+            "chargeVolumeMultiplier": 1.05
+          }
+        },
+        "stage_2": {
+          "label": "Large Front-Mount",
+          "effects": {
+            "chargeCoolingEfficiency": 0.72,
+            "pressureLossKpa": 4.5,
+            "chargeVolumeMultiplier": 1.16
+          }
+        },
+        "stage_3": {
+          "label": "Competition Intercooler",
+          "effects": {
+            "chargeCoolingEfficiency": 0.82,
+            "pressureLossKpa": 5,
+            "chargeVolumeMultiplier": 1.22
+          }
+        },
+        "stage_4": {
+          "label": "Motorsport Charge Cooling System",
+          "effects": {
+            "chargeCoolingEfficiency": 0.9,
+            "pressureLossKpa": 5.5,
+            "chargeVolumeMultiplier": 1.28,
+            "antiHeatSoakMultiplier": 1.3
+          }
+        }
+      }
+    },
+    "fuelSystem": {
+      "label": "Fuel System",
+      "stages": {
+        "stage_0": {
+          "label": "Stock",
+          "effects": {}
+        },
+        "stage_1": {
+          "label": "High-Flow Pump",
+          "effects": {
+            "fuelFlowCapacityMultiplier": 1.22
+          }
+        },
+        "stage_2": {
+          "label": "Pump + Injectors",
+          "effects": {
+            "fuelFlowCapacityMultiplier": 1.58,
+            "injectorLatencyQualityMultiplier": 1.04
+          }
+        },
+        "stage_3": {
+          "label": "Complete High-Flow Fuel System",
+          "effects": {
+            "fuelFlowCapacityMultiplier": 2.15,
+            "fuelPressureStabilityMultiplier": 1.18
+          }
+        },
+        "stage_4": {
+          "label": "Motorsport Fuel System",
+          "effects": {
+            "fuelFlowCapacityMultiplier": 3,
+            "fuelPressureStabilityMultiplier": 1.35,
+            "surgeResistanceMultiplier": 1.4
+          }
+        }
+      }
+    },
+    "cooling": {
+      "label": "Engine Cooling",
+      "stages": {
+        "stage_0": {
+          "label": "Stock",
+          "effects": {}
+        },
+        "stage_1": {
+          "label": "High-Performance Radiator",
+          "effects": {
+            "coolantHeatRejectionMultiplier": 1.22,
+            "massDeltaKg": 1.2
+          }
+        },
+        "stage_2": {
+          "label": "Radiator + Oil Cooler",
+          "effects": {
+            "coolantHeatRejectionMultiplier": 1.36,
+            "oilHeatRejectionMultiplier": 1.28,
+            "massDeltaKg": 2.4
+          }
+        },
+        "stage_3": {
+          "label": "Competition Cooling Package",
+          "effects": {
+            "coolantHeatRejectionMultiplier": 1.55,
+            "oilHeatRejectionMultiplier": 1.5,
+            "thermalCapacityMultiplier": 1.18,
+            "massDeltaKg": 3.6
+          }
+        }
+      }
+    }
+  }
+}

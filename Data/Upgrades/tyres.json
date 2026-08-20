@@ -1,0 +1,155 @@
+{
+  "schemaVersion": 1,
+  "id": "universal_tyre_compounds",
+  "effectModel": "compound_family_plus_vehicle_tyre_size",
+  "notes": [
+    "Tyre compound is mostly universal, but actual force capacity still depends on vehicle tyre size, load, pressure and temperature."
+  ],
+  "compounds": {
+    "comfort_hard": {
+      "label": "Comfort Hard",
+      "category": "road",
+      "peakFriction": 0.88,
+      "wearMultiplier": 0.55,
+      "temperatureWindowC": [
+        10,
+        70
+      ],
+      "wetGripMultiplier": 0.82
+    },
+    "comfort_medium": {
+      "label": "Comfort Medium",
+      "category": "road",
+      "peakFriction": 0.94,
+      "wearMultiplier": 0.68,
+      "temperatureWindowC": [
+        15,
+        80
+      ],
+      "wetGripMultiplier": 0.8
+    },
+    "comfort_soft": {
+      "label": "Comfort Soft",
+      "category": "road",
+      "peakFriction": 0.99,
+      "wearMultiplier": 0.84,
+      "temperatureWindowC": [
+        20,
+        90
+      ],
+      "wetGripMultiplier": 0.76
+    },
+    "sports_hard_reference": {
+      "label": "Sports Hard",
+      "category": "sports",
+      "peakFriction": 1.05,
+      "wearMultiplier": 0.9,
+      "temperatureWindowC": [
+        25,
+        105
+      ],
+      "wetGripMultiplier": 0.72,
+      "loadSensitivity": 0.12,
+      "rollingResistance": 0.013
+    },
+    "sports_medium": {
+      "label": "Sports Medium",
+      "category": "sports",
+      "peakFriction": 1.12,
+      "wearMultiplier": 1.08,
+      "temperatureWindowC": [
+        35,
+        115
+      ],
+      "wetGripMultiplier": 0.68
+    },
+    "sports_soft": {
+      "label": "Sports Soft",
+      "category": "sports",
+      "peakFriction": 1.19,
+      "wearMultiplier": 1.32,
+      "temperatureWindowC": [
+        45,
+        125
+      ],
+      "wetGripMultiplier": 0.62
+    },
+    "racing_hard": {
+      "label": "Racing Hard",
+      "category": "racing",
+      "peakFriction": 1.34,
+      "wearMultiplier": 1.18,
+      "temperatureWindowC": [
+        70,
+        140
+      ],
+      "wetGripMultiplier": 0.42
+    },
+    "racing_medium": {
+      "label": "Racing Medium",
+      "category": "racing",
+      "peakFriction": 1.45,
+      "wearMultiplier": 1.55,
+      "temperatureWindowC": [
+        80,
+        150
+      ],
+      "wetGripMultiplier": 0.36
+    },
+    "racing_soft": {
+      "label": "Racing Soft",
+      "category": "racing",
+      "peakFriction": 1.56,
+      "wearMultiplier": 2.05,
+      "temperatureWindowC": [
+        90,
+        155
+      ],
+      "wetGripMultiplier": 0.3
+    },
+    "intermediate": {
+      "label": "Intermediate",
+      "category": "specialist",
+      "peakFriction": 1.12,
+      "wearMultiplier": 1.35,
+      "temperatureWindowC": [
+        40,
+        110
+      ],
+      "wetGripMultiplier": 1.02,
+      "standingWaterResistance": 0.7
+    },
+    "wet": {
+      "label": "Wet",
+      "category": "specialist",
+      "peakFriction": 1,
+      "wearMultiplier": 1.85,
+      "temperatureWindowC": [
+        25,
+        95
+      ],
+      "wetGripMultiplier": 1.18,
+      "standingWaterResistance": 1
+    },
+    "drag": {
+      "label": "Drag",
+      "category": "specialist",
+      "peakFriction": 1.62,
+      "longitudinalBias": 1.32,
+      "lateralGripMultiplier": 0.72,
+      "wearMultiplier": 2.3
+    },
+    "dirt": {
+      "label": "Dirt",
+      "category": "specialist",
+      "peakFriction": 0.82,
+      "looseSurfaceBiteMultiplier": 1.35
+    },
+    "snow": {
+      "label": "Snow",
+      "category": "specialist",
+      "peakFriction": 0.42,
+      "looseSurfaceBiteMultiplier": 1.8
+    }
+  }
+}

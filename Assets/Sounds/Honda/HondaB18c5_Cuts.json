@@ -1,0 +1,107 @@
+{
+  "source": "HondaB18c5_Uncut.wav",
+  "sourceDurationSeconds": 27.185,
+  "format": {
+    "sampleRate": 44100,
+    "channels": 2,
+    "bitsPerSample": 16
+  },
+  "cuts": [
+    {
+      "file": "idle_0900.wav",
+      "sourceStartSeconds": 0.1,
+      "sourceEndSeconds": 3.05,
+      "durationSeconds": 2.95,
+      "sampleRate": 44100,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "rms": 0.30982,
+      "peak": 0.71637,
+      "notes": "steady idle section"
+    },
+    {
+      "file": "normal_2000.wav",
+      "sourceStartSeconds": 3.5,
+      "sourceEndSeconds": 6.45,
+      "durationSeconds": 2.95,
+      "sampleRate": 44100,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "rms": 0.46741,
+      "peak": 0.71671,
+      "notes": "steady low-rpm normal cam section"
+    },
+    {
+      "file": "normal_3500.wav",
+      "sourceStartSeconds": 6.8,
+      "sourceEndSeconds": 9.5,
+      "durationSeconds": 2.7,
+      "sampleRate": 44100,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "rms": 0.49481,
+      "peak": 0.71646,
+      "notes": "steady mid-rpm normal cam section (extended active runtime loop)"
+    },
+    {
+      "file": "normal_5000.wav",
+      "sourceStartSeconds": 9.7,
+      "sourceEndSeconds": 12.05,
+      "durationSeconds": 2.35,
+      "sampleRate": 44100,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "rms": 0.48482,
+      "peak": 0.7164,
+      "notes": "steady upper normal cam section"
+    },
+    {
+      "file": "vtec_6200.wav",
+      "sourceStartSeconds": 12.35,
+      "sourceEndSeconds": 14.7,
+      "durationSeconds": 2.35,
+      "sampleRate": 44100,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "rms": 0.38609,
+      "peak": 0.71719,
+      "notes": "first VTEC/high-cam section"
+    },
+    {
+      "file": "vtec_7600.wav",
+      "sourceStartSeconds": 15.05,
+      "sourceEndSeconds": 17.75,
+      "durationSeconds": 2.7,
+      "sampleRate": 44100,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "rms": 0.36896,
+      "peak": 0.71753,
+      "notes": "upper VTEC/high-cam section (extended active runtime loop)"
+    },
+    {
+      "file": "vtec_8200.wav",
+      "sourceStartSeconds": 17.9,
+      "sourceEndSeconds": 20.9,
+      "durationSeconds": 3.0,
+      "sampleRate": 44100,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "rms": 0.35947,
+      "peak": 0.71906,
+      "notes": "extra steady max-rev VTEC section found before limiter bounce"
+    },
+    {
+      "file": "limiter_8200.wav",
+      "sourceStartSeconds": 21.3,
+      "sourceEndSeconds": 27.1,
+      "durationSeconds": 5.8,
+      "sampleRate": 44100,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "rms": 0.27495,
+      "peak": 0.72391,
+      "notes": "long limiter/bounce section"
+    }
+  ]
+}

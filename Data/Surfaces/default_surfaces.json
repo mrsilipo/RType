@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "id": "default_track_surfaces",
+  "surfaces": {
+    "road": {
+      "name": "ROAD",
+      "grip": {
+        "value": 1
+      },
+      "rollingResistanceMultiplier": {
+        "value": 1
+      },
+      "longitudinalDragCoefficient": {
+        "value": 0
+      },
+      "lateralDragCoefficient": {
+        "value": 0
+      },
+      "wheelSpinDragCoefficient": {
+        "value": 0
+      }
+    },
+    "curb": {
+      "name": "CURB",
+      "grip": {
+        "value": 0.84
+      },
+      "rollingResistanceMultiplier": {
+        "value": 1.9
+      },
+      "longitudinalDragCoefficient": {
+        "value": 1
+      },
+      "lateralDragCoefficient": {
+        "value": 1.4
+      },
+      "wheelSpinDragCoefficient": {
+        "value": 4
+      }
+    },
+    "grass": {
+      "name": "GRASS",
+      "grip": {
+        "value": 0.58
+      },
+      "rollingResistanceMultiplier": {
+        "value": 6.2
+      },
+      "longitudinalDragCoefficient": {
+        "value": 12.5
+      },
+      "lateralDragCoefficient": {
+        "value": 5.8
+      },
+      "wheelSpinDragCoefficient": {
+        "value": 34
+      }
+    }
+  }
+}

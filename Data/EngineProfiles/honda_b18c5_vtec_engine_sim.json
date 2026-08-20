@@ -1,0 +1,43 @@
+{
+  "id": "honda_b18c5_vtec_engine_sim",
+  "displayName": "Honda B18C5 VTEC Engine Sim",
+  "source": "Engine Sim 0.1.14a atg-video-1 Honda VTEC MR",
+  "engineFamily": "Honda B-series VTEC",
+  "engineSimulator": {
+    "mrScriptPath": "Assets/Sounds/EngineSim/HondaB18C5/assets/engines/honda_b18c5_vtec.mr",
+    "impulseResponsePath": "Assets/Sounds/EngineSim/HondaB18C5/es/sound-library/new/mild_exhaust.wav",
+    "impulseResponseVolume": {
+      "value": 0.01
+    },
+    "impulseResponseTaps": {
+      "value": 512
+    },
+    "simulationFrequencyHz": {
+      "value": 20000
+    },
+    "fluidSimulationSteps": {
+      "value": 1
+    },
+    "throttleGamma": {
+      "value": 2
+    },
+    "dspPressureScale": {
+      "value": 1
+    },
+    "dspOutputGain": {
+      "value": 0.62
+    },
+    "overrunGain": {
+      "value": 2.35
+    },
+    "shockGain": {
+      "value": 1.75
+    },
+    "limiterGain": {
+      "value": 1
+    },
+    "vtecIntensity": {
+      "value": 0.58
+    }
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "track_definition_v1.json",
+  "title": "R Type Honda Racing Track Definition",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "id",
+    "displayName",
+    "roadWidthMeters",
+    "lengthMeters",
+    "controlPoints"
+  ],
+  "properties": {
+    "formatVersion": { "type": "integer", "const": 1 },
+    "sortOrder": { "type": "integer" },
+    "id": { "type": "string", "minLength": 1 },
+    "displayName": { "type": "string", "minLength": 1 },
+    "layout": {
+      "type": "string",
+      "enum": ["customSpline", "lakesidePark", "highSpeedRingInspired", "velocityLoop"]
+    },
+    "roadWidthMeters": { "type": "number", "exclusiveMinimum": 0 },
+    "terrainWidthMeters": { "type": "number", "exclusiveMinimum": 0 },
+    "terrainDepthMeters": { "type": "number", "exclusiveMinimum": 0 },
+    "lengthMeters": { "type": "integer", "minimum": 1 },
+    "longestStraightMeters": { "type": "integer", "minimum": 0 },
+    "elevationDifferenceMeters": { "type": "number", "minimum": 0 },
+    "sectorMarkers": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1 }
+    },
+    "controlPoints": {
+      "type": "array",
+      "minItems": 4,
+      "items": { "$ref": "#/$defs/controlPoint" }
+    },
+    "bankProfile": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/bankPoint" }
+    },
+    "segments": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/segment" }
+    },
+    "widthPoints": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/widthPoint" }
+    }
+  },
+  "$defs": {
+    "controlPoint": {
+      "type": "object",
+      "required": ["x", "z", "elevationMeters"],
+      "additionalProperties": false,
+      "properties": {
+        "x": { "type": "number" },
+        "z": { "type": "number" },
+        "elevationMeters": { "type": "number" }
+      }
+    },
+    "bankPoint": {
+      "type": "object",
+      "required": ["progress", "bankDegrees"],
+      "additionalProperties": false,
+      "properties": {
+        "progress": { "type": "number", "minimum": 0, "maximum": 1 },
+        "bankDegrees": { "type": "number" }
+      }
+    },
+    "segment": {
+      "type": "object",
+      "required": ["fromControlPoint", "shape"],
+      "additionalProperties": false,
+      "properties": {
+        "fromControlPoint": { "type": "integer", "minimum": 0 },
+        "shape": { "type": "string", "enum": ["curve", "straight"] }
+      }
+    },
+    "widthPoint": {
+      "type": "object",
+      "required": ["controlPoint"],
+      "additionalProperties": false,
+      "properties": {
+        "controlPoint": { "type": "integer", "minimum": 0 },
+        "roadWidthMeters": { "type": "number", "exclusiveMinimum": 0 },
+        "leftRoadWidthMeters": { "type": "number", "exclusiveMinimum": 0 },
+        "rightRoadWidthMeters": { "type": "number", "exclusiveMinimum": 0 },
+        "grassWidthMeters": { "type": "number", "minimum": 0 },
+        "leftGrassWidthMeters": { "type": "number", "minimum": 0 },
+        "rightGrassWidthMeters": { "type": "number", "minimum": 0 },
+        "wallOffsetMeters": { "type": "number", "exclusiveMinimum": 0 },
+        "leftWallOffsetMeters": { "type": "number", "exclusiveMinimum": 0 },
+        "rightWallOffsetMeters": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    }
+  }
+}

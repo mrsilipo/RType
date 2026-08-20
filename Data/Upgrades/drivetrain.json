@@ -1,0 +1,224 @@
+{
+  "schemaVersion": 1,
+  "id": "universal_drivetrain_upgrades",
+  "effectModel": "universal_procedure_with_vehicle_response_scaling",
+  "categories": {
+    "gearbox": {
+      "label": "Gearbox",
+      "stages": {
+        "stage_0": {
+          "label": "Factory Transmission",
+          "effects": {}
+        },
+        "stage_1": {
+          "label": "Sports Close-Ratio Gearbox",
+          "effects": {
+            "gearRatioSet": "sports_close",
+            "shiftTimeMultiplier": 0.92,
+            "gearWhineMultiplier": 1.08
+          }
+        },
+        "stage_2": {
+          "label": "Competition Close-Ratio Gearbox",
+          "effects": {
+            "gearRatioSet": "competition_close",
+            "shiftTimeMultiplier": 0.82,
+            "synchroCapacityMultiplier": 1.15
+          }
+        },
+        "stage_3": {
+          "label": "Fully Customisable Racing Transmission",
+          "effects": {
+            "customGearRatiosAvailable": true,
+            "customFinalDriveAvailable": true,
+            "shiftTimeMultiplier": 0.76,
+            "gearInertiaMultiplier": 0.92
+          }
+        },
+        "stage_4": {
+          "label": "Sequential / Dog Engagement Race Transmission",
+          "effects": {
+            "shiftTimeMultiplier": 0.48,
+            "synchroModel": "dogEngagement",
+            "gearInertiaMultiplier": 0.86,
+            "streetDrivabilityMultiplier": 0.75
+          }
+        }
+      }
+    },
+    "finalDrive": {
+      "label": "Final Drive",
+      "stages": {
+        "stage_0": {
+          "label": "Factory",
+          "effects": {}
+        },
+        "stage_1": {
+          "label": "Sports Final Drive",
+          "effects": {
+            "alternateFinalDriveAvailable": true
+          }
+        },
+        "stage_2": {
+          "label": "Adjustable Final Drive",
+          "effects": {
+            "customFinalDriveAvailable": true,
+            "finalDriveAdjustmentRange": [
+              0.75,
+              1.35
+            ]
+          }
+        }
+      }
+    },
+    "clutch": {
+      "label": "Clutch",
+      "stages": {
+        "stage_0": {
+          "label": "Stock",
+          "effects": {}
+        },
+        "stage_1": {
+          "label": "Sports Clutch",
+          "effects": {
+            "torqueCapacityMultiplier": 1.28,
+            "thermalCapacityMultiplier": 1.12,
+            "engagementSharpnessMultiplier": 1.08
+          }
+        },
+        "stage_2": {
+          "label": "Racing Clutch",
+          "effects": {
+            "torqueCapacityMultiplier": 1.65,
+            "thermalCapacityMultiplier": 1.35,
+            "engagementSharpnessMultiplier": 1.22
+          }
+        },
+        "stage_3": {
+          "label": "Twin-Plate / Competition Clutch",
+          "effects": {
+            "torqueCapacityMultiplier": 2.15,
+            "thermalCapacityMultiplier": 1.7,
+            "engagementSharpnessMultiplier": 1.42,
+            "rotationalInertiaMultiplier": 0.88
+          }
+        },
+        "stage_4": {
+          "label": "Multi-Plate Race Clutch",
+          "effects": {
+            "torqueCapacityMultiplier": 2.9,
+            "thermalCapacityMultiplier": 2.15,
+            "engagementSharpnessMultiplier": 1.68,
+            "rotationalInertiaMultiplier": 0.78
+          }
+        }
+      }
+    },
+    "flywheel": {
+      "label": "Flywheel",
+      "stages": {
+        "stage_0": {
+          "label": "Stock",
+          "effects": {}
+        },
+        "stage_1": {
+          "label": "Sports",
+          "effects": {
+            "flywheelInertiaMultiplier": 0.82
+          }
+        },
+        "stage_2": {
+          "label": "Lightweight",
+          "effects": {
+            "flywheelInertiaMultiplier": 0.65,
+            "idleStabilityMultiplier": 0.96
+          }
+        },
+        "stage_3": {
+          "label": "Ultra-Light Racing",
+          "effects": {
+            "flywheelInertiaMultiplier": 0.48,
+            "idleStabilityMultiplier": 0.9,
+            "launchForgivenessMultiplier": 0.85
+          }
+        }
+      }
+    },
+    "limitedSlipDifferential": {
+      "label": "Limited-Slip Differential",
+      "stages": {
+        "stage_0": {
+          "label": "Stock Differential",
+          "effects": {}
+        },
+        "stage_1": {
+          "label": "Sports LSD",
+          "effects": {
+            "preloadNm": 20,
+            "powerLockPercent": 28,
+            "coastLockPercent": 8
+          }
+        },
+        "stage_2": {
+          "label": "Competition LSD",
+          "effects": {
+            "preloadNm": 35,
+            "powerLockPercent": 45,
+            "coastLockPercent": 18
+          }
+        },
+        "stage_3": {
+          "label": "Fully Adjustable LSD",
+          "effects": {
+            "adjustablePreloadAvailable": true,
+            "adjustablePowerLockAvailable": true,
+            "adjustableCoastLockAvailable": true,
+            "preloadRangeNm": [
+              5,
+              80
+            ],
+            "powerLockRangePercent": [
+              5,
+              80
+            ],
+            "coastLockRangePercent": [
+              0,
+              60
+            ]
+          }
+        }
+      }
+    },
+    "driveshaft": {
+      "label": "Driveshaft",
+      "stages": {
+        "stage_0": {
+          "label": "Stock",
+          "effects": {}
+        },
+        "stage_1": {
+          "label": "Lightweight Steel",
+          "effects": {
+            "rotationalInertiaMultiplier": 0.92,
+            "torsionalStiffnessMultiplier": 1.08
+          }
+        },
+        "stage_2": {
+          "label": "Aluminium",
+          "effects": {
+            "rotationalInertiaMultiplier": 0.78,
+            "torsionalStiffnessMultiplier": 1.15
+          }
+        },
+        "stage_3": {
+          "label": "Carbon Composite",
+          "effects": {
+            "rotationalInertiaMultiplier": 0.62,
+            "torsionalStiffnessMultiplier": 1.28,
+            "failureShockLimitMultiplier": 0.92
+          }
+        }
+      }
+    }
+  }
+}

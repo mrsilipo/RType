@@ -1,0 +1,347 @@
+{
+  "schemaVersion": 1,
+  "id": "gt1_arcade_engine",
+  "physics": {
+    "fixedTickRateHz": {
+      "value": 120
+    },
+    "maximumFrameTimeSeconds": {
+      "value": 0.1
+    },
+    "maximumTicksPerUpdate": {
+      "value": 12
+    }
+  },
+  "vehicleSafety": {
+    "minimumSlipSpeedMetersPerSecond": {
+      "value": 2.0
+    },
+    "maximumReverseSpeedMetersPerSecond": {
+      "value": 13.5
+    },
+    "maximumForwardSpeedMetersPerSecond": {
+      "value": 70.0
+    }
+  },
+  "stabilityAssist": {
+    "minimumSpeedMetersPerSecond": {
+      "value": 5.0
+    },
+    "minimumLateralSpeedMetersPerSecond": {
+      "value": 0.05
+    },
+    "speedBlendStartMetersPerSecond": {
+      "value": 8.0
+    },
+    "speedBlendEndMetersPerSecond": {
+      "value": 30.0
+    },
+    "gripBlendStart": {
+      "value": 0.84
+    },
+    "gripBlendEnd": {
+      "value": 1.0
+    },
+    "throttleBlendStart": {
+      "value": 0.55
+    },
+    "throttleBlendEnd": {
+      "value": 1.0
+    },
+    "brakeBlendStart": {
+      "value": 0.12
+    },
+    "brakeBlendEnd": {
+      "value": 0.8
+    },
+    "lateralDampingMin": {
+      "value": 0.35
+    },
+    "lateralDampingMax": {
+      "value": 4.8
+    },
+    "lateralGripBoost": {
+      "value": 0.45
+    },
+    "lateralThrottleBoost": {
+      "value": 0.2
+    },
+    "lateralBrakeBoost": {
+      "value": 0.10
+    },
+    "maxLateralAccelerationMinG": {
+      "value": 0.28
+    },
+    "maxLateralAccelerationMaxG": {
+      "value": 1.45
+    },
+    "yawDampingMin": {
+      "value": 0.25
+    },
+    "yawDampingMax": {
+      "value": 3.9
+    },
+    "yawGripBoost": {
+      "value": 0.55
+    },
+    "yawRecoveryBoost": {
+      "value": 0.75
+    },
+    "yawThrottleBoost": {
+      "value": 0.15
+    },
+    "yawBrakeBoost": {
+      "value": 0.06
+    },
+    "bodySlipStartDegrees": {
+      "value": 3.0
+    },
+    "bodySlipEndDegrees": {
+      "value": 12.0
+    },
+    "tyreSlipStartDegrees": {
+      "value": 5.5
+    },
+    "tyreSlipEndDegrees": {
+      "value": 16.0
+    },
+    "assistGripStart": {
+      "value": 0.9
+    },
+    "assistGripEnd": {
+      "value": 1.0
+    },
+    "bodyGripInfluenceMin": {
+      "value": 0.25
+    },
+    "bodyGripInfluenceMax": {
+      "value": 1.0
+    },
+    "tyreGripInfluenceMin": {
+      "value": 0.45
+    },
+    "tyreGripInfluenceMax": {
+      "value": 1.0
+    },
+    "counterSteerInputStart": {
+      "value": 0.12
+    },
+    "counterSteerInputEnd": {
+      "value": 0.85
+    },
+    "counterSteerGripAllowance": {
+      "value": 0.34
+    },
+    "counterSteerSlipRelaxationMultiplier": {
+      "value": 0.34
+    },
+    "counterSteerSlidingFrictionRecovery": {
+      "value": 0.52
+    },
+    "neutralRecoveryInputStart": {
+      "value": 0.04
+    },
+    "neutralRecoveryInputEnd": {
+      "value": 0.3
+    },
+    "neutralRecoveryMultiplier": {
+      "value": 0.45
+    },
+    "committedTurnInputStart": {
+      "value": 0.22
+    },
+    "committedTurnInputEnd": {
+      "value": 0.85
+    },
+    "committedTurnBrakeDampingMultiplier": {
+      "value": 0.54
+    },
+    "minimumYawRateDegreesPerSecond": {
+      "value": 2.0
+    }
+  },
+  "digitalThrottleAssist": {
+    "fullThrottleBelowSpeedMetersPerSecond": {
+      "value": 3.0
+    },
+    "speedBlendStartMetersPerSecond": {
+      "value": 4.5
+    },
+    "speedBlendEndMetersPerSecond": {
+      "value": 28.0
+    },
+    "steeringBlendStart": {
+      "value": 0.06
+    },
+    "steeringBlendEnd": {
+      "value": 0.64
+    },
+    "straightLaunchBypassSpeedMetersPerSecond": {
+      "value": 9.0
+    },
+    "gripUsageBlendStart": {
+      "value": 0.94
+    },
+    "gripUsageBlendEnd": {
+      "value": 1.14
+    },
+    "slipRatioBlendStart": {
+      "value": 0.09
+    },
+    "slipRatioBlendEnd": {
+      "value": 0.3
+    },
+    "cornerLimitLowSpeed": {
+      "value": 0.9
+    },
+    "cornerLimitHighSpeed": {
+      "value": 0.94
+    },
+    "tractionDemandGripScale": {
+      "value": 0.35
+    },
+    "tractionLimitFloor": {
+      "value": 0.90
+    },
+    "minimumAssistLimit": {
+      "value": 0.56
+    }
+  },
+  "digitalBrakeAssist": {
+    "fullBrakeBelowSpeedMetersPerSecond": {
+      "value": 1.5
+    },
+    "speedBlendStartMetersPerSecond": {
+      "value": 5.0
+    },
+    "speedBlendEndMetersPerSecond": {
+      "value": 34.0
+    },
+    "steeringBlendStart": {
+      "value": 0.12
+    },
+    "steeringBlendEnd": {
+      "value": 0.82
+    },
+    "highSpeedBrakeLimit": {
+      "value": 0.975
+    },
+    "steeringReductionLowSpeed": {
+      "value": 0.02
+    },
+    "steeringReductionHighSpeed": {
+      "value": 0.09
+    },
+    "minimumAssistLimit": {
+      "value": 0.88
+    },
+    "maximumAssistLimit": {
+      "value": 0.975
+    },
+    "trailBrakeFrontTorqueMultiplier": {
+      "value": 0.88
+    },
+    "trailBrakeRearTorqueMultiplier": {
+      "value": 0.99
+    },
+    "absTargetSlipRatio": {
+      "value": -0.09
+    },
+    "absReleaseSlipRatio": {
+      "value": -0.125
+    },
+    "absApplyRatePerSecond": {
+      "value": 14.0
+    },
+    "absReleaseRatePerSecond": {
+      "value": 38.0
+    },
+    "absMinimumSpeedMetersPerSecond": {
+      "value": 2.0
+    },
+    "absMinimumPressureRatio": {
+      "value": 0.1
+    }
+  },
+  "brakeThrottlePriority": {
+    "brakeBlendStart": {
+      "value": 0.06
+    },
+    "brakeBlendEnd": {
+      "value": 0.65
+    },
+    "fullBrakeThrottleMultiplier": {
+      "value": 0.0
+    }
+  },
+  "steeringAssist": {
+    "brakeAngleBoostBrakeStart": {
+      "value": 0.12
+    },
+    "brakeAngleBoostBrakeEnd": {
+      "value": 0.85
+    },
+    "brakeAngleBoostSpeedStartMetersPerSecond": {
+      "value": 14.0
+    },
+    "brakeAngleBoostSpeedEndMetersPerSecond": {
+      "value": 38.0
+    },
+    "brakeAngleBoostMultiplier": {
+      "value": 1.42
+    },
+    "speedMatchedSlipStartMetersPerSecond": {
+      "value": 32.0
+    },
+    "speedMatchedSlipEndMetersPerSecond": {
+      "value": 68.0
+    },
+    "lowSpeedSlipAllowanceMultiplier": {
+      "value": 1.16
+    },
+    "highSpeedSlipAllowanceMultiplier": {
+      "value": 0.44
+    },
+    "highSpeedMinimumRoadWheelAngleDegrees": {
+      "value": 2.25
+    },
+    "inputBrakeAuthorityStart": {
+      "value": 0.1
+    },
+    "inputBrakeAuthorityEnd": {
+      "value": 0.7
+    },
+    "inputBrakeAuthoritySpeedStartMetersPerSecond": {
+      "value": 12.0
+    },
+    "inputBrakeAuthoritySpeedEndMetersPerSecond": {
+      "value": 36.0
+    },
+    "brakingInputMultiplierFloor": {
+      "value": 0.95
+    },
+    "brakingReturnMultiplierFloor": {
+      "value": 1.05
+    },
+    "brakingInputRateBoost": {
+      "value": 1.45
+    },
+    "recentBrakeBoostThreshold": {
+      "value": 0.12
+    },
+    "recentBrakeBoostSeconds": {
+      "value": 0.42
+    },
+    "recentBrakeAuthority": {
+      "value": 0.58
+    }
+  },
+  "rpmResponse": {
+    "poweredAntiDipWindowRpm": {
+      "value": 6500
+    },
+    "poweredAntiDipFallRateRpmPerSecond": {
+      "value": 520
+    }
+  }
+}

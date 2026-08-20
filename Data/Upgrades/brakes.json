@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 1,
+  "id": "universal_brake_upgrades",
+  "effectModel": "physical_brake_capacity_and_thermal_model",
+  "categories": {
+    "brakeSystem": {
+      "label": "Brake System",
+      "stages": {
+        "stage_0": {
+          "label": "Factory Brakes",
+          "effects": {}
+        },
+        "stage_1": {
+          "label": "Club / Street-Track Brakes",
+          "effects": {
+            "rotorMaterial": "highCarbonIron",
+            "workingTemperatureC": 500,
+            "effectiveRadiusMultiplier": 1.04,
+            "thermalCapacityMultiplier": 1.25,
+            "rotorMassMultiplier": 1.08
+          }
+        },
+        "stage_2": {
+          "label": "Racing Brakes",
+          "effects": {
+            "rotorMaterial": "twoPieceHighCarbonIron",
+            "hatMaterial": "aluminium",
+            "workingTemperatureC": 800,
+            "effectiveRadiusMultiplier": 1.08,
+            "thermalCapacityMultiplier": 1.55,
+            "rotorMassMultiplier": 0.96
+          }
+        },
+        "stage_3": {
+          "label": "Carbon-Ceramic Brakes",
+          "effects": {
+            "rotorMaterial": "carbonCeramicMatrix",
+            "workingTemperatureC": 1000,
+            "effectiveRadiusMultiplier": 1.1,
+            "thermalCapacityMultiplier": 1.9,
+            "rotorMassMultiplier": 0.68,
+            "coldBiteMultiplier": 0.9
+          }
+        },
+        "stage_4": {
+          "label": "Carbon-Carbon Motorsport Brakes",
+          "effects": {
+            "rotorMaterial": "carbonCarbon",
+            "workingTemperatureC": 1200,
+            "effectiveRadiusMultiplier": 1.12,
+            "thermalCapacityMultiplier": 2.25,
+            "rotorMassMultiplier": 0.54,
+            "coldBiteMultiplier": 0.62,
+            "raceOnly": true
+          }
+        }
+      }
+    },
+    "brakePads": {
+      "label": "Brake Pads",
+      "options": {
+        "stock": {
+          "label": "Stock",
+          "effects": {}
+        },
+        "street_performance": {
+          "label": "Street Performance",
+          "effects": {
+            "padFrictionMultiplier": 1.06,
+            "temperatureWindowC": [
+              20,
+              480
+            ],
+            "wearMultiplier": 1.05
+          }
+        },
+        "track": {
+          "label": "Track",
+          "effects": {
+            "padFrictionMultiplier": 1.12,
+            "temperatureWindowC": [
+              120,
+              760
+            ],
+            "coldBiteMultiplier": 0.88,
+            "wearMultiplier": 1.18
+          }
+        },
+        "race": {
+          "label": "Race",
+          "effects": {
+            "padFrictionMultiplier": 1.18,
+            "temperatureWindowC": [
+              250,
+              980
+            ],
+            "coldBiteMultiplier": 0.72,
+            "wearMultiplier": 1.32
+          }
+        },
+        "endurance": {
+          "label": "Endurance",
+          "effects": {
+            "padFrictionMultiplier": 1.1,
+            "temperatureWindowC": [
+              160,
+              900
+            ],
+            "wearMultiplier": 0.72,
+            "thermalStabilityMultiplier": 1.18
+          }
+        }
+      }
+    },
+    "brakeController": {
+      "label": "Brake Controller",
+      "stages": {
+        "stage_0": {
+          "label": "Stock Bias",
+          "effects": {}
+        },
+        "stage_1": {
+          "label": "Adjustable Brake Balance",
+          "effects": {
+            "frontRearBiasAdjustmentAvailable": true,
+            "biasRangeFront": [
+              0.52,
+              0.78
+            ]
+          }
+        },
+        "stage_2": {
+          "label": "Competition Brake Controller",
+          "effects": {
+            "frontRearBiasAdjustmentAvailable": true,
+            "absInterventionAdjustmentAvailable": true,
+            "pressureRampAdjustmentAvailable": true
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+// IMPORTANT NOTE
+// Going forward, please don't use this file. Instead,
+// simply call `main()` within the engine script itself
+// or simply call set_engine(), set_vehicle() and
+// set_transmission() directly within your engine file.
+// See the engines in `assets/engines` for examples.
+
+import "engine_sim.mr"
+import "themes/default.mr"
+
+// To load a different engine, change this line below
+// \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/
+import "engines/rotary/4_rotor.mr"
+// /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\
+
+use_default_theme()
+main()

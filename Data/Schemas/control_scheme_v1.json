@@ -1,0 +1,273 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "control_scheme_v1.json",
+  "title": "R Type Honda Racing Control Scheme",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "id",
+    "name",
+    "keyboard",
+    "gamePad",
+    "menu"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "keyboard": {
+      "$ref": "#/$defs/keyboard"
+    },
+    "gamePad": {
+      "$ref": "#/$defs/gamePad"
+    },
+    "menu": {
+      "$ref": "#/$defs/menu"
+    }
+  },
+  "$defs": {
+    "keyboard": {
+      "type": "object",
+      "required": [
+        "steering",
+        "actions"
+      ],
+      "properties": {
+        "steering": {
+          "$ref": "#/$defs/digitalAxis"
+        },
+        "actions": {
+          "$ref": "#/$defs/actions"
+        }
+      }
+    },
+    "gamePad": {
+      "type": "object",
+      "required": [
+        "playerIndex",
+        "steering",
+        "actions"
+      ],
+      "properties": {
+        "playerIndex": {
+          "type": "string"
+        },
+        "triggerPressedThreshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "steering": {
+          "$ref": "#/$defs/gamePadSteering"
+        },
+        "actions": {
+          "$ref": "#/$defs/actions"
+        },
+        "unmappedWhileRacing": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "digitalAxis": {
+      "type": "object",
+      "properties": {
+        "negative": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "positive": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "gamePadSteering": {
+      "type": "object",
+      "properties": {
+        "axis": {
+          "type": "string"
+        },
+        "invertAxis": {
+          "type": "boolean"
+        },
+        "deadZone": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.95
+        },
+        "negativeButtons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "positiveButtons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "actions": {
+      "type": "object",
+      "properties": {
+        "accelerate": {
+          "$ref": "#/$defs/binding"
+        },
+        "brake": {
+          "$ref": "#/$defs/binding"
+        },
+        "handbrake": {
+          "$ref": "#/$defs/binding"
+        },
+        "reverse": {
+          "$ref": "#/$defs/binding"
+        },
+        "lookBehind": {
+          "$ref": "#/$defs/binding"
+        },
+        "toggleView": {
+          "$ref": "#/$defs/binding"
+        },
+        "shiftDown": {
+          "$ref": "#/$defs/binding"
+        },
+        "shiftUp": {
+          "$ref": "#/$defs/binding"
+        },
+        "pause": {
+          "$ref": "#/$defs/binding"
+        },
+        "exit": {
+          "$ref": "#/$defs/binding"
+        },
+        "toggleDebug": {
+          "$ref": "#/$defs/binding"
+        },
+        "toggleTransmissionMode": {
+          "$ref": "#/$defs/binding"
+        }
+      }
+    },
+    "binding": {
+      "type": "object",
+      "properties": {
+        "keys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "buttons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "triggers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "menu": {
+      "type": "object",
+      "required": [
+        "confirm",
+        "cancel",
+        "navigation"
+      ],
+      "properties": {
+        "confirm": {
+          "$ref": "#/$defs/binding"
+        },
+        "cancel": {
+          "$ref": "#/$defs/binding"
+        },
+        "navigation": {
+          "$ref": "#/$defs/menuNavigation"
+        }
+      }
+    },
+    "menuNavigation": {
+      "type": "object",
+      "properties": {
+        "horizontalAxis": {
+          "type": "string"
+        },
+        "verticalAxis": {
+          "type": "string"
+        },
+        "deadZone": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.95
+        },
+        "leftKeys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rightKeys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "upKeys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "downKeys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "leftButtons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rightButtons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "upButtons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "downButtons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
