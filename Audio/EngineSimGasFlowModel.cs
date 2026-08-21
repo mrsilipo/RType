@@ -676,7 +676,13 @@ internal sealed class EngineSimGasFlowModel
                 (cylinder.ExhaustRunner.Pressure - AtmosphericPressure +
                  0.1 * cylinder.ExhaustRunner.DynamicPressure(1.0, 0.0) +
                  0.1 * cylinder.ExhaustRunner.DynamicPressure(-1.0, 0.0));
-            double delayed = cylinder.Delay.Process(exhaustFlow);
+            double delayed = cylinder.Delay.Process(
+                exhaustFlow,
+                Lerp(
+                    0.10,
+                    0.24,
+                    Clamp(load, 0.0, 1.0)) +
+                Clamp(overrun, 0.0, 1.0) * 0.04);
             double exhaustLength = Math.Max(0.01, _profile.ExhaustPrimaryTubeLength + exhaust.Length);
             double staged = cylinder.SoundAttenuation *
                 (exhaust.AudioVolume * delayed / _cylinders.Length) *
@@ -949,7 +955,7 @@ internal sealed class EngineSimGasFlowModel
             ExhaustIndex = exhaustIndex;
             BlowbyK = blowbyK;
             Exhaust = exhaust;
-            Delay = new DelayFilter(Math.Max(0.01, profile.ExhaustPrimaryTubeLength + exhaust.Length) / SpeedOfSoundMetersPerSecond, sampleRate);
+            Delay = new PressureWaveGuide(Math.Max(0.01, profile.ExhaustPrimaryTubeLength + exhaust.Length) / SpeedOfSoundMetersPerSecond, sampleRate);
         }
 
         public int Index { get; }
@@ -970,7 +976,7 @@ internal sealed class EngineSimGasFlowModel
 
         public GasSystem ExhaustRunner { get; } = new();
 
-        public DelayFilter Delay { get; private set; }
+        public PressureWaveGuide Delay { get; private set; } = new(0.0, 1);
 
         public PressureWaveGuide IntakeDelay { get; private set; } = new(0.0, 1);
 
@@ -1007,7 +1013,7 @@ internal sealed class EngineSimGasFlowModel
             Array.Clear(PistonSpeedHistory);
             PistonSpeedSum = 0.0;
             Flame = default;
-            Delay = new DelayFilter(delayLength / SpeedOfSoundMetersPerSecond, sampleRate);
+            Delay = new PressureWaveGuide(delayLength / SpeedOfSoundMetersPerSecond, sampleRate);
             IntakeDelay = new PressureWaveGuide(intakeDelayLength / SpeedOfSoundMetersPerSecond, sampleRate);
         }
 
