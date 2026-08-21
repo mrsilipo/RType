@@ -70,6 +70,8 @@ public sealed class VehicleSimulationParameters
 
     public float EngineSimulatorPhysicsTorqueBlend { get; init; }
 
+    public bool EngineSimulatorPhysicsUseReferenceTorqueCalibration { get; init; }
+
     public float EngineSimulatorPhysicsEngineBrakeScale { get; init; } = 1f;
 
     public float EngineSimulatorPhysicsEngineBrakeBlend { get; init; }

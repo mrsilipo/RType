@@ -124,6 +124,10 @@ public sealed class VehicleAudioParameters
 
     public float EngineSimulatorVtecIntensity { get; init; } = 0.58f;
 
+    public float EngineSimulatorProfileMaxTorqueNm { get; init; }
+
+    public float EngineSimulatorProfileMaxEngineBrakeTorqueNm { get; init; }
+
     public float EngineSimulatorLimiterDurationSeconds { get; init; } = 0.05f;
 
     public float EngineSimulatorLowIntakeDurationDegrees { get; init; } = 210f;

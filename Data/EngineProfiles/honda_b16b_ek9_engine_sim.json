@@ -55,6 +55,12 @@
     "vehicleRollingResistanceN": {
       "value": 300
     },
+    "maxTorqueNm": {
+      "value": 190
+    },
+    "maxEngineBrakeTorqueNm": {
+      "value": 140
+    },
     "intakePlenumVolumeLiters": {
       "value": 1.325
     },

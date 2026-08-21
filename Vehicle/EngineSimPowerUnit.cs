@@ -19,6 +19,14 @@ internal sealed class EngineSimPowerUnit : IEnginePowerUnit
     private float _lastTransmissionOmegaRadiansPerSecond;
     private bool _drivelineInitialized;
 
+    private float EffectiveMaxTorqueNm => _parameters.Audio.EngineSimulatorProfileMaxTorqueNm > 0f
+        ? _parameters.Audio.EngineSimulatorProfileMaxTorqueNm
+        : _parameters.EngineSimulatorPhysicsMaxTorqueNm;
+
+    private float EffectiveMaxEngineBrakeTorqueNm => _parameters.Audio.EngineSimulatorProfileMaxEngineBrakeTorqueNm > 0f
+        ? _parameters.Audio.EngineSimulatorProfileMaxEngineBrakeTorqueNm
+        : _parameters.EngineSimulatorPhysicsMaxEngineBrakeTorqueNm;
+
     public EngineSimPowerUnit(VehicleSimulationParameters parameters)
     {
         _parameters = parameters;
@@ -117,8 +125,11 @@ internal sealed class EngineSimPowerUnit : IEnginePowerUnit
             SmoothStep(0.02f, 0.82f, clampedThrottle) *
             MathF.Max(0f, _parameters.EngineSimulatorPhysicsTorqueScale),
             0f,
-            MathF.Max(1f, _parameters.EngineSimulatorPhysicsMaxTorqueNm));
-        simDriveTorque = CalibrateDriveTorque(simDriveTorque, curveDriveTorque, clampedThrottle, vtecBlend, vtecKick, vtecIntensity, vtecTorqueGain, clampedShock);
+            MathF.Max(1f, EffectiveMaxTorqueNm));
+        if (_parameters.EngineSimulatorPhysicsUseReferenceTorqueCalibration)
+        {
+            simDriveTorque = CalibrateDriveTorque(simDriveTorque, curveDriveTorque, clampedThrottle, vtecBlend, vtecKick, vtecIntensity, vtecTorqueGain, clampedShock);
+        }
         float driveBlend = MathHelper.Clamp(_parameters.EngineSimulatorPhysicsTorqueBlend, 0f, 1f);
         float driveTorque = MathHelper.Lerp(curveDriveTorque, simDriveTorque, driveBlend);
         driveTorque *= vtecTorqueGain;
@@ -131,7 +142,7 @@ internal sealed class EngineSimPowerUnit : IEnginePowerUnit
         float simBrakeTorque = MathHelper.Clamp(
             MathF.Max(0f, -rawNegativeTorque) * MathF.Max(0f, _parameters.EngineSimulatorPhysicsEngineBrakeScale),
             0f,
-            MathF.Max(1f, _parameters.EngineSimulatorPhysicsMaxEngineBrakeTorqueNm));
+            MathF.Max(1f, EffectiveMaxEngineBrakeTorqueNm));
         float brakeBlend = MathHelper.Clamp(_parameters.EngineSimulatorPhysicsEngineBrakeBlend, 0f, 1f);
         float engineBrakeTorque = MathHelper.Lerp(curveBrakeTorque, simBrakeTorque, brakeBlend);
         float transmissionRpm = OmegaToRpm(_lastTransmissionOmegaRadiansPerSecond);
@@ -275,7 +286,7 @@ internal sealed class EngineSimPowerUnit : IEnginePowerUnit
         float pumpingBrakeTorque = engineBrakeTorqueNm * (1f - throttleRelief);
         float idleAssistTorque = CalculateIdleAssistTorque(throttle);
         float limiterDragTorque = MathF.Max(0f, 1f - MathHelper.Clamp(limiterTorqueMultiplier, 0f, 1f)) *
-                                  MathHelper.Lerp(0f, _parameters.EngineSimulatorPhysicsMaxTorqueNm * 0.34f, SmoothStep(_parameters.RevLimiterResumeRpm, _parameters.RedlineRpm, crankRpm));
+                                  MathHelper.Lerp(0f, EffectiveMaxTorqueNm * 0.34f, SmoothStep(_parameters.RevLimiterResumeRpm, _parameters.RedlineRpm, crankRpm));
         float clutchTorque = 0f;
         if (clutchCapacity > 0.001f)
         {
@@ -320,8 +331,8 @@ internal sealed class EngineSimPowerUnit : IEnginePowerUnit
         float deliveredCrankTorque = effectiveClutchEngagement > 0f ? clutchTorque : 0f;
         float driveTorque = MathHelper.Clamp(
             deliveredCrankTorque,
-            -MathF.Max(1f, _parameters.EngineSimulatorPhysicsMaxEngineBrakeTorqueNm),
-            MathF.Max(1f, _parameters.EngineSimulatorPhysicsMaxTorqueNm));
+            -MathF.Max(1f, EffectiveMaxEngineBrakeTorqueNm),
+            MathF.Max(1f, EffectiveMaxTorqueNm));
         float engineBrakeTorque = MathF.Max(
             engineBrakeTorqueNm,
             MathF.Max(0f, -deliveredCrankTorque) + pumpingBrakeTorque * 0.35f);
