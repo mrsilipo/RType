@@ -4,6 +4,83 @@
   "source": "B16B calibration using the bundled B18C5 VTEC MR reference",
   "engineFamily": "Honda B-series VTEC",
   "engineSimulator": {
+    "cylinderCount": 4,
+    "firingOrder": [1, 3, 4, 2],
+    "boreMillimeters": {
+      "value": 81
+    },
+    "strokeMillimeters": {
+      "value": 77.4
+    },
+    "rodLengthMillimeters": {
+      "value": 137.922
+    },
+    "fuelBurningEfficiency": {
+      "value": 0.75
+    },
+    "fuelTurbulence": {
+      "value": 2.5
+    },
+    "intakePlenumVolumeLiters": {
+      "value": 1.325
+    },
+    "intakeRunnerLengthInches": {
+      "value": 7
+    },
+    "exhaustPrimaryTubeLengthInches": {
+      "value": 10
+    },
+    "exhaustVolumeLiters": {
+      "value": 100
+    },
+    "ignitionTimingRpm": [0, 1000, 2000, 3000, 4000],
+    "ignitionTimingDegrees": [-25, -25, -30, -30, -30],
+    "lowCam": {
+      "intakeDurationDegrees": {
+        "value": 210
+      },
+      "intakeLiftMillimeters": {
+        "value": 6.9
+      },
+      "exhaustDurationDegrees": {
+        "value": 190
+      },
+      "exhaustLiftMillimeters": {
+        "value": 6.5
+      },
+      "gamma": {
+        "value": 1
+      },
+      "intakeCenterDegrees": {
+        "value": 116
+      },
+      "exhaustCenterDegrees": {
+        "value": 116
+      }
+    },
+    "vtecCam": {
+      "intakeDurationDegrees": {
+        "value": 240
+      },
+      "intakeLiftMillimeters": {
+        "value": 11.5
+      },
+      "exhaustDurationDegrees": {
+        "value": 232
+      },
+      "exhaustLiftMillimeters": {
+        "value": 10.5
+      },
+      "gamma": {
+        "value": 0.5
+      },
+      "intakeCenterDegrees": {
+        "value": 100
+      },
+      "exhaustCenterDegrees": {
+        "value": 100
+      }
+    },
     "mrScriptPath": "Assets/Sounds/EngineSim/HondaB18C5/assets/engines/honda_b18c5_vtec.mr",
     "impulseResponsePath": "Assets/Sounds/EngineSim/HondaB18C5/es/sound-library/new/mild_exhaust.wav",
     "impulseResponseVolume": {
