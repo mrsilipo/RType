@@ -79,6 +79,19 @@ if (args.Any(arg => arg.Equals("--engine-sim-stream-stress", StringComparison.Or
     return;
 }
 
+if (args.Any(arg => arg.Equals("--engine-sim-compare", StringComparison.OrdinalIgnoreCase)))
+{
+    int referenceIndex = Array.FindIndex(args, arg => arg.Equals("--reference-wav", StringComparison.OrdinalIgnoreCase));
+    if (referenceIndex < 0 || referenceIndex + 1 >= args.Length)
+    {
+        Console.Error.WriteLine("Usage: --engine-sim-compare --reference-wav <path>");
+        return;
+    }
+
+    EngineSimWaveformCompareTool.Run(GameLaunchOptions.FromArgs(args), args[referenceIndex + 1]);
+    return;
+}
+
 if (args.Any(arg => arg.Equals("--render-engine-audio", StringComparison.OrdinalIgnoreCase)))
 {
     EngineAudioRenderTool.Run();
