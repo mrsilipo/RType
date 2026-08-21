@@ -36,11 +36,11 @@ internal sealed class EngineSimDspProcessor
         _audioParameters = new AudioParameters
         {
             Volume = MathF.Max(0f, parameters.EngineSimulatorDspOutputGain),
-            Convolution = 1f,
-            DerivativeMix = MathHelper.Clamp(parameters.EngineSimulatorHighFrequencyGain, 0f, 0.25f),
-            InputSampleNoise = MathHelper.Clamp(parameters.EngineSimulatorJitter * RealtimeJitterScale, 0f, 1f),
+            Convolution = 0f,
+            DerivativeMix = 0f,
+            InputSampleNoise = 0f,
             InputSampleNoiseFrequencyCutoff = 10000f,
-            AirNoise = MathHelper.Clamp(parameters.EngineSimulatorNoise * RealtimeAirNoiseScale, 0f, 1f),
+            AirNoise = 0f,
             AirNoiseFrequencyCutoff = 2000f,
             LevelerTarget = 24000f,
             LevelerMaxGain = 1.25f,
@@ -160,11 +160,7 @@ internal sealed class EngineSimDspProcessor
         float intakeSource = output - _intakeBodyFilter.Process(output);
         float transientSource = output - _transientBodyFilter.Process(output);
         float drivelineSource = _drivelineBodyFilter.Process(output);
-        float layered = output +
-                        intakeSource * _runtimeIntakeLayer * 0.115f +
-                        transientSource * _runtimeThrottleTransientLayer * 0.075f +
-                        drivelineSource * _runtimeDrivelineLayer * 0.040f;
-        return MathHelper.Clamp(layered, -1f, 1f);
+        return MathHelper.Clamp(output, -1f, 1f);
     }
 
     public void Reset()
