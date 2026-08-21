@@ -11,7 +11,10 @@ internal sealed class EngineSimDspProcessor
     // for a real-time managed output path and make the result sound like
     // digital static. Keep the simulated pressure signal intact and soften
     // only the deliberately noisy presentation layer.
-    private const float RealtimeJitterScale = 0.10f;
+    // Randomly reordering combustion samples creates a granular, insect-like
+    // texture in the managed realtime path. Keep the deterministic solver
+    // waveform intact and reserve jitter for offline reference experiments.
+    private const float RealtimeJitterScale = 0.0f;
     private const float RealtimeAirNoiseScale = 0.12f;
     private readonly ChannelFilters[] _filters;
     private readonly ButterworthLowPassFilter _antialiasing = new();
