@@ -77,7 +77,7 @@ internal sealed class EngineSimulatorSampleSynth
         _dsp = new EngineSimDspProcessor(
             parameters,
             _sampleRate,
-            _engineModel.ExhaustChannelCount);
+            _engineModel.AudioChannelCount);
         _simulationAdvancePerAudioSample = simulationRate / (float)_sampleRate;
         _previousSimulationInput = new float[_dsp.ChannelCount];
         _nextSimulationInput = new float[_dsp.ChannelCount];
@@ -91,7 +91,7 @@ internal sealed class EngineSimulatorSampleSynth
 
         AudioDiagnostics.Log(
             "engine-sim-synth",
-            $"MR {FormatScriptPath(parameters.EngineSimulatorMrScriptPath)}, gas-flow chamber model, cylinders {_engineModel.CylinderCount}, route {_engineModel.EventRouteSummary}, attenuation {_engineModel.EventAttenuationSummary}, exhaust {_engineModel.ExhaustGainSummary}, cam {_engineModel.CamSummary}, {_engineModel.FlowSummary}, timing {string.Join("/", parameters.EngineSimulatorIgnitionTimingDegrees.Select(value => value.ToString("0")))}, sim {simulationRate} Hz, fluid steps {_engineModel.FluidSimulationSteps}, input antialias 1900 Hz");
+            $"MR {FormatScriptPath(parameters.EngineSimulatorMrScriptPath)}, gas-flow chamber model, cylinders {_engineModel.CylinderCount}, audio channels {_engineModel.AudioChannelCount} (exhaust {_engineModel.ExhaustChannelCount} + intake), route {_engineModel.EventRouteSummary}, attenuation {_engineModel.EventAttenuationSummary}, exhaust {_engineModel.ExhaustGainSummary}, cam {_engineModel.CamSummary}, {_engineModel.FlowSummary}, timing {string.Join("/", parameters.EngineSimulatorIgnitionTimingDegrees.Select(value => value.ToString("0")))}, sim {simulationRate} Hz, fluid steps {_engineModel.FluidSimulationSteps}, input antialias 1900 Hz");
     }
 
     public int CylinderCount => _engineModel.CylinderCount;

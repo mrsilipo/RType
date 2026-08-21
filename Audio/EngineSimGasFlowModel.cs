@@ -136,6 +136,8 @@ internal sealed class EngineSimGasFlowModel
 
     public int ExhaustChannelCount => _exhausts.Length;
 
+    public int AudioChannelCount => _exhausts.Length + 1;
+
     public string EventRouteSummary => string.Join("/", OrderedByFiring().Select(cylinder => cylinder.ExhaustIndex));
 
     public string EventAttenuationSummary => string.Join("/", OrderedByFiring().Select(cylinder => cylinder.SoundAttenuation.ToString("0.00", CultureInfo.InvariantCulture)));
@@ -679,6 +681,16 @@ internal sealed class EngineSimGasFlowModel
 
             int outputIndex = Math.Clamp(cylinder.ExhaustIndex, 0, output.Length - 1);
             output[outputIndex] += (float)(staged * pressureScale * drive);
+        }
+
+        int intakeOutputIndex = _exhausts.Length;
+        if (intakeOutputIndex < output.Length)
+        {
+            double intakePressure = _intakeSystem.Pressure - AtmosphericPressure +
+                                    0.18 * _intakeSystem.DynamicPressure(0.0, -1.0);
+            double intakeSignal = intakePressure * pressureScale *
+                                  Lerp(0.16, 0.48, Clamp(load, 0.0, 1.0));
+            output[intakeOutputIndex] += (float)intakeSignal;
         }
     }
 
