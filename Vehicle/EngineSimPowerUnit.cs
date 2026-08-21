@@ -134,9 +134,19 @@ internal sealed class EngineSimPowerUnit : IEnginePowerUnit
             ProfileTorqueEnvelope(clampedRpm),
             0f,
             MathF.Max(1f, EffectiveMaxTorqueNm));
-        if (_parameters.EngineSimulatorPhysicsUseReferenceTorqueCalibration)
+        if (_parameters.EngineSimulatorPhysicsUseReferenceTorqueCalibration || HasProfileCurve(
+                _parameters.Audio.EngineSimulatorProfileTorqueCurveRpm,
+                _parameters.Audio.EngineSimulatorProfileTorqueCurveNm))
         {
-            simDriveTorque = CalibrateDriveTorque(simDriveTorque, curveDriveTorque, clampedThrottle, vtecBlend, vtecKick, vtecIntensity, vtecTorqueGain, clampedShock);
+            float referenceDriveTorque = HasProfileCurve(
+                    _parameters.Audio.EngineSimulatorProfileTorqueCurveRpm,
+                    _parameters.Audio.EngineSimulatorProfileTorqueCurveNm)
+                ? ProfileTorqueAtRpm(
+                    clampedRpm,
+                    _parameters.Audio.EngineSimulatorProfileTorqueCurveRpm,
+                    _parameters.Audio.EngineSimulatorProfileTorqueCurveNm) * clampedThrottle
+                : curveDriveTorque;
+            simDriveTorque = CalibrateDriveTorque(simDriveTorque, referenceDriveTorque, clampedThrottle, vtecBlend, vtecKick, vtecIntensity, vtecTorqueGain, clampedShock);
         }
         float driveBlend = MathHelper.Clamp(_parameters.EngineSimulatorPhysicsTorqueBlend, 0f, 1f);
         float driveTorque = MathHelper.Lerp(curveDriveTorque, simDriveTorque, driveBlend);
@@ -152,6 +162,16 @@ internal sealed class EngineSimPowerUnit : IEnginePowerUnit
             ProfileEngineBrakeEnvelope(clampedRpm),
             0f,
             MathF.Max(1f, EffectiveMaxEngineBrakeTorqueNm));
+        if (HasProfileCurve(
+                _parameters.Audio.EngineSimulatorProfileEngineBrakeCurveRpm,
+                _parameters.Audio.EngineSimulatorProfileEngineBrakeCurveNm))
+        {
+            float profileBrakeTorque = ProfileTorqueAtRpm(
+                clampedRpm,
+                _parameters.Audio.EngineSimulatorProfileEngineBrakeCurveRpm,
+                _parameters.Audio.EngineSimulatorProfileEngineBrakeCurveNm);
+            simBrakeTorque = CalibrateProfileBrakeTorque(simBrakeTorque, profileBrakeTorque);
+        }
         float brakeBlend = MathHelper.Clamp(_parameters.EngineSimulatorPhysicsEngineBrakeBlend, 0f, 1f);
         float engineBrakeTorque = MathHelper.Lerp(curveBrakeTorque, simBrakeTorque, brakeBlend);
         float transmissionRpm = OmegaToRpm(_lastTransmissionOmegaRadiansPerSecond);
@@ -296,6 +316,49 @@ internal sealed class EngineSimPowerUnit : IEnginePowerUnit
         }
 
         return MathHelper.Clamp(sampleTorque[count - 1] / peak, 0.25f, 1.15f);
+    }
+
+    private static bool HasProfileCurve(float[] sampleRpm, float[] sampleTorque)
+    {
+        return Math.Min(sampleRpm.Length, sampleTorque.Length) >= 2;
+    }
+
+    private static float ProfileTorqueAtRpm(float rpm, float[] sampleRpm, float[] sampleTorque)
+    {
+        int count = Math.Min(sampleRpm.Length, sampleTorque.Length);
+        if (count == 0)
+        {
+            return 0f;
+        }
+
+        if (rpm <= sampleRpm[0])
+        {
+            return MathF.Max(0f, sampleTorque[0]);
+        }
+
+        for (int i = 1; i < count; i++)
+        {
+            if (rpm <= sampleRpm[i])
+            {
+                float span = MathF.Max(1f, sampleRpm[i] - sampleRpm[i - 1]);
+                float t = MathHelper.Clamp((rpm - sampleRpm[i - 1]) / span, 0f, 1f);
+                return MathF.Max(0f, MathHelper.Lerp(sampleTorque[i - 1], sampleTorque[i], t));
+            }
+        }
+
+        return MathF.Max(0f, sampleTorque[count - 1]);
+    }
+
+    private static float CalibrateProfileBrakeTorque(float simulatedTorque, float profileTorque)
+    {
+        if (profileTorque <= 0f)
+        {
+            return simulatedTorque;
+        }
+
+        float lower = profileTorque * 0.82f;
+        float upper = profileTorque * 1.08f;
+        return MathHelper.Clamp(simulatedTorque, lower, MathF.Max(lower + 1f, upper));
     }
 
     private EngineSimDrivelineSample AdvanceFullDriveline(
