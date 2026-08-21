@@ -330,3 +330,5 @@ The 20% adjustment remained too subtle in the live mix. VTEC now also adds a str
 The missing richness was the original deterministic intake timbre layer, which had been removed during clean-path isolation. It is restored at its original 11.5% mix over the simulated pressure signal, with the stronger VTEC-specific harmonic retained.
 
 The full deterministic timbre mix is now restored: intake, throttle-transient, and driveline shaping are active again. Broadband noise, jitter, long convolution tail, and the device-buffer protections remain unchanged.
+
+The richer reference comparison showed that scaled Engine Sim jitter and air texture were still missing. They are restored at the previously softened realtime levels (10% jitter scale and 12% air-noise scale), rather than the raw MR values, to recover character without returning to the earlier static.
