@@ -96,7 +96,7 @@ public sealed class VehicleAudioParameters
 
     public float EngineSimulatorDspPressureScale { get; init; } = 1f;
 
-    public float EngineSimulatorDspOutputGain { get; init; } = 0.62f;
+    public float EngineSimulatorDspOutputGain { get; init; } = 1f;
 
     public float EngineSimulatorOverrunGain { get; init; } = 2.35f;
 

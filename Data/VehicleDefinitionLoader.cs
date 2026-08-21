@@ -375,7 +375,7 @@ public static class VehicleDefinitionLoader
             EngineSimulatorVehicleRollingResistanceN = ReadEngineSimulatorValueSingle(root, engineSimulatorProfile, mrProfile?.VehicleRollingResistanceN ?? 300f, "vehicleRollingResistanceN"),
             EngineSimulatorThrottleGamma = ReadEngineSimulatorValueSingle(root, engineSimulatorProfile, mrProfile?.ThrottleGamma ?? 2f, "throttleGamma"),
             EngineSimulatorDspPressureScale = ReadEngineSimulatorValueSingle(root, engineSimulatorProfile, 1f, "dspPressureScale"),
-            EngineSimulatorDspOutputGain = ReadEngineSimulatorValueSingle(root, engineSimulatorProfile, 0.62f, "dspOutputGain"),
+            EngineSimulatorDspOutputGain = ReadEngineSimulatorValueSingle(root, engineSimulatorProfile, 1f, "dspOutputGain"),
             EngineSimulatorOverrunGain = ReadEngineSimulatorValueSingle(root, engineSimulatorProfile, 2.35f, "overrunGain"),
             EngineSimulatorShockGain = ReadEngineSimulatorValueSingle(root, engineSimulatorProfile, 1.75f, "shockGain"),
             EngineSimulatorLimiterGain = ReadEngineSimulatorValueSingle(root, engineSimulatorProfile, 1f, "limiterGain"),

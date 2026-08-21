@@ -136,7 +136,10 @@ internal sealed class EngineSimGasFlowModel
 
     public int ExhaustChannelCount => _exhausts.Length;
 
-    public int AudioChannelCount => _exhausts.Length + 4;
+    // Engine Sim's synthesizer receives one input per exhaust system. Other
+    // solver state remains available for vehicle telemetry, but is not mixed
+    // into the native-equivalent exhaust signal.
+    public int AudioChannelCount => _exhausts.Length;
 
     public string EventRouteSummary => string.Join("/", OrderedByFiring().Select(cylinder => cylinder.ExhaustIndex));
 
@@ -678,23 +681,11 @@ internal sealed class EngineSimGasFlowModel
             combustionPressureSignal += Math.Max(0.0, cylinder.Chamber.Pressure - AtmosphericPressure);
             pistonSignal += cylinder.CurrentPistonTravelDerivative;
             valvetrainSignal += cylinder.IntakeFlowRate + cylinder.ExhaustFlowRate;
-            double exhaustFlow = attenuation3 * 240.0 *
+            double exhaustFlow = attenuation3 * 1600.0 *
                 (cylinder.ExhaustRunner.Pressure - AtmosphericPressure +
                  0.1 * cylinder.ExhaustRunner.DynamicPressure(1.0, 0.0) +
                  0.1 * cylinder.ExhaustRunner.DynamicPressure(-1.0, 0.0));
-            // Integrate pressure excitation into a continuous acoustic state
-            // before the runner waveguide, preventing solver-step edges from
-            // becoming the audible narrow buzz.
-            double acousticAlpha = 1.0 - Math.Exp(-2.0 * Math.PI * 900.0 * _dt);
-            cylinder.ExhaustAcousticState +=
-                (exhaustFlow - cylinder.ExhaustAcousticState) * acousticAlpha;
-            double delayed = cylinder.Delay.Process(
-                cylinder.ExhaustAcousticState,
-                Lerp(
-                    0.10,
-                    0.24,
-                    Clamp(load, 0.0, 1.0)) +
-                Clamp(overrun, 0.0, 1.0) * 0.04);
+            double delayed = cylinder.Delay.Process(exhaustFlow);
             double exhaustLength = Math.Max(0.01, _profile.ExhaustPrimaryTubeLength + exhaust.Length);
             double staged = cylinder.SoundAttenuation *
                 (exhaust.AudioVolume * delayed / _cylinders.Length) *
@@ -987,7 +978,7 @@ internal sealed class EngineSimGasFlowModel
             Exhaust = exhaust;
             // Engine Sim's PistonEngineSimulator initializes its exhaust delay
             // filters at 10 kHz, independently of the solver frequency.
-            Delay = new PressureWaveGuide(Math.Max(0.01, profile.ExhaustPrimaryTubeLength + exhaust.Length) / SpeedOfSoundMetersPerSecond, 10000);
+            Delay = new DelayFilter(Math.Max(0.01, profile.ExhaustPrimaryTubeLength + exhaust.Length) / SpeedOfSoundMetersPerSecond, 10000);
         }
 
         public int Index { get; }
@@ -1008,7 +999,7 @@ internal sealed class EngineSimGasFlowModel
 
         public GasSystem ExhaustRunner { get; } = new();
 
-        public PressureWaveGuide Delay { get; private set; } = new(0.0, 1);
+        public DelayFilter Delay { get; private set; } = new(0.0, 1);
 
         public PressureWaveGuide IntakeDelay { get; private set; } = new(0.0, 1);
 
@@ -1048,7 +1039,7 @@ internal sealed class EngineSimGasFlowModel
             Array.Clear(PistonSpeedHistory);
             PistonSpeedSum = 0.0;
             Flame = default;
-            Delay = new PressureWaveGuide(delayLength / SpeedOfSoundMetersPerSecond, 10000);
+            Delay = new DelayFilter(delayLength / SpeedOfSoundMetersPerSecond, 10000);
             IntakeDelay = new PressureWaveGuide(intakeDelayLength / SpeedOfSoundMetersPerSecond, sampleRate);
         }
 
