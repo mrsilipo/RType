@@ -21,6 +21,40 @@
     "fuelTurbulence": {
       "value": 2.5
     },
+    "starterTorqueNm": {
+      "value": 94.91
+    },
+    "starterSpeedRpm": {
+      "value": -500
+    },
+    "crankshaftFrictionTorqueNm": {
+      "value": 1.36
+    },
+    "crankshaftMomentOfInertiaKgM2": {
+      "value": 0.114934
+    },
+    "crankshaftMassKg": {
+      "value": 16.1
+    },
+    "flywheelMassKg": {
+      "value": 4.54
+    },
+    "transmissionMaxClutchTorqueNm": {
+      "value": 406.75
+    },
+    "transmissionGearRatios": [3.23, 2.105, 1.458, 1.107, 0.848],
+    "vehicleMassKg": {
+      "value": 1088.62
+    },
+    "vehicleDiffRatio": {
+      "value": 3.55
+    },
+    "vehicleTireRadiusMeters": {
+      "value": 0.254
+    },
+    "vehicleRollingResistanceN": {
+      "value": 300
+    },
     "intakePlenumVolumeLiters": {
       "value": 1.325
     },
