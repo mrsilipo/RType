@@ -73,6 +73,12 @@ if (args.Any(arg => arg.Equals("--engine-sim-profile-compare", StringComparison.
     return;
 }
 
+if (args.Any(arg => arg.Equals("--engine-sim-dyno-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    EngineSimDynoProbe.Run();
+    return;
+}
+
 if (args.Any(arg => arg.Equals("--engine-sim-power-probe", StringComparison.OrdinalIgnoreCase)))
 {
     EngineSimPowerProbe.Run();

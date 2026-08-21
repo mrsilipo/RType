@@ -18,6 +18,7 @@ internal sealed class EngineSimPowerUnit : IEnginePowerUnit
     private float _crankOmegaRadiansPerSecond;
     private float _lastTransmissionOmegaRadiansPerSecond;
     private bool _drivelineInitialized;
+    private readonly bool _ownsDriveline;
 
     private float EffectiveMaxTorqueNm => _parameters.Audio.EngineSimulatorProfileMaxTorqueNm > 0f
         ? _parameters.Audio.EngineSimulatorProfileMaxTorqueNm
@@ -28,11 +29,17 @@ internal sealed class EngineSimPowerUnit : IEnginePowerUnit
         : _parameters.EngineSimulatorPhysicsMaxEngineBrakeTorqueNm;
 
     public EngineSimPowerUnit(VehicleSimulationParameters parameters)
+        : this(parameters, parameters.EngineSimulatorFullDriveline)
+    {
+    }
+
+    internal EngineSimPowerUnit(VehicleSimulationParameters parameters, bool ownDriveline)
     {
         _parameters = parameters;
         Enabled = parameters.EngineSimulatorDrivesPhysics &&
                   parameters.Audio.EngineSimulatorEnabled &&
                   parameters.Audio.EngineSimulatorCylinderCount > 0;
+        _ownsDriveline = Enabled && ownDriveline;
         if (!Enabled)
         {
             _audioScratch = [];
@@ -51,7 +58,7 @@ internal sealed class EngineSimPowerUnit : IEnginePowerUnit
 
     public bool UsesEngineSimulator => Enabled;
 
-    public bool OwnsDriveline => Enabled && _parameters.EngineSimulatorFullDriveline;
+    public bool OwnsDriveline => _ownsDriveline;
 
     public EnginePowerUnitState State { get; private set; }
 
