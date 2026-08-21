@@ -328,3 +328,5 @@ The VTEC harmonic contribution is increased from 10% to 20% of the filtered simu
 The 20% adjustment remained too subtle in the live mix. VTEC now also adds a stronger derivative/harmonic emphasis (`0.012` while active) and the filtered harmonic contribution is raised to 55%. This remains tied to the Engine Sim cam blend and does not raise the global engine volume.
 
 The missing richness was the original deterministic intake timbre layer, which had been removed during clean-path isolation. It is restored at its original 11.5% mix over the simulated pressure signal, with the stronger VTEC-specific harmonic retained.
+
+The full deterministic timbre mix is now restored: intake, throttle-transient, and driveline shaping are active again. Broadband noise, jitter, long convolution tail, and the device-buffer protections remain unchanged.

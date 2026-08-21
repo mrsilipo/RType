@@ -167,8 +167,10 @@ internal sealed class EngineSimDspProcessor
         // noise: VTEC adds a restrained high-passed harmonic of the same
         // simulated pressure signal.
         float intakeTimbre = intakeSource * _runtimeIntakeLayer * 0.115f;
+        float transientTimbre = transientSource * _runtimeThrottleTransientLayer * 0.075f;
+        float drivelineTimbre = drivelineSource * _runtimeDrivelineLayer * 0.040f;
         float vtecHarmonic = intakeSource * _runtimeVtecLayer * 0.55f;
-        return MathHelper.Clamp(output + intakeTimbre + vtecHarmonic, -1f, 1f);
+        return MathHelper.Clamp(output + intakeTimbre + transientTimbre + drivelineTimbre + vtecHarmonic, -1f, 1f);
     }
 
     public void Reset()
