@@ -79,7 +79,7 @@ internal sealed class EngineSimDspProcessor
         float[] impulseResponse = LoadImpulseResponse(parameters);
         for (int i = 0; i < _filters.Length; i++)
         {
-            _filters[i] = new ChannelFilters(safeSampleRate, impulseResponse);
+            _filters[i] = new ChannelFilters(safeSampleRate, impulseResponse, ChannelSourceCutoff(i, safeSampleRate));
         }
 
         _antialiasing.SetCutoffFrequency(safeSampleRate * 0.45f, safeSampleRate);
@@ -188,6 +188,7 @@ internal sealed class EngineSimDspProcessor
             float derivativeMix = _runtimeDerivativeMix;
             float vIn = fP * derivativeMix +
                         f * rMixed * (1f - derivativeMix);
+            vIn = filters.SourceFilter.Process(vIn);
             if (MathF.Abs(vIn) < 1.0e-30f)
             {
                 vIn = 0f;
@@ -228,6 +229,23 @@ internal sealed class EngineSimDspProcessor
             2 => 0.26f, // piston/crank motion
             3 => 0.20f, // valvetrain flow
             _ => 0.25f
+        };
+    }
+
+    private float ChannelSourceCutoff(int channelIndex, float sampleRate)
+    {
+        if (channelIndex < _exhaustChannelCount)
+        {
+            return MathF.Min(9000f, sampleRate * 0.40f);
+        }
+
+        return (channelIndex - _exhaustChannelCount) switch
+        {
+            0 => 3200f, // intake
+            1 => 1800f, // combustion pressure
+            2 => 650f,  // crank/piston mechanical motion
+            3 => 4200f, // valvetrain flow
+            _ => 3200f
         };
     }
 
@@ -386,11 +404,13 @@ internal sealed class EngineSimDspProcessor
 
     private sealed class ChannelFilters
     {
-        public ChannelFilters(float sampleRate, float[] impulseResponse)
+        public ChannelFilters(float sampleRate, float[] impulseResponse, float sourceCutoff)
         {
             Derivative.Dt = 1f / sampleRate;
             InputDcFilter.Dt = 1f / sampleRate;
             InputDcFilter.SetCutoffFrequency(10f);
+            SourceFilter.Dt = 1f / sampleRate;
+            SourceFilter.SetCutoffFrequency(sourceCutoff);
             Jitter.Initialize(10, 10000f, sampleRate);
             AirNoiseLowPass.SetCutoffFrequency(2000f, sampleRate);
             Convolution.Initialize(impulseResponse);
@@ -406,6 +426,8 @@ internal sealed class EngineSimDspProcessor
 
         public OnePoleLowPassFilter InputDcFilter { get; } = new();
 
+        public OnePoleLowPassFilter SourceFilter { get; } = new();
+
         public void Reset()
         {
             Convolution.Reset();
@@ -413,6 +435,7 @@ internal sealed class EngineSimDspProcessor
             Jitter.Reset();
             AirNoiseLowPass.Reset();
             InputDcFilter.Reset();
+            SourceFilter.Reset();
         }
     }
 
