@@ -13,6 +13,11 @@ public static class VehicleDefinitionLoader
 
     public static VehicleSimulationParameters LoadSimulationParameters(string path)
     {
+        return LoadSimulationParameters(path, null);
+    }
+
+    public static VehicleSimulationParameters LoadSimulationParameters(string path, string? engineSimulatorProfileOverridePath)
+    {
         string resolvedPath = ResolveDataPath(path);
         using FileStream stream = File.OpenRead(resolvedPath);
         using JsonDocument document = JsonDocument.Parse(stream, new JsonDocumentOptions
@@ -123,7 +128,7 @@ public static class VehicleDefinitionLoader
             DrivenWheels = ReadDrivenWheels(root),
             FrontTyres = frontTyres,
             RearTyres = rearTyres,
-            Audio = ReadAudio(root),
+            Audio = ReadAudio(root, engineSimulatorProfileOverridePath),
             WallCollisionPointRadiusMeters = ReadValueSingle(root, 0.08f, "simulation", "currentPrototype", "wallCollisionPointRadiusMeters"),
             WallCollisionRestitution = ReadValueSingle(root, 0.12f, "simulation", "currentPrototype", "wallCollisionRestitution"),
             WallImpactFriction = ReadValueSingle(root, 0.24f, "simulation", "currentPrototype", "wallImpactFriction"),
@@ -296,12 +301,13 @@ public static class VehicleDefinitionLoader
         };
     }
 
-    private static VehicleAudioParameters ReadAudio(JsonElement root)
+    private static VehicleAudioParameters ReadAudio(JsonElement root, string? engineSimulatorProfileOverridePath = null)
     {
         float vtecActivationRpm = ReadValueSingle(root, 5800f, "powertrain", "engine", "vtec", "activationRpm");
         float vtecTransitionWidthRpm = ReadValueSingle(root, 650f, "powertrain", "engine", "vtec", "transitionWidthRpm");
         bool engineSimulatorEnabled = ReadBoolean(root, false, "audio", "engineSimulator", "enabled");
-        string engineSimulatorProfilePath = ReadString(root, string.Empty, "audio", "engineSimulator", "profilePath");
+        string engineSimulatorProfilePath = engineSimulatorProfileOverridePath ??
+                                             ReadString(root, string.Empty, "audio", "engineSimulator", "profilePath");
         string directMrScriptPath = ReadString(root, string.Empty, "audio", "engineSimulator", "mrScriptPath");
         if (engineSimulatorEnabled &&
             string.IsNullOrWhiteSpace(engineSimulatorProfilePath) &&
