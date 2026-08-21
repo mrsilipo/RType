@@ -318,3 +318,5 @@ The direct-response run still sounded choppy/static, so the realtime presentatio
 Offline Engine Sim renders from the same clean path are continuous, confirming the artifact is specific to live device delivery. The live playback target is increased from two to three pending 512-frame buffers, with startup raised to four, adding 11.6 ms of device-side protection without changing the generated waveform.
 
 The next live run was a dramatic improvement but still reached a two-buffer minimum during frame-time spikes. The device target is increased from three to four pending buffers, with startup raised to five, to remove that near-empty transition. This is another 11.6 ms of device protection; the synthesis and waveform are unchanged.
+
+The clean isolation output was stable but too blunt compared with the Engine Sim reference. Direct 512-tap exhaust convolution and the profile's low high-frequency derivative mix are restored for harmonic richness. The long IR tail, noise, jitter, and extra presentation layers remain disabled until the live result is confirmed clean.

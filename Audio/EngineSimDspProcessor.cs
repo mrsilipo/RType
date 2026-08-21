@@ -36,8 +36,8 @@ internal sealed class EngineSimDspProcessor
         _audioParameters = new AudioParameters
         {
             Volume = MathF.Max(0f, parameters.EngineSimulatorDspOutputGain),
-            Convolution = 0f,
-            DerivativeMix = 0f,
+            Convolution = 1f,
+            DerivativeMix = MathHelper.Clamp(parameters.EngineSimulatorHighFrequencyGain, 0f, 0.25f),
             InputSampleNoise = 0f,
             InputSampleNoiseFrequencyCutoff = 10000f,
             AirNoise = 0f,
