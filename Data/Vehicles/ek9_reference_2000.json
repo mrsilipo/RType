@@ -860,7 +860,7 @@
     },
     "engineSimulator": {
       "enabled": true,
-      "profilePath": "Data/EngineProfiles/honda_b18c5_vtec_engine_sim.json",
+      "profilePath": "Data/EngineProfiles/honda_b16b_ek9_engine_sim.json",
       "volume": {
         "value": 0.72
       }
