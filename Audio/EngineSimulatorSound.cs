@@ -66,6 +66,11 @@ internal sealed class EngineSimulatorSound : IDisposable
     private long _maximumReadyAgeAtSubmitTicks;
     private long _maximumEstimatedAudibleAgeTicks;
     private long _maximumTargetUpdateGapTicks;
+    private long _nonFiniteSampleCount;
+    private long _clippedSampleCount;
+    private long _largeSampleJumpCount;
+    private long _maximumOutputAbsMicro;
+    private long _maximumOutputJumpMicro;
     private int _minimumPendingBufferCount = int.MaxValue;
     private int _minimumReadyBufferCount = int.MaxValue;
     private EngineSimulatorSynthesisTarget _lastLoggedTarget = new(900f, 0f, 0f, 0f, 0f, 0f, 0f);
@@ -423,6 +428,12 @@ internal sealed class EngineSimulatorSound : IDisposable
         long newestTargetUpdatedTicks = initialTarget.UpdatedTicks;
         _synth.SetTarget(target);
         float startCorrection = 0f;
+        float previousOutputSample = _lastOutputSample;
+        long nonFiniteSamples = 0;
+        long clippedSamples = 0;
+        long largeSampleJumps = 0;
+        long maximumOutputAbsMicro = 0;
+        long maximumOutputJumpMicro = 0;
 
         for (int frame = 0; frame < FramesPerBuffer; frame++)
         {
@@ -436,6 +447,11 @@ internal sealed class EngineSimulatorSound : IDisposable
             }
 
             float sample = _synth.NextSample();
+            if (!float.IsFinite(sample))
+            {
+                nonFiniteSamples++;
+                sample = 0f;
+            }
             if (frame == 0)
             {
                 float discontinuity = _lastOutputSample - sample;
@@ -456,11 +472,32 @@ internal sealed class EngineSimulatorSound : IDisposable
             }
 
             _lastOutputSample = sample;
+            float outputAbs = MathF.Abs(sample);
+            float outputJump = MathF.Abs(sample - previousOutputSample);
+            if (outputAbs > 1f)
+            {
+                clippedSamples++;
+            }
+
+            if (outputJump > 0.30f)
+            {
+                largeSampleJumps++;
+            }
+
+            maximumOutputAbsMicro = Math.Max(maximumOutputAbsMicro, (long)(outputAbs * 1_000_000f));
+            maximumOutputJumpMicro = Math.Max(maximumOutputJumpMicro, (long)(outputJump * 1_000_000f));
+            previousOutputSample = sample;
             short output = (short)(MathHelper.Clamp(sample, -1f, 1f) * short.MaxValue);
             int write = frame * sizeof(short);
             buffer[write] = (byte)(output & 0xff);
             buffer[write + 1] = (byte)((output >> 8) & 0xff);
         }
+
+        Interlocked.Add(ref _nonFiniteSampleCount, nonFiniteSamples);
+        Interlocked.Add(ref _clippedSampleCount, clippedSamples);
+        Interlocked.Add(ref _largeSampleJumpCount, largeSampleJumps);
+        UpdateMaximum(ref _maximumOutputAbsMicro, maximumOutputAbsMicro);
+        UpdateMaximum(ref _maximumOutputJumpMicro, maximumOutputJumpMicro);
 
         return newestTargetUpdatedTicks;
     }
@@ -532,6 +569,11 @@ internal sealed class EngineSimulatorSound : IDisposable
         long maxReadyAgeAtSubmitTicks = Interlocked.Exchange(ref _maximumReadyAgeAtSubmitTicks, 0);
         long maxEstimatedAudibleAgeTicks = Interlocked.Exchange(ref _maximumEstimatedAudibleAgeTicks, 0);
         long maxTargetUpdateGapTicks = Interlocked.Exchange(ref _maximumTargetUpdateGapTicks, 0);
+        long nonFiniteSamples = Interlocked.Exchange(ref _nonFiniteSampleCount, 0);
+        long clippedSamples = Interlocked.Exchange(ref _clippedSampleCount, 0);
+        long largeSampleJumps = Interlocked.Exchange(ref _largeSampleJumpCount, 0);
+        long maximumOutputAbsMicro = Interlocked.Exchange(ref _maximumOutputAbsMicro, 0);
+        long maximumOutputJumpMicro = Interlocked.Exchange(ref _maximumOutputJumpMicro, 0);
         int minimumPending = Interlocked.Exchange(ref _minimumPendingBufferCount, int.MaxValue);
         int minimumReady = Interlocked.Exchange(ref _minimumReadyBufferCount, int.MaxValue);
         int currentPending = _instance.PendingBufferCount;
@@ -557,10 +599,12 @@ internal sealed class EngineSimulatorSound : IDisposable
         double maxReadyAgeAtSubmitMilliseconds = TicksToMilliseconds(maxReadyAgeAtSubmitTicks);
         double maxEstimatedAudibleAgeMilliseconds = TicksToMilliseconds(maxEstimatedAudibleAgeTicks);
         double maxTargetUpdateGapMilliseconds = TicksToMilliseconds(maxTargetUpdateGapTicks);
+        double maximumOutputAbs = maximumOutputAbsMicro / 1_000_000.0;
+        double maximumOutputJump = maximumOutputJumpMicro / 1_000_000.0;
         double generatedPerSecond = generatedDelta / Math.Max(0.001, elapsedSeconds);
         AudioDiagnostics.Log(
             "engine-sim-stream-health",
-            $"pending {currentPending}, ready {currentReady}, min pending {minimumPending}, min ready {minimumReady}, generated {generatedPerSecond:0.0}/s, emergency {emergencyGeneratedDelta}, max fill {maxFillMilliseconds:0.00} ms, max emergency {maxEmergencyFillMilliseconds:0.00} ms, target age fill {maxTargetAgeAtFillMilliseconds:0.00} ms, target age submit {maxTargetAgeAtSubmitMilliseconds:0.00} ms, ready age submit {maxReadyAgeAtSubmitMilliseconds:0.00} ms, estimated audible age {maxEstimatedAudibleAgeMilliseconds:0.00} ms, target update gap {maxTargetUpdateGapMilliseconds:0.00} ms, rpm {_lastTargetRpm:0}, load {_lastLoggedTarget.Load:0.00}, vtec {_lastLoggedTarget.VtecBlend:0.00}, limiter {_lastLoggedTarget.Limiter:0.00}, overrun {_lastLoggedTarget.Overrun:0.00}, intake {_lastLoggedTarget.Intake:0.00}, transient {_lastLoggedTarget.ThrottleTransient:0.00}, driveline {_lastLoggedTarget.Driveline:0.00}");
+            $"pending {currentPending}, ready {currentReady}, min pending {minimumPending}, min ready {minimumReady}, generated {generatedPerSecond:0.0}/s, emergency {emergencyGeneratedDelta}, max fill {maxFillMilliseconds:0.00} ms, max emergency {maxEmergencyFillMilliseconds:0.00} ms, target age fill {maxTargetAgeAtFillMilliseconds:0.00} ms, target age submit {maxTargetAgeAtSubmitMilliseconds:0.00} ms, ready age submit {maxReadyAgeAtSubmitMilliseconds:0.00} ms, estimated audible age {maxEstimatedAudibleAgeMilliseconds:0.00} ms, target update gap {maxTargetUpdateGapMilliseconds:0.00} ms, samples nonfinite/clipped/jump {nonFiniteSamples}/{clippedSamples}/{largeSampleJumps}, peak/jump {maximumOutputAbs:0.000}/{maximumOutputJump:0.000}, rpm {_lastTargetRpm:0}, load {_lastLoggedTarget.Load:0.00}, vtec {_lastLoggedTarget.VtecBlend:0.00}, limiter {_lastLoggedTarget.Limiter:0.00}, overrun {_lastLoggedTarget.Overrun:0.00}, intake {_lastLoggedTarget.Intake:0.00}, transient {_lastLoggedTarget.ThrottleTransient:0.00}, driveline {_lastLoggedTarget.Driveline:0.00}");
     }
 
     private void LogStreamRecoveryIfNeeded(int generatedCount, long maxFillTicks)
