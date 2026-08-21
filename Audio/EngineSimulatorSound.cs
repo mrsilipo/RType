@@ -18,7 +18,6 @@ internal sealed class EngineSimulatorSound : IDisposable
     // Keep one extra generated buffer outside the playback queue so a slow
     // synthesis pass cannot immediately starve the audio callback.
     private const int ReadyBufferCapacity = 4;
-    private const int StaleReadyBufferReserve = 1;
     private const int BufferPoolSize = TargetPendingBuffers + ReadyBufferCapacity + 6;
     private const int BufferBytes = FramesPerBuffer * sizeof(short);
     private const int DeClickFrames = 96;
@@ -27,7 +26,6 @@ internal sealed class EngineSimulatorSound : IDisposable
     private const int EmergencyGenerationPendingThreshold = 0;
     private const int EmergencyRecoveryPendingBuffers = 1;
     private const int MaximumEmergencyBuffersPerUpdate = 1;
-    private const double MaximumReadyBufferAgeMilliseconds = 40.0;
     private const double StreamHealthLogIntervalSeconds = 3.0;
     private const double StreamRecoveryLogIntervalSeconds = 1.0;
 
@@ -59,10 +57,8 @@ internal sealed class EngineSimulatorSound : IDisposable
     private double _lastStreamHealthLogSeconds;
     private long _lastStreamHealthGeneratedBuffers;
     private long _lastStreamHealthEmergencyGeneratedBuffers;
-    private long _lastStreamHealthStaleReadyRecycledBuffers;
     private long _generatedBufferCount;
     private long _emergencyGeneratedBufferCount;
-    private long _staleReadyRecycledBufferCount;
     private long _maximumBufferFillTicks;
     private long _maximumEmergencyBufferFillTicks;
     private long _maximumTargetAgeAtFillTicks;
@@ -201,7 +197,6 @@ internal sealed class EngineSimulatorSound : IDisposable
         lock (_submitLock)
         {
             int currentGeneration = Volatile.Read(ref _generation);
-            long newestTargetUpdatedTicks = Volatile.Read(ref _targetUpdatedTicks);
             int targetPendingBuffers = _hasPlayed ? TargetPendingBuffers : MinimumStartupBuffers;
             while (_instance.PendingBufferCount < targetPendingBuffers &&
                    _readyBuffers.TryDequeue(out GeneratedBuffer generated))
@@ -211,15 +206,6 @@ internal sealed class EngineSimulatorSound : IDisposable
                 {
                     long submitTicks = Stopwatch.GetTimestamp();
                     long readyAgeTicks = submitTicks - generated.GeneratedTicks;
-                    if (generated.TargetUpdatedTicks < newestTargetUpdatedTicks &&
-                        readyAgeTicks > MaximumReadyBufferAgeTicks() &&
-                        Volatile.Read(ref _readyBufferCount) > StaleReadyBufferReserve)
-                    {
-                        Interlocked.Increment(ref _staleReadyRecycledBufferCount);
-                        _freeBuffers.Enqueue(generated.Buffer);
-                        continue;
-                    }
-
                     int pendingBeforeSubmit = _instance.PendingBufferCount;
                     UpdateMaximum(ref _maximumReadyAgeAtSubmitTicks, readyAgeTicks);
                     UpdateMaximum(ref _maximumTargetAgeAtSubmitTicks, submitTicks - generated.TargetUpdatedTicks);
@@ -505,7 +491,6 @@ internal sealed class EngineSimulatorSound : IDisposable
         _lastStreamHealthLogSeconds = AudioDiagnostics.NowSeconds;
         _lastStreamHealthGeneratedBuffers = Interlocked.Read(ref _generatedBufferCount);
         _lastStreamHealthEmergencyGeneratedBuffers = Interlocked.Read(ref _emergencyGeneratedBufferCount);
-        _lastStreamHealthStaleReadyRecycledBuffers = Interlocked.Read(ref _staleReadyRecycledBufferCount);
         AudioDiagnostics.Log(
             "engine-sim-stream-ready",
             $"pending {_instance.PendingBufferCount}, ready {Volatile.Read(ref _readyBufferCount)}, generated {_lastStreamHealthGeneratedBuffers}, max fill {ReadMaximumBufferFillMilliseconds():0.00} ms, target age fill {ReadMaximumTargetAgeAtFillMilliseconds():0.00} ms");
@@ -540,8 +525,6 @@ internal sealed class EngineSimulatorSound : IDisposable
         long generatedDelta = generatedBuffers - _lastStreamHealthGeneratedBuffers;
         long emergencyGeneratedBuffers = Interlocked.Read(ref _emergencyGeneratedBufferCount);
         long emergencyGeneratedDelta = emergencyGeneratedBuffers - _lastStreamHealthEmergencyGeneratedBuffers;
-        long staleReadyRecycledBuffers = Interlocked.Read(ref _staleReadyRecycledBufferCount);
-        long staleReadyRecycledDelta = staleReadyRecycledBuffers - _lastStreamHealthStaleReadyRecycledBuffers;
         long maxFillTicks = Interlocked.Exchange(ref _maximumBufferFillTicks, 0);
         long maxEmergencyFillTicks = Interlocked.Exchange(ref _maximumEmergencyBufferFillTicks, 0);
         long maxTargetAgeAtFillTicks = Interlocked.Exchange(ref _maximumTargetAgeAtFillTicks, 0);
@@ -557,7 +540,6 @@ internal sealed class EngineSimulatorSound : IDisposable
         _lastStreamHealthLogSeconds = now;
         _lastStreamHealthGeneratedBuffers = generatedBuffers;
         _lastStreamHealthEmergencyGeneratedBuffers = emergencyGeneratedBuffers;
-        _lastStreamHealthStaleReadyRecycledBuffers = staleReadyRecycledBuffers;
         if (minimumPending == int.MaxValue)
         {
             minimumPending = currentPending;
@@ -578,7 +560,7 @@ internal sealed class EngineSimulatorSound : IDisposable
         double generatedPerSecond = generatedDelta / Math.Max(0.001, elapsedSeconds);
         AudioDiagnostics.Log(
             "engine-sim-stream-health",
-            $"pending {currentPending}, ready {currentReady}, min pending {minimumPending}, min ready {minimumReady}, generated {generatedPerSecond:0.0}/s, emergency {emergencyGeneratedDelta}, stale {staleReadyRecycledDelta}, max fill {maxFillMilliseconds:0.00} ms, max emergency {maxEmergencyFillMilliseconds:0.00} ms, target age fill {maxTargetAgeAtFillMilliseconds:0.00} ms, target age submit {maxTargetAgeAtSubmitMilliseconds:0.00} ms, ready age submit {maxReadyAgeAtSubmitMilliseconds:0.00} ms, estimated audible age {maxEstimatedAudibleAgeMilliseconds:0.00} ms, target update gap {maxTargetUpdateGapMilliseconds:0.00} ms, rpm {_lastTargetRpm:0}, load {_lastLoggedTarget.Load:0.00}, vtec {_lastLoggedTarget.VtecBlend:0.00}, limiter {_lastLoggedTarget.Limiter:0.00}, overrun {_lastLoggedTarget.Overrun:0.00}, intake {_lastLoggedTarget.Intake:0.00}, transient {_lastLoggedTarget.ThrottleTransient:0.00}, driveline {_lastLoggedTarget.Driveline:0.00}");
+            $"pending {currentPending}, ready {currentReady}, min pending {minimumPending}, min ready {minimumReady}, generated {generatedPerSecond:0.0}/s, emergency {emergencyGeneratedDelta}, max fill {maxFillMilliseconds:0.00} ms, max emergency {maxEmergencyFillMilliseconds:0.00} ms, target age fill {maxTargetAgeAtFillMilliseconds:0.00} ms, target age submit {maxTargetAgeAtSubmitMilliseconds:0.00} ms, ready age submit {maxReadyAgeAtSubmitMilliseconds:0.00} ms, estimated audible age {maxEstimatedAudibleAgeMilliseconds:0.00} ms, target update gap {maxTargetUpdateGapMilliseconds:0.00} ms, rpm {_lastTargetRpm:0}, load {_lastLoggedTarget.Load:0.00}, vtec {_lastLoggedTarget.VtecBlend:0.00}, limiter {_lastLoggedTarget.Limiter:0.00}, overrun {_lastLoggedTarget.Overrun:0.00}, intake {_lastLoggedTarget.Intake:0.00}, transient {_lastLoggedTarget.ThrottleTransient:0.00}, driveline {_lastLoggedTarget.Driveline:0.00}");
     }
 
     private void LogStreamRecoveryIfNeeded(int generatedCount, long maxFillTicks)
@@ -658,11 +640,6 @@ internal sealed class EngineSimulatorSound : IDisposable
     private static long BufferDurationTicks()
     {
         return FramesPerBuffer * Stopwatch.Frequency / SampleRate;
-    }
-
-    private static long MaximumReadyBufferAgeTicks()
-    {
-        return (long)(MaximumReadyBufferAgeMilliseconds * Stopwatch.Frequency / 1000.0);
     }
 
     private readonly record struct TargetSnapshot(EngineSimulatorSynthesisTarget Target, long UpdatedTicks);

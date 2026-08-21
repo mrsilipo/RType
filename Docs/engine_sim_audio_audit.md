@@ -306,3 +306,5 @@ The game is already using the important Honda MR data:
 ### 2026-08-21 Live underrun cushion
 
 The latest live run was mostly stable at roughly 49-60 ms estimated audible age, but it recorded one real low-buffer event at 8400 RPM. The stream was generating about 80 buffers per second while one synthesis pass reached 22 ms for an 11.6 ms audio buffer. The playback target remains two buffers; the ready-buffer capacity is increased from three to four so one slow synthesis pass has an additional non-audible scheduling cushion without increasing the normal playback latency.
+
+The following run had no underruns, but was recycling approximately 43 stale ready buffers every three seconds. Those buffers had already advanced the synthesizer state without being played, which could fragment rapid RPM and load transitions. Ready buffers are now consumed sequentially so the generated waveform remains continuous.
