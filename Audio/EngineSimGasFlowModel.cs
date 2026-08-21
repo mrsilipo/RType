@@ -304,7 +304,7 @@ internal sealed class EngineSimGasFlowModel
         {
             Cylinder cylinder = _cylinders[i];
             double localDegrees = WrapCycleDegrees(_crankDegrees - cylinder.PowerTdcDegrees);
-            CalculatePistonKinematics(localDegrees, out double volume, out double pistonTravelDerivative);
+            CalculatePistonKinematicsWrapped(localDegrees, out double volume, out double pistonTravelDerivative);
             cylinder.Chamber.SetVolume(volume);
             cylinder.CurrentVolume = volume;
             cylinder.CurrentPistonTravelDerivative = pistonTravelDerivative;
@@ -313,7 +313,7 @@ internal sealed class EngineSimGasFlowModel
             cylinder.Chamber.SetGeometry(Math.Sqrt(_boreAreaMeters2), cylinderHeight, 1.0, 0.0);
 
             double pistonSpeed = Math.Abs(pistonTravelDerivative * omega);
-            int sampleIndex = (int)Math.Round((localDegrees / CycleDegrees) * (StateSamples - 1));
+            int sampleIndex = (int)((localDegrees / CycleDegrees) * (StateSamples - 1) + 0.5);
             sampleIndex = Math.Clamp(sampleIndex, 0, StateSamples - 1);
             cylinder.RecordPistonSample(sampleIndex, pistonSpeed);
 
@@ -602,7 +602,12 @@ internal sealed class EngineSimGasFlowModel
 
     private void CalculatePistonKinematics(double localDegrees, out double volume, out double travelDerivative)
     {
-        double theta = WrapCycleDegrees(localDegrees) % 360.0 * DegreesToRadians;
+        CalculatePistonKinematicsWrapped(WrapCycleDegrees(localDegrees), out volume, out travelDerivative);
+    }
+
+    private void CalculatePistonKinematicsWrapped(double wrappedCycleDegrees, out double volume, out double travelDerivative)
+    {
+        double theta = (wrappedCycleDegrees >= 360.0 ? wrappedCycleDegrees - 360.0 : wrappedCycleDegrees) * DegreesToRadians;
         double sin = Math.Sin(theta);
         double cos = Math.Cos(theta);
         double crankSquared = _crankRadiusMeters * _crankRadiusMeters;
@@ -1071,7 +1076,7 @@ internal sealed class EngineSimGasFlowModel
         {
             double nextVolume = Math.Max(MinimumGasVolume, _volume + deltaVolume);
             double actualDelta = nextVolume - _volume;
-            double length = Math.Pow(Math.Max(1.0e-12, _volume + actualDelta), 1.0 / 3.0);
+            double length = Math.Cbrt(Math.Max(1.0e-12, _volume + actualDelta));
             double surfaceArea = Math.Max(1.0e-12, length * length);
             double deltaLength = -actualDelta / surfaceArea;
             double work = deltaLength * Pressure * surfaceArea;
@@ -1168,11 +1173,23 @@ internal sealed class EngineSimGasFlowModel
 
         public void DissipateExcessVelocity()
         {
-            double velocityX = VelocityX();
-            double velocityY = VelocityY();
+            if (_nMol <= 1.0e-12 || _kineticEnergy <= 0.0)
+            {
+                return;
+            }
+
+            double mass = Mass;
+            if (mass <= 1.0e-12)
+            {
+                return;
+            }
+
+            double invMass = 1.0 / mass;
+            double velocityX = _momentumX * invMass;
+            double velocityY = _momentumY * invMass;
             double velocitySquared = velocityX * velocityX + velocityY * velocityY;
-            double speedOfSound = C();
-            double speedOfSoundSquared = speedOfSound * speedOfSound;
+            double density = mass / Math.Max(1.0e-12, _volume);
+            double speedOfSoundSquared = Pressure * HeatCapacityRatio / Math.Max(1.0e-12, density);
             if (speedOfSoundSquared >= velocitySquared || velocitySquared <= 0.0)
             {
                 return;
@@ -1267,18 +1284,23 @@ internal sealed class EngineSimGasFlowModel
 
             double machSquared = velocity * velocity / cSquared;
             double x = 1.0 + (hcr - 1.0) * 0.5 * machSquared;
-            double xd = _degreesOfFreedom == 5
-                ? Math.Pow(x, 7.0)
-                : _degreesOfFreedom == 3 ? Math.Pow(x, 5.0) : x;
-            return staticPressure * (Math.Sqrt(Math.Max(0.0, xd)) - 1.0);
+            double pressureRatio = _degreesOfFreedom == 5
+                ? x * x * x * Math.Sqrt(Math.Max(0.0, x))
+                : _degreesOfFreedom == 3
+                    ? x * x * Math.Sqrt(Math.Max(0.0, x))
+                    : Math.Sqrt(Math.Max(0.0, x));
+            return staticPressure * (pressureRatio - 1.0);
         }
 
         public static double Flow(GasFlowParameters parameters)
         {
+            if (parameters.KFlow <= 0.0)
+            {
+                return 0.0;
+            }
+
             GasSystem system0 = parameters.System0;
             GasSystem system1 = parameters.System1;
-            system0.Sanitize();
-            system1.Sanitize();
             double p0 = system0.Pressure + system0.DynamicPressure(parameters.DirectionX, parameters.DirectionY);
             double p1 = system1.Pressure + system1.DynamicPressure(-parameters.DirectionX, -parameters.DirectionY);
 
@@ -1317,7 +1339,7 @@ internal sealed class EngineSimGasFlowModel
                 direction = -1.0;
             }
 
-            if (source._nMol <= 1.0e-12 || parameters.KFlow <= 0.0)
+            if (source._nMol <= 1.0e-12)
             {
                 return 0.0;
             }

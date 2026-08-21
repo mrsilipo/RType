@@ -15,12 +15,12 @@ internal sealed class EngineSimulatorSound : IDisposable
     private const int FramesPerBuffer = 512;
     private const int TargetPendingBuffers = 2;
     private const int MinimumStartupBuffers = 2;
-    private const int ReadyBufferCapacity = 3;
+    private const int ReadyBufferCapacity = 4;
     private const int BufferPoolSize = TargetPendingBuffers + ReadyBufferCapacity + 6;
     private const int BufferBytes = FramesPerBuffer * sizeof(short);
     private const int DeClickFrames = 96;
     private const float DeClickThreshold = 0.18f;
-    private const int RealtimeFluidSimulationStepLimit = 1;
+    private const int RealtimeFluidSimulationStepLimit = 2;
     private const int EmergencyGenerationPendingThreshold = 1;
     private const int EmergencyRecoveryPendingBuffers = 2;
     private const int MaximumEmergencyBuffersPerUpdate = 2;

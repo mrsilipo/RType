@@ -140,6 +140,21 @@ Current validation:
 - `--performance-probe`: audio synth around `1.60x` realtime
 - `--physics-smoke-test`: passed
 
+## 2026-08-21 Fluid Solver Runtime Pass
+
+The managed gas-flow model has had its hot path tightened enough to run the Honda profile at `20000 Hz` with `2` fluid substeps in the live stream. The main savings came from removing redundant per-flow sanitization, short-circuiting zero-flow paths before pressure work, replacing generic exponent math in the dynamic-pressure path with direct formulas for the 5-DOF gas model, and avoiding avoidable wrapping/rounding in piston/chamber volume updates.
+
+The Honda Engine Sim audio profile now requests `2` fluid substeps. The live stream cap was raised to `2`, while the submitted queue remains `2 x 512` frames. The ready queue is `4` buffers so the worker has enough cushion for the heavier solver, and stale-ready-buffer pruning keeps that cushion from becoming extra audible lag.
+
+The performance probe now reports explicit fluid-step variants so future tuning can compare `1`, `2`, and `4` substeps directly.
+
+Current validation:
+
+- `--engine-sim-stream-stress`: no low-buffer events, no emergency recovery events, worst fill `12.75 ms`, worst estimated audible age `42.19 ms`
+- `--audio-diagnostics-smoke`: no low-buffer events, worst fill `12.50 ms`, worst estimated audible age `42.58 ms`
+- `--performance-probe`: default `2`-step audio synth around `1.14x` realtime; variant probe `1` step `2.06x`, `2` steps `1.15x`, `4` steps `0.61x`
+- `--physics-smoke-test`: passed
+
 Changed files:
 
 - `Audio/EngineAudioFrame.cs`
@@ -156,6 +171,7 @@ Changed files:
 - `Core/AudioProbe.cs`
 - `Core/EngineSimProfileProbe.cs`
 - `Core/EngineSimStreamStressProbe.cs`
+- `Core/PerformanceProbe.cs`
 - `Program.cs`
 - `Audio/EngineSimGasFlowModel.cs`
 
@@ -220,7 +236,7 @@ The game is already using the important Honda MR data:
 
 1. Drive-test the new stream and confirm whether `engine-sim-buffer-low` stops appearing during real gameplay.
 2. Use the timing telemetry during real gameplay to confirm whether the remaining perceived lag matches the reported estimated audible age.
-3. Optimize the synth enough to restore multiple fluid substeps at the Honda MR `20000` Hz rate without dropping below realtime.
+3. Continue optimizing the synth toward `4+` fluid substeps at the Honda MR `20000` Hz rate; `2` is now active but still has limited Debug headroom.
 4. Add a native C++ Engine Sim bridge once CMake/build tooling is available, then feed game RPM/load from the real `PistonEngineSimulator`/constraint system instead of the managed approximation.
 5. Replace the direct convolution with a cheaper partitioned or hybrid convolution so the full `mild_exhaust.wav` tail can be used.
 6. Revisit the idle jitter/noise scaling after stream underruns are gone.
