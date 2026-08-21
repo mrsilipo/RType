@@ -86,12 +86,14 @@ internal sealed class EngineSimulatorSampleSynth
         for (int i = 0; i < _inputAntialiasingFilters.Length; i++)
         {
             _inputAntialiasingFilters[i] = new ButterworthLowPassFilter();
-            _inputAntialiasingFilters[i].SetCutoffFrequency(1900f, _sampleRate);
+            // The gas solver runs at 20 kHz. A 1.9 kHz input filter removes
+            // nearly all combustion harmonics before the output DSP sees them.
+            _inputAntialiasingFilters[i].SetCutoffFrequency(8500f, _sampleRate);
         }
 
         AudioDiagnostics.Log(
             "engine-sim-synth",
-            $"MR {FormatScriptPath(parameters.EngineSimulatorMrScriptPath)}, gas-flow chamber model, cylinders {_engineModel.CylinderCount}, audio channels {_engineModel.AudioChannelCount} (exhaust {_engineModel.ExhaustChannelCount} + intake), route {_engineModel.EventRouteSummary}, attenuation {_engineModel.EventAttenuationSummary}, exhaust {_engineModel.ExhaustGainSummary}, cam {_engineModel.CamSummary}, {_engineModel.FlowSummary}, timing {string.Join("/", parameters.EngineSimulatorIgnitionTimingDegrees.Select(value => value.ToString("0")))}, sim {simulationRate} Hz, fluid steps {_engineModel.FluidSimulationSteps}, input antialias 1900 Hz");
+            $"MR {FormatScriptPath(parameters.EngineSimulatorMrScriptPath)}, gas-flow chamber model, cylinders {_engineModel.CylinderCount}, audio channels {_engineModel.AudioChannelCount} (exhaust {_engineModel.ExhaustChannelCount} + intake), route {_engineModel.EventRouteSummary}, attenuation {_engineModel.EventAttenuationSummary}, exhaust {_engineModel.ExhaustGainSummary}, cam {_engineModel.CamSummary}, {_engineModel.FlowSummary}, timing {string.Join("/", parameters.EngineSimulatorIgnitionTimingDegrees.Select(value => value.ToString("0")))}, sim {simulationRate} Hz, fluid steps {_engineModel.FluidSimulationSteps}, input antialias 8500 Hz");
     }
 
     public int CylinderCount => _engineModel.CylinderCount;
