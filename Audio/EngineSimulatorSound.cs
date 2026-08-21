@@ -22,6 +22,9 @@ internal sealed class EngineSimulatorSound : IDisposable
     private const int BufferBytes = FramesPerBuffer * sizeof(short);
     private const int DeClickFrames = 96;
     private const float DeClickThreshold = 0.18f;
+    // The full eight-step solver remains available to offline probes. Live
+    // audio must stay within the frame budget until the solver is decimated.
+    private const int RealtimeFluidSimulationStepLimit = 1;
     private const int EmergencyGenerationPendingThreshold = 0;
     private const int EmergencyRecoveryPendingBuffers = 1;
     private const int MaximumEmergencyBuffersPerUpdate = 1;
@@ -77,10 +80,13 @@ internal sealed class EngineSimulatorSound : IDisposable
     public EngineSimulatorSound(VehicleAudioParameters parameters)
     {
         _parameters = parameters;
-        int realtimeFluidSteps = Math.Clamp(parameters.EngineSimulatorFluidSimulationSteps, 1, 16);
+        int realtimeFluidSteps = Math.Clamp(
+            Math.Min(parameters.EngineSimulatorFluidSimulationSteps, RealtimeFluidSimulationStepLimit),
+            1,
+            16);
         AudioDiagnostics.Log(
-            "engine-sim-realtime-fidelity",
-            $"live audio fluid steps {realtimeFluidSteps}, source-aligned solver fidelity");
+            "engine-sim-realtime-cap",
+            $"live audio fluid steps {parameters.EngineSimulatorFluidSimulationSteps} -> {realtimeFluidSteps}; full solver reserved for offline profiling");
 
         _synth = new EngineSimulatorSampleSynth(parameters, SampleRate, fluidSimulationStepsOverride: realtimeFluidSteps);
         WarmSynth();
