@@ -27,6 +27,9 @@ internal sealed class EngineSimDspProcessor
     private readonly AudioParameters _audioParameters;
     private readonly float _sampleRate;
     private readonly int _exhaustChannelCount;
+    private readonly double[] _channelEnergy;
+    private readonly float[] _channelPeak;
+    private long _channelSampleCount;
     private float _runtimeDerivativeMix;
     private float _runtimeInputSampleNoise;
     private float _runtimeAirNoise;
@@ -48,6 +51,8 @@ internal sealed class EngineSimDspProcessor
     {
         int channelCount = Math.Max(1, inputChannelCount);
         _filters = new ChannelFilters[channelCount];
+        _channelEnergy = new double[channelCount];
+        _channelPeak = new float[channelCount];
         _exhaustChannelCount = Math.Clamp(parameters.EngineSimulatorExhaustVolumes.Length, 1, Math.Max(1, channelCount - 4));
         _audioParameters = new AudioParameters
         {
@@ -191,8 +196,12 @@ internal sealed class EngineSimDspProcessor
             float convolved = filters.Convolution.Process(vIn);
             float v = _audioParameters.Convolution * convolved +
                       (1f - _audioParameters.Convolution) * vIn;
+            _channelEnergy[i] += v * v;
+            _channelPeak[i] = MathF.Max(_channelPeak[i], MathF.Abs(v));
             signal += v * ChannelGain(i);
         }
+        _channelSampleCount++;
+        LogChannelDiagnosticsIfNeeded();
 
         signal = _antialiasing.Process(signal);
         _levelingFilter.Target = _audioParameters.LevelerTarget;
@@ -232,6 +241,9 @@ internal sealed class EngineSimDspProcessor
         _exhaustResonanceLow.Reset();
         _exhaustResonanceHigh.Reset();
         _levelingFilter.Reset();
+        Array.Clear(_channelEnergy);
+        Array.Clear(_channelPeak);
+        _channelSampleCount = 0;
         foreach (ChannelFilters filters in _filters)
         {
             filters.Reset();
@@ -242,6 +254,39 @@ internal sealed class EngineSimDspProcessor
     {
         phase += frequency / _sampleRate;
         return phase >= 1f ? phase - MathF.Floor(phase) : phase;
+    }
+
+    private void LogChannelDiagnosticsIfNeeded()
+    {
+        if (_channelSampleCount < (long)(_sampleRate * 2f))
+        {
+            return;
+        }
+
+        string[] names = new string[_filters.Length];
+        for (int i = 0; i < names.Length; i++)
+        {
+            names[i] = i < _exhaustChannelCount
+                ? $"exhaust{i}"
+                : (i - _exhaustChannelCount) switch
+                {
+                    0 => "intake",
+                    1 => "combustion",
+                    2 => "piston",
+                    3 => "valvetrain",
+                    _ => $"channel{i}"
+                };
+        }
+
+        double inverseSamples = 1.0 / _channelSampleCount;
+        string report = string.Join(
+            ", ",
+            Enumerable.Range(0, _filters.Length).Select(i =>
+                $"{names[i]} rms {Math.Sqrt(_channelEnergy[i] * inverseSamples):0.000000} peak {_channelPeak[i]:0.000000}"));
+        AudioDiagnostics.Log("engine-sim-channel-levels", report);
+        Array.Clear(_channelEnergy);
+        Array.Clear(_channelPeak);
+        _channelSampleCount = 0;
     }
 
     private static float[] LoadImpulseResponse(VehicleAudioParameters parameters)
