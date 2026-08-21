@@ -4,6 +4,7 @@ public sealed record GameLaunchOptions(
     int? AutoExitMilliseconds,
     string VehicleDefinitionPath,
     bool StartInManualTransmission,
+    bool MuteEngineSimulator,
     string ControlSchemePath,
     string SurfaceDefinitionPath,
     string SimulationEngineDefinitionPath)
@@ -21,6 +22,7 @@ public sealed record GameLaunchOptions(
         string surfaceDefinitionPath = DefaultSurfaceDefinitionPath;
         string simulationEngineDefinitionPath = DefaultSimulationEngineDefinitionPath;
         bool startInManualTransmission = false;
+        bool muteEngineSimulator = false;
 
         for (int i = 0; i < args.Length; i++)
         {
@@ -40,6 +42,10 @@ public sealed record GameLaunchOptions(
             else if (args[i].Equals("--manual-transmission", StringComparison.OrdinalIgnoreCase))
             {
                 startInManualTransmission = true;
+            }
+            else if (args[i].Equals("--mute-engine-sim", StringComparison.OrdinalIgnoreCase))
+            {
+                muteEngineSimulator = true;
             }
             else if (args[i].Equals("--controls", StringComparison.OrdinalIgnoreCase) &&
                      i + 1 < args.Length)
@@ -65,6 +71,7 @@ public sealed record GameLaunchOptions(
             autoExitMilliseconds,
             vehicleDefinitionPath,
             startInManualTransmission,
+            muteEngineSimulator,
             controlSchemePath,
             surfaceDefinitionPath,
             simulationEngineDefinitionPath);

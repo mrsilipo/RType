@@ -34,6 +34,12 @@ public sealed class VehicleAudioSystem : IDisposable
     private float _throttleTransientEnvelope;
     private bool _hasEngineAudioFrameHistory;
     private bool _available = true;
+    private readonly bool _muteEngineSimulator;
+
+    public VehicleAudioSystem(bool muteEngineSimulator = false)
+    {
+        _muteEngineSimulator = muteEngineSimulator;
+    }
 
     public void SetVehicle(VehicleAudioParameters parameters)
     {
@@ -58,9 +64,14 @@ public sealed class VehicleAudioSystem : IDisposable
                 "vehicle-audio",
                 $"initializing vehicle audio, engineSimOnly={useEngineSimulatorOnly}");
 
-            _engineSimulatorSound = parameters.EngineSimulatorEnabled
+            _engineSimulatorSound = parameters.EngineSimulatorEnabled && !_muteEngineSimulator
                 ? new EngineSimulatorSound(parameters)
                 : null;
+
+            if (_muteEngineSimulator)
+            {
+                AudioDiagnostics.Log("engine-audio-diagnostic", "Engine Sim muted by --mute-engine-sim");
+            }
 
             if (useEngineSimulatorOnly)
             {

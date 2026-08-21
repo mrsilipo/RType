@@ -127,7 +127,7 @@ public sealed class RacingGame : Game
         _hud = new HudRenderer(GraphicsDevice);
         _menu = new MenuRenderer(GraphicsDevice);
         _menuSounds = new MenuSoundSystem();
-        _vehicleAudio = new VehicleAudioSystem();
+        _vehicleAudio = new VehicleAudioSystem(_launchOptions.MuteEngineSimulator);
     }
 
     protected override void UnloadContent()
