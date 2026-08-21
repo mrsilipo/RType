@@ -7,8 +7,8 @@ set "GAME_EXE=bin\Debug\net8.0-windows\RetroRacer.exe"
 set "GAME_DLL=bin\Debug\net8.0-windows\RetroRacer.dll"
 
 if exist "%GAME_DLL%" (
-    dotnet "%GAME_DLL%" %*
-    exit /b %ERRORLEVEL%
+    start "" /b dotnet "%GAME_DLL%" %* >nul 2>&1
+    exit /b 0
 )
 
 if not exist "%GAME_EXE%" (
@@ -17,5 +17,5 @@ if not exist "%GAME_EXE%" (
     exit /b 1
 )
 
-"%GAME_EXE%" %*
-exit /b %ERRORLEVEL%
+start "" /b "%GAME_EXE%" %* >nul 2>&1
+exit /b 0
