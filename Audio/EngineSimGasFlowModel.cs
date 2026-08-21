@@ -985,7 +985,9 @@ internal sealed class EngineSimGasFlowModel
             ExhaustIndex = exhaustIndex;
             BlowbyK = blowbyK;
             Exhaust = exhaust;
-            Delay = new PressureWaveGuide(Math.Max(0.01, profile.ExhaustPrimaryTubeLength + exhaust.Length) / SpeedOfSoundMetersPerSecond, sampleRate);
+            // Engine Sim's PistonEngineSimulator initializes its exhaust delay
+            // filters at 10 kHz, independently of the solver frequency.
+            Delay = new PressureWaveGuide(Math.Max(0.01, profile.ExhaustPrimaryTubeLength + exhaust.Length) / SpeedOfSoundMetersPerSecond, 10000);
         }
 
         public int Index { get; }
@@ -1046,7 +1048,7 @@ internal sealed class EngineSimGasFlowModel
             Array.Clear(PistonSpeedHistory);
             PistonSpeedSum = 0.0;
             Flame = default;
-            Delay = new PressureWaveGuide(delayLength / SpeedOfSoundMetersPerSecond, sampleRate);
+            Delay = new PressureWaveGuide(delayLength / SpeedOfSoundMetersPerSecond, 10000);
             IntakeDelay = new PressureWaveGuide(intakeDelayLength / SpeedOfSoundMetersPerSecond, sampleRate);
         }
 

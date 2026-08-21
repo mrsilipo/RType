@@ -86,14 +86,14 @@ internal sealed class EngineSimulatorSampleSynth
         for (int i = 0; i < _inputAntialiasingFilters.Length; i++)
         {
             _inputAntialiasingFilters[i] = new ButterworthLowPassFilter();
-            // Match the source's 20 kHz audio bandwidth. The old 5.5 kHz
-            // cutoff removed the pressure waveform's useful upper harmonics.
-            _inputAntialiasingFilters[i].SetCutoffFrequency(9000f, _sampleRate);
+            // Match Engine Sim's Synthesizer::ProcessingFilters. The native
+            // input resampler uses a 1900 Hz antialiasing cutoff.
+            _inputAntialiasingFilters[i].SetCutoffFrequency(1900f, _sampleRate);
         }
 
         AudioDiagnostics.Log(
             "engine-sim-synth",
-            $"MR {FormatScriptPath(parameters.EngineSimulatorMrScriptPath)}, gas-flow chamber model, cylinders {_engineModel.CylinderCount}, audio channels {_engineModel.AudioChannelCount} (exhaust {_engineModel.ExhaustChannelCount} + intake + combustion + piston + valvetrain), route {_engineModel.EventRouteSummary}, attenuation {_engineModel.EventAttenuationSummary}, exhaust {_engineModel.ExhaustGainSummary}, cam {_engineModel.CamSummary}, {_engineModel.FlowSummary}, timing {string.Join("/", parameters.EngineSimulatorIgnitionTimingDegrees.Select(value => value.ToString("0")))}, sim {simulationRate} Hz, fluid steps {_engineModel.FluidSimulationSteps}, input antialias 9000 Hz");
+            $"MR {FormatScriptPath(parameters.EngineSimulatorMrScriptPath)}, gas-flow chamber model, cylinders {_engineModel.CylinderCount}, audio channels {_engineModel.AudioChannelCount} (exhaust {_engineModel.ExhaustChannelCount} + intake + combustion + piston + valvetrain), route {_engineModel.EventRouteSummary}, attenuation {_engineModel.EventAttenuationSummary}, exhaust {_engineModel.ExhaustGainSummary}, cam {_engineModel.CamSummary}, {_engineModel.FlowSummary}, timing {string.Join("/", parameters.EngineSimulatorIgnitionTimingDegrees.Select(value => value.ToString("0")))}, sim {simulationRate} Hz, fluid steps {_engineModel.FluidSimulationSteps}, input antialias 1900 Hz");
     }
 
     public int CylinderCount => _engineModel.CylinderCount;
