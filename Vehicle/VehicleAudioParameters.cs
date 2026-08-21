@@ -2,25 +2,7 @@ namespace RetroRacer.Vehicle;
 
 public sealed class VehicleAudioParameters
 {
-    public string EngineLoopPath { get; init; } = string.Empty;
-
-    public string HighRpmLoopPath { get; init; } = string.Empty;
-
-    public EngineAudioSampleParameters[] EngineSamples { get; init; } = [];
-
     public string TurboLoopPath { get; init; } = string.Empty;
-
-    public float BaseSampleRpm { get; init; } = 3000f;
-
-    public float MinimumPlaybackRatio { get; init; } = 0.35f;
-
-    public float MaximumPlaybackRatio { get; init; } = 3.2f;
-
-    public float EngineSampleCrossfadeWidthRpm { get; init; } = 240f;
-
-    public float EngineIdleBlendOutRpm { get; init; } = 1650f;
-
-    public float EngineSampleVolume { get; init; } = 1f;
 
     public float EngineVolume { get; init; } = 0.62f;
 
@@ -33,9 +15,6 @@ public sealed class VehicleAudioParameters
     public float EngineBrakeVolume { get; init; } = 0.18f;
 
     public float ShiftKickVolume { get; init; } = 0.16f;
-
-    public bool HighRpmEnabled => !string.IsNullOrWhiteSpace(HighRpmLoopPath) ||
-                                  EngineSamples.Any(sample => sample.HighRpm && !sample.Limiter);
 
     public float HighRpmBlendInRpm { get; init; } = 5800f;
 
@@ -188,15 +167,4 @@ public sealed class VehicleAudioParameters
     public float TurboMinimumPlaybackRatio { get; init; } = 0.55f;
 
     public float TurboMaximumPlaybackRatio { get; init; } = 2.6f;
-}
-
-public sealed class EngineAudioSampleParameters
-{
-    public string Path { get; init; } = string.Empty;
-
-    public float Rpm { get; init; }
-
-    public bool HighRpm { get; init; }
-
-    public bool Limiter { get; init; }
 }

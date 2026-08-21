@@ -61,22 +61,13 @@ public static class EngineSimProfileProbe
         Console.WriteLine($"  cylinder audio: attenuation {string.Join("/", ek9.Audio.EngineSimulatorCylinderAttenuation.Select(v => v.ToString("0.00")))}, exhaust route {string.Join("/", ek9.Audio.EngineSimulatorCylinderExhaust)}, exhaust vols {string.Join("/", ek9.Audio.EngineSimulatorExhaustVolumes.Select(v => v.ToString("0.00")))}");
         Console.WriteLine($"  exhaust IR: {ek9.Audio.EngineSimulatorImpulseResponsePath}, volume {ek9.Audio.EngineSimulatorImpulseResponseVolume:0.000}, taps {ek9.Audio.EngineSimulatorImpulseResponseTaps}");
         Console.WriteLine($"  procedural cam: low {ek9.Audio.EngineSimulatorLowIntakeDurationDegrees:0}/{ek9.Audio.EngineSimulatorLowIntakeLiftMillimeters:0.0} intake, {ek9.Audio.EngineSimulatorLowExhaustDurationDegrees:0}/{ek9.Audio.EngineSimulatorLowExhaustLiftMillimeters:0.0} exhaust; VTEC {ek9.Audio.EngineSimulatorVtecIntakeDurationDegrees:0}/{ek9.Audio.EngineSimulatorVtecIntakeLiftMillimeters:0.0} intake, {ek9.Audio.EngineSimulatorVtecExhaustDurationDegrees:0}/{ek9.Audio.EngineSimulatorVtecExhaustLiftMillimeters:0.0} exhaust");
-        string sampleBankSummary = ek9.Audio.EngineSamples.Length == 0
-            ? "none"
-            : string.Join(", ", ek9.Audio.EngineSamples.Select(sample => FormatSample(sample)));
-        Console.WriteLine($"  current sample bank: trim {ek9.Audio.EngineSampleVolume:0.00}, {sampleBankSummary}");
+        Console.WriteLine("  runtime engine audio: Engine Sim procedural stream only; legacy pitch-shifted sample banks are ignored");
         Console.WriteLine($"  game transmission: final {ek9.FinalDriveRatio:0.00}, gears {string.Join(", ", ek9.ForwardGearRatios.Select(v => v.ToString("0.000")))}");
         Console.WriteLine();
         Console.WriteLine("Recommended integration boundary");
         Console.WriteLine("  keep EK9 physics limits at the car data values; do not use the 9400 rpm Engine Sim ignition cut for this B16B");
         Console.WriteLine("  use the Engine Sim profile for live gas-flow audio plus dyno-constrained drivetrain torque and engine braking");
         Console.WriteLine("  keep the native Engine Sim executable out of the runtime unless we replace it with a callable SDK/library wrapper");
-    }
-
-    private static string FormatSample(EngineAudioSampleParameters sample)
-    {
-        string role = sample.Limiter ? "limiter" : sample.HighRpm ? "vtec" : "normal";
-        return $"{role}@{sample.Rpm:0}";
     }
 
     private static string FormatProfile(string id, string displayName, string path)

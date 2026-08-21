@@ -17,7 +17,6 @@ public static class AudioProbe
     {
         ProbeVehicle("Data/Vehicles/ek9_reference_2000.json");
         ProbeVehicle("Data/Vehicles/r33_gtr_reference_1995.json");
-        ProbeHondaB18c5Cuts();
         ProbeLoop("Generic tyres", "wheelspin", "Assets/Sounds/Generic/TyreScreech_001.wav");
         ProbeLoopSlice("Generic tyres", "wheelspin-sustain-loop", "Assets/Sounds/Generic/TyreScreech_001.wav", TyreSpinLoopStartRatio, TyreSpinLoopEndRatio);
         ProbeLoopSlice("Generic tyres", "wheelspin-chirp-loop", "Assets/Sounds/Generic/TyreScreech_001.wav", TyreChirpLoopStartRatio, TyreChirpLoopEndRatio);
@@ -29,36 +28,7 @@ public static class AudioProbe
     {
         VehicleSimulationParameters parameters = VehicleDefinitionLoader.LoadSimulationParameters(vehiclePath);
         Console.WriteLine(
-            $"{parameters.DisplayName} gas-flow engine sim: enabled {parameters.Audio.EngineSimulatorEnabled}, volume {parameters.Audio.EngineSimulatorVolume:0.00}, sample trim {parameters.Audio.EngineSampleVolume:0.00}, mr {FormatMrPath(parameters.Audio.EngineSimulatorMrScriptPath)}, sim {parameters.Audio.EngineSimulatorSimulationFrequencyHz:0} Hz, order {string.Join("-", parameters.Audio.EngineSimulatorFiringOrder)}, route {string.Join("/", parameters.Audio.EngineSimulatorCylinderExhaust)}, exhaust {string.Join("/", parameters.Audio.EngineSimulatorExhaustVolumes.Select(v => v.ToString("0.00")))}, ir taps {parameters.Audio.EngineSimulatorImpulseResponseTaps}, dsp scale/gain {parameters.Audio.EngineSimulatorDspPressureScale:0}/{parameters.Audio.EngineSimulatorDspOutputGain:0.00}, timing {string.Join("/", parameters.Audio.EngineSimulatorIgnitionTimingDegrees.Select(v => v.ToString("0")))}, cam {parameters.Audio.EngineSimulatorLowIntakeDurationDegrees:0}/{parameters.Audio.EngineSimulatorLowIntakeLiftMillimeters:0.0}->{parameters.Audio.EngineSimulatorVtecIntakeDurationDegrees:0}/{parameters.Audio.EngineSimulatorVtecIntakeLiftMillimeters:0.0}, jitter {parameters.Audio.EngineSimulatorJitter:0.000}, noise {parameters.Audio.EngineSimulatorNoise:0.000}, gains {parameters.Audio.EngineSimulatorOverrunGain:0.00}/{parameters.Audio.EngineSimulatorShockGain:0.00}/{parameters.Audio.EngineSimulatorLimiterGain:0.00}");
-        if (parameters.Audio.EngineSamples.Length > 0)
-        {
-            foreach (EngineAudioSampleParameters sample in parameters.Audio.EngineSamples)
-            {
-                string role = sample.Limiter
-                    ? $"limiter-{sample.Rpm:0}"
-                    : sample.HighRpm
-                        ? $"high-rpm-{sample.Rpm:0}"
-                        : $"engine-{sample.Rpm:0}";
-                ProbeLoop(parameters.DisplayName, role, sample.Path);
-            }
-
-            return;
-        }
-
-        ProbeLoop(parameters.DisplayName, "engine", parameters.Audio.EngineLoopPath);
-        ProbeLoop(parameters.DisplayName, "high-rpm", parameters.Audio.HighRpmLoopPath);
-    }
-
-    private static void ProbeHondaB18c5Cuts()
-    {
-        ProbeLoop("Honda B18C5 cuts", "idle-0900", "Assets/Sounds/Honda/idle_0900.wav");
-        ProbeLoop("Honda B18C5 cuts", "normal-2000", "Assets/Sounds/Honda/normal_2000.wav");
-        ProbeLoop("Honda B18C5 cuts", "normal-3500", "Assets/Sounds/Honda/normal_3500.wav");
-        ProbeLoop("Honda B18C5 cuts", "normal-5000", "Assets/Sounds/Honda/normal_5000.wav");
-        ProbeLoop("Honda B18C5 cuts", "vtec-6200", "Assets/Sounds/Honda/vtec_6200.wav");
-        ProbeLoop("Honda B18C5 cuts", "vtec-7600", "Assets/Sounds/Honda/vtec_7600.wav");
-        ProbeLoop("Honda B18C5 cuts", "vtec-8200", "Assets/Sounds/Honda/vtec_8200.wav");
-        ProbeLoop("Honda B18C5 cuts", "limiter-8200", "Assets/Sounds/Honda/limiter_8200.wav");
+            $"{parameters.DisplayName} gas-flow engine sim: enabled {parameters.Audio.EngineSimulatorEnabled}, volume {parameters.Audio.EngineSimulatorVolume:0.00}, mr {FormatMrPath(parameters.Audio.EngineSimulatorMrScriptPath)}, sim {parameters.Audio.EngineSimulatorSimulationFrequencyHz:0} Hz, order {string.Join("-", parameters.Audio.EngineSimulatorFiringOrder)}, route {string.Join("/", parameters.Audio.EngineSimulatorCylinderExhaust)}, exhaust {string.Join("/", parameters.Audio.EngineSimulatorExhaustVolumes.Select(v => v.ToString("0.00")))}, ir taps {parameters.Audio.EngineSimulatorImpulseResponseTaps}, dsp scale/gain {parameters.Audio.EngineSimulatorDspPressureScale:0}/{parameters.Audio.EngineSimulatorDspOutputGain:0.00}, timing {string.Join("/", parameters.Audio.EngineSimulatorIgnitionTimingDegrees.Select(v => v.ToString("0")))}, cam {parameters.Audio.EngineSimulatorLowIntakeDurationDegrees:0}/{parameters.Audio.EngineSimulatorLowIntakeLiftMillimeters:0.0}->{parameters.Audio.EngineSimulatorVtecIntakeDurationDegrees:0}/{parameters.Audio.EngineSimulatorVtecIntakeLiftMillimeters:0.0}, jitter {parameters.Audio.EngineSimulatorJitter:0.000}, noise {parameters.Audio.EngineSimulatorNoise:0.000}, gains {parameters.Audio.EngineSimulatorOverrunGain:0.00}/{parameters.Audio.EngineSimulatorShockGain:0.00}/{parameters.Audio.EngineSimulatorLimiterGain:0.00}");
     }
 
     private static string FormatMrPath(string path)

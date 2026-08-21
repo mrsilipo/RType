@@ -321,16 +321,7 @@ public static class VehicleDefinitionLoader
         EngineSimMrProfile? mrProfile = EngineSimMrProfile.TryLoad(mrScriptPath);
         return new VehicleAudioParameters
         {
-            EngineLoopPath = ReadString(root, string.Empty, "audio", "engineLoop"),
-            HighRpmLoopPath = ReadString(root, string.Empty, "audio", "highRpmLoop"),
-            EngineSamples = ReadEngineAudioSamples(root),
             TurboLoopPath = ReadString(root, string.Empty, "audio", "turbo", "loop"),
-            BaseSampleRpm = ReadValueSingle(root, 3000f, "audio", "baseSampleRpm"),
-            MinimumPlaybackRatio = ReadValueSingle(root, 0.35f, "audio", "minimumPlaybackRatio"),
-            MaximumPlaybackRatio = ReadValueSingle(root, 3.2f, "audio", "maximumPlaybackRatio"),
-            EngineSampleCrossfadeWidthRpm = ReadValueSingle(root, 240f, "audio", "engineSampleCrossfadeWidthRpm"),
-            EngineIdleBlendOutRpm = ReadValueSingle(root, 1650f, "audio", "engineIdleBlendOutRpm"),
-            EngineSampleVolume = ReadValueSingle(root, 1f, "audio", "engineSampleVolume"),
             EngineVolume = ReadValueSingle(root, 0.62f, "audio", "engineVolume"),
             IdleVolume = ReadValueSingle(root, 0.22f, "audio", "idleVolume"),
             ThrottleVolume = ReadValueSingle(root, 0.34f, "audio", "throttleVolume"),
@@ -413,46 +404,6 @@ public static class VehicleDefinitionLoader
             TurboMinimumPlaybackRatio = ReadValueSingle(root, 0.55f, "audio", "turbo", "minimumPlaybackRatio"),
             TurboMaximumPlaybackRatio = ReadValueSingle(root, 2.6f, "audio", "turbo", "maximumPlaybackRatio")
         };
-    }
-
-    private static EngineAudioSampleParameters[] ReadEngineAudioSamples(JsonElement root)
-    {
-        if (!TryGet(root, out JsonElement samplesElement, "audio", "engineSamples") ||
-            samplesElement.ValueKind != JsonValueKind.Array)
-        {
-            return [];
-        }
-
-        List<EngineAudioSampleParameters> samples = [];
-        foreach (JsonElement sampleElement in samplesElement.EnumerateArray())
-        {
-            if (sampleElement.ValueKind != JsonValueKind.Object)
-            {
-                continue;
-            }
-
-            string path = ReadString(sampleElement, string.Empty, "path");
-            if (string.IsNullOrWhiteSpace(path))
-            {
-                path = ReadString(sampleElement, string.Empty, "file");
-            }
-
-            float rpm = ReadValueSingle(sampleElement, 0f, "rpm");
-            if (string.IsNullOrWhiteSpace(path) || rpm <= 0f)
-            {
-                continue;
-            }
-
-            samples.Add(new EngineAudioSampleParameters
-            {
-                Path = path,
-                Rpm = rpm,
-                HighRpm = ReadBoolean(sampleElement, false, "highRpm"),
-                Limiter = ReadBoolean(sampleElement, false, "limiter")
-            });
-        }
-
-        return [.. samples.OrderBy(sample => sample.Limiter).ThenBy(sample => sample.Rpm)];
     }
 
     private static EngineSimulatorAudioProfile? LoadEngineSimulatorAudioProfile(string path)

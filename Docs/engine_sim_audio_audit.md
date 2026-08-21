@@ -112,6 +112,21 @@ Current validation:
 - `--audio-diagnostics-smoke`: no low-buffer events, worst estimated audible age `60.59 ms`
 - `--performance-probe`: audio synth around `1.51x` realtime
 
+## 2026-08-21 Legacy Engine Sample Cleanup
+
+The runtime vehicle engine-audio path is now Engine Sim-only. `VehicleAudioSystem` no longer creates pitch-shifted engine loops, high-RPM loops, limiter sample loops, or multi-sample Honda banks. If Engine Sim is disabled, the vehicle engine path logs that there is no legacy fallback instead of silently returning to the old sample model.
+
+The vehicle audio data contract and loader also no longer expose `engineLoop`, `highRpmLoop`, `engineSamples`, playback-ratio, or engine-sample crossfade fields. Existing vehicle JSON may still contain historical sample fields, but they are ignored by the loader and have no runtime effect.
+
+Tyre screech and other non-engine audio remain sample-based.
+
+Current validation:
+
+- `--audio-diagnostics-smoke`: Engine Sim initialized as the only engine mode; no low-buffer events
+- `--engine-sim-stream-stress`: no low-buffer events, no emergency recovery events, worst estimated audible age `77.72 ms`
+- `--performance-probe`: audio synth around `1.55x` realtime
+- `--physics-smoke-test`: passed
+
 Changed files:
 
 - `Audio/EngineAudioFrame.cs`
@@ -125,6 +140,7 @@ Changed files:
 - `Data/VehicleDefinitionLoader.cs`
 - `Data/EngineProfiles/honda_b18c5_vtec_engine_sim.json`
 - `Data/Vehicles/ek9_reference_2000.json`
+- `Core/AudioProbe.cs`
 - `Core/EngineSimProfileProbe.cs`
 - `Core/EngineSimStreamStressProbe.cs`
 - `Program.cs`
@@ -190,7 +206,7 @@ The game is already using the important Honda MR data:
 ## Recommended Next Work
 
 1. Drive-test the new stream and confirm whether `engine-sim-buffer-low` stops appearing during real gameplay.
-2. Add audio timing telemetry: generated buffers per second, queue depth, worst generation time, underrun count.
+2. Use the timing telemetry during real gameplay to confirm whether the remaining perceived lag matches the reported estimated audible age.
 3. Optimize the synth enough to restore multiple fluid substeps at the Honda MR `20000` Hz rate without dropping below realtime.
 4. Add a native C++ Engine Sim bridge once CMake/build tooling is available, then feed game RPM/load from the real `PistonEngineSimulator`/constraint system instead of the managed approximation.
 5. Replace the direct convolution with a cheaper partitioned or hybrid convolution so the full `mild_exhaust.wav` tail can be used.

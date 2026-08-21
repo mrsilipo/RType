@@ -16,22 +16,12 @@ public sealed class VehicleAudioSystem : IDisposable
     private const float ControlLossScreechLoopEndRatio = 0.86f;
 
     private VehicleAudioParameters _parameters = new();
-    private LoopingPitchedSound? _engineLoop;
-    private LoopingPitchedSound? _highRpmLoop;
-    private EngineSampleLoop[] _engineSampleLoops = [];
-    private EngineSampleLoop[] _normalEngineSampleLoops = [];
-    private EngineSampleLoop[] _highRpmEngineSampleLoops = [];
-    private EngineSampleLoop? _limiterEngineSampleLoop;
     private EngineSimulatorSound? _engineSimulatorSound;
     private LoopingPitchedSound? _tyreSpinLoop;
     private LoopingPitchedSound? _tyreChirpLoop;
     private LoopingPitchedSound? _controlLossScreechLoop;
     private float _smoothedEngineRpm;
     private float _highRpmBlend;
-    private bool _highRpmAudioLatched;
-    private float _highRpmAudioReleaseSeconds;
-    private float _highRpmLoudnessTrim = 1f;
-    private float _smoothedLimiterSampleIntensity;
     private float _smoothedTyreSpinIntensity;
     private float _tyreChirpEnvelope;
     private float _previousTyreChirpSource;
@@ -51,10 +41,6 @@ public sealed class VehicleAudioSystem : IDisposable
         _parameters = parameters;
         _smoothedEngineRpm = 0f;
         _highRpmBlend = 0f;
-        _highRpmAudioLatched = false;
-        _highRpmAudioReleaseSeconds = 0f;
-        _highRpmLoudnessTrim = 1f;
-        _smoothedLimiterSampleIntensity = 0f;
         _smoothedTyreSpinIntensity = 0f;
         _tyreChirpEnvelope = 0f;
         _previousTyreChirpSource = 0f;
@@ -70,7 +56,7 @@ public sealed class VehicleAudioSystem : IDisposable
             bool useEngineSimulatorOnly = parameters.EngineSimulatorEnabled && parameters.EngineSimulatorVolume > 0.001f;
             AudioDiagnostics.Log(
                 "vehicle-audio",
-                $"initializing vehicle audio, engineSimOnly={useEngineSimulatorOnly}, sampleBank={parameters.EngineSamples.Length}");
+                $"initializing vehicle audio, engineSimOnly={useEngineSimulatorOnly}");
 
             _engineSimulatorSound = parameters.EngineSimulatorEnabled
                 ? new EngineSimulatorSound(parameters)
@@ -78,19 +64,11 @@ public sealed class VehicleAudioSystem : IDisposable
 
             if (useEngineSimulatorOnly)
             {
-                AudioDiagnostics.Log("engine-audio-mode", "Engine Sim only; legacy engine sample loops disabled");
-            }
-            else if (parameters.EngineSamples.Length > 0)
-            {
-                LoadEngineSampleBank(parameters.EngineSamples);
+                AudioDiagnostics.Log("engine-audio-mode", "Engine Sim only");
             }
             else
             {
-                WavLoopSource? engineSource = LoadSource(parameters.EngineLoopPath);
-                WavLoopSource? highRpmSource = LoadSource(parameters.HighRpmLoopPath);
-                _engineLoop = engineSource is null ? null : new LoopingPitchedSound(engineSource, $"engine {parameters.EngineLoopPath}");
-                _highRpmLoop = highRpmSource is null ? null : new LoopingPitchedSound(highRpmSource, $"high-rpm {parameters.HighRpmLoopPath}");
-                _highRpmLoudnessTrim = CalculateHighRpmLoudnessTrim(engineSource, highRpmSource);
+                AudioDiagnostics.Log("engine-audio-mode", "Engine Sim disabled; no legacy engine sample fallback");
             }
 
             _tyreSpinLoop = TryLoadSlicedLoop(TyreSpinLoopPath, TyreSpinLoopStartRatio, TyreSpinLoopEndRatio, "tyre-spin sustain");
@@ -135,30 +113,13 @@ public sealed class VehicleAudioSystem : IDisposable
             rpm = _smoothedEngineRpm;
             float pauseScale = paused ? 0f : 1f;
             float driveVolume = MathHelper.Clamp(_parameters.EngineVolume * pauseScale, 0f, 1f);
-            float sampleDriveVolume = driveVolume * MathHelper.Clamp(_parameters.EngineSampleVolume, 0f, 1f);
             float engineSimulatorRpm = SelectEngineSimulatorAudioRpm(vehicle, rpm);
             float targetHighBlend = CalculateTargetHighRpmBlend(
                 vehicle,
-                MathF.Max(300f, vehicle.EngineSimulatorPowerActive ? engineSimulatorRpm : vehicle.Rpm),
-                dt);
-            float highBlendRate = _engineSampleLoops.Length > 0
-                ? (vehicle.IsShifting ? 95f : 72f)
-                : (vehicle.IsShifting ? 72f : 42f);
+                MathF.Max(300f, vehicle.EngineSimulatorPowerActive ? engineSimulatorRpm : vehicle.Rpm));
+            float highBlendRate = vehicle.IsShifting ? 72f : 42f;
             float highBlendStep = 1f - MathF.Exp(-highBlendRate * MathHelper.Clamp(dt, 0f, 1f / 20f));
             _highRpmBlend = MathHelper.Lerp(_highRpmBlend, targetHighBlend, MathHelper.Clamp(highBlendStep, 0f, 1f));
-            float normalGain = 1f - _highRpmBlend;
-            float highGain = _highRpmBlend;
-
-            if (_engineSampleLoops.Length > 0)
-            {
-                UpdateEngineSampleBank(vehicle, rpm, sampleDriveVolume, dt);
-            }
-            else
-            {
-                float playbackRatio = CalculateEnginePlaybackRatio(rpm);
-                _engineLoop?.Update(playbackRatio, sampleDriveVolume * normalGain);
-                _highRpmLoop?.Update(playbackRatio, sampleDriveVolume * highGain * _highRpmLoudnessTrim);
-            }
 
             float throttleTransient = UpdateEngineAudioThrottleTransient(vehicle, dt);
             EngineAudioFrame engineFrame = EngineAudioFrame.FromVehicleState(
@@ -184,19 +145,12 @@ public sealed class VehicleAudioSystem : IDisposable
 
     public void Stop()
     {
-        _engineLoop?.Stop();
-        _highRpmLoop?.Stop();
         _engineSimulatorSound?.Stop();
-        StopEngineSampleLoops();
         _tyreSpinLoop?.Stop();
         _tyreChirpLoop?.Stop();
         _controlLossScreechLoop?.Stop();
         _smoothedEngineRpm = 0f;
         _highRpmBlend = 0f;
-        _highRpmAudioLatched = false;
-        _highRpmAudioReleaseSeconds = 0f;
-        _highRpmLoudnessTrim = 1f;
-        _smoothedLimiterSampleIntensity = 0f;
         _smoothedTyreSpinIntensity = 0f;
         _tyreChirpEnvelope = 0f;
         _previousTyreChirpSource = 0f;
@@ -205,15 +159,6 @@ public sealed class VehicleAudioSystem : IDisposable
         _throttleTransientEnvelope = 0f;
         _hasEngineAudioFrameHistory = false;
         ResetSwayScreechHistory();
-    }
-
-    private void StopEngineSampleLoops()
-    {
-        foreach (EngineSampleLoop sample in _engineSampleLoops)
-        {
-            sample.SmoothedVolume = 0f;
-            sample.Loop.Stop();
-        }
     }
 
     private static float SelectEngineSimulatorAudioRpm(VehicleState vehicle, float fallbackRpm)
@@ -257,63 +202,22 @@ public sealed class VehicleAudioSystem : IDisposable
         DisposeLoops();
     }
 
-    private bool HasEngineAudio => _engineLoop is not null ||
-                                   _engineSimulatorSound is not null ||
-                                   _normalEngineSampleLoops.Length > 0 ||
-                                   _highRpmEngineSampleLoops.Length > 0;
+    private bool HasEngineAudio => _engineSimulatorSound is not null;
 
-    private bool HasHighRpmAudio => _highRpmLoop is not null ||
-                                    _highRpmEngineSampleLoops.Length > 0 ||
-                                    _engineSimulatorSound is not null;
+    private bool HasHighRpmAudio => _engineSimulatorSound is not null;
 
-    private float CalculateTargetHighRpmBlend(VehicleState vehicle, float rpm, float dt)
+    private float CalculateTargetHighRpmBlend(VehicleState vehicle, float rpm)
     {
         if (!HasHighRpmAudio)
         {
-            _highRpmAudioReleaseSeconds = 0f;
             return 0f;
         }
 
         float activationGate = CalculateHighRpmActivationGate(vehicle);
-        if (_engineSampleLoops.Length == 0)
-        {
-            return activationGate * SmoothStep(
-                _parameters.HighRpmBlendInRpm,
-                _parameters.HighRpmBlendInRpm + MathF.Max(1f, _parameters.HighRpmBlendWidthRpm),
-                rpm);
-        }
-
-        float entryRpm = _parameters.HighRpmBlendInRpm;
-        float releaseGapRpm = MathHelper.Clamp(
-            MathF.Max(420f, _parameters.HighRpmBlendWidthRpm * 3f),
-            420f,
-            650f);
-        float exitRpm = entryRpm - releaseGapRpm;
-        if (_highRpmAudioLatched)
-        {
-            if (activationGate <= 0.2f || rpm <= exitRpm)
-            {
-                _highRpmAudioReleaseSeconds += MathHelper.Clamp(dt, 0f, 1f / 20f);
-                if (_highRpmAudioReleaseSeconds >= 0.08f)
-                {
-                    _highRpmAudioLatched = false;
-                    _highRpmAudioReleaseSeconds = 0f;
-                    AudioDiagnostics.Log("vtec-audio-latch", $"released at {rpm:0} rpm, exit {exitRpm:0}, gate {activationGate:0.00}");
-                }
-            }
-            else
-            {
-                _highRpmAudioReleaseSeconds = 0f;
-            }
-        }
-        else if (activationGate > 0.92f && rpm >= entryRpm)
-        {
-            _highRpmAudioLatched = true;
-            _highRpmAudioReleaseSeconds = 0f;
-            AudioDiagnostics.Log("vtec-audio-latch", $"engaged at {rpm:0} rpm, entry {entryRpm:0}, exit {exitRpm:0}, gate {activationGate:0.00}");
-        }
-
-        return _highRpmAudioLatched ? activationGate : 0f;
+        return activationGate * SmoothStep(
+            _parameters.HighRpmBlendInRpm,
+            _parameters.HighRpmBlendInRpm + MathF.Max(1f, _parameters.HighRpmBlendWidthRpm),
+            rpm);
     }
 
     private float CalculateHighRpmActivationGate(VehicleState vehicle)
@@ -328,189 +232,6 @@ public sealed class VehicleAudioSystem : IDisposable
             : SmoothStep(_parameters.HighRpmMinimumSpeedMetersPerSecond * 0.72f, _parameters.HighRpmMinimumSpeedMetersPerSecond, speed);
 
         return MathHelper.Clamp(throttleGate * speedGate, 0f, 1f);
-    }
-
-    private void UpdateEngineSampleBank(VehicleState vehicle, float rpm, float driveVolume, float dt)
-    {
-        bool hasNormalBank = _normalEngineSampleLoops.Length > 0;
-        bool hasHighRpmBank = _highRpmEngineSampleLoops.Length > 0;
-        float normalBankScale = hasNormalBank && hasHighRpmBank ? 1f - _highRpmBlend : hasNormalBank ? 1f : 0f;
-        float highRpmBankScale = hasNormalBank && hasHighRpmBank ? _highRpmBlend : hasHighRpmBank ? 1f : 0f;
-        float limiterTargetIntensity = CalculateLimiterSampleIntensity(vehicle);
-        float limiterIntensity = UpdateLimiterSampleEnvelope(limiterTargetIntensity, driveVolume, dt);
-        float limiterDuck = 1f - limiterIntensity * 0.42f;
-
-        UpdateEngineSampleBank(_normalEngineSampleLoops, rpm, driveVolume * normalBankScale * limiterDuck, dt);
-        UpdateEngineSampleBank(_highRpmEngineSampleLoops, rpm, driveVolume * highRpmBankScale * limiterDuck, dt);
-        UpdateLimiterSample(vehicle, rpm, driveVolume, limiterTargetIntensity, limiterIntensity, dt);
-    }
-
-    private void UpdateEngineSampleBank(EngineSampleLoop[] bank, float rpm, float bankVolume, float dt)
-    {
-        foreach (EngineSampleLoop sample in bank)
-        {
-            float weight = CalculateBankSampleWeight(bank, sample, rpm);
-            UpdateEngineSampleLoop(sample, rpm, bankVolume * weight * sample.LoudnessTrim, dt);
-        }
-    }
-
-    private void UpdateLimiterSample(
-        VehicleState vehicle,
-        float rpm,
-        float driveVolume,
-        float limiterTargetIntensity,
-        float limiterIntensity,
-        float dt)
-    {
-        if (_limiterEngineSampleLoop is null)
-        {
-            return;
-        }
-
-        if (driveVolume <= 0.006f)
-        {
-            _smoothedLimiterSampleIntensity = 0f;
-            _limiterEngineSampleLoop.Loop.Stop();
-            return;
-        }
-
-        float limiterRpm = MathF.Max(rpm, vehicle.RedlineRpm > 0f ? vehicle.RedlineRpm * 0.98f : rpm);
-        float audibleIntensity = limiterIntensity <= 0.0005f && limiterTargetIntensity <= 0.0005f
-            ? 0f
-            : limiterIntensity;
-        UpdateEngineSampleLoop(
-            _limiterEngineSampleLoop,
-            limiterRpm,
-            driveVolume * audibleIntensity * _limiterEngineSampleLoop.LoudnessTrim,
-            dt);
-    }
-
-    private float UpdateLimiterSampleEnvelope(float targetIntensity, float driveVolume, float dt)
-    {
-        if (driveVolume <= 0.006f)
-        {
-            _smoothedLimiterSampleIntensity = 0f;
-            return 0f;
-        }
-
-        float clampedDt = MathHelper.Clamp(dt, 0f, 1f / 20f);
-        float responseRate = targetIntensity > _smoothedLimiterSampleIntensity ? 58f : 3.4f;
-        float blend = 1f - MathF.Exp(-responseRate * clampedDt);
-        _smoothedLimiterSampleIntensity = MathHelper.Lerp(
-            _smoothedLimiterSampleIntensity,
-            MathHelper.Clamp(targetIntensity, 0f, 1f),
-            MathHelper.Clamp(blend, 0f, 1f));
-        return _smoothedLimiterSampleIntensity;
-    }
-
-    private float CalculateBankSampleWeight(EngineSampleLoop[] bank, EngineSampleLoop sample, float rpm)
-    {
-        if (bank.Length == 0)
-        {
-            return 0f;
-        }
-
-        if (bank.Length == 1)
-        {
-            return ReferenceEquals(sample, bank[0]) ? 1f : 0f;
-        }
-
-        int sampleIndex = Array.IndexOf(bank, sample);
-        if (sampleIndex < 0)
-        {
-            return 0f;
-        }
-
-        float weight = 1f;
-        if (sampleIndex > 0)
-        {
-            EngineSampleLoop previous = bank[sampleIndex - 1];
-            float boundaryRpm = CalculateSampleBoundaryRpm(previous, sample);
-            float halfWidth = CalculateSampleCrossfadeHalfWidth(previous, sample);
-            weight *= SmoothStep(boundaryRpm - halfWidth, boundaryRpm + halfWidth, rpm);
-        }
-
-        if (sampleIndex < bank.Length - 1)
-        {
-            EngineSampleLoop next = bank[sampleIndex + 1];
-            float boundaryRpm = CalculateSampleBoundaryRpm(sample, next);
-            float halfWidth = CalculateSampleCrossfadeHalfWidth(sample, next);
-            weight *= 1f - SmoothStep(boundaryRpm - halfWidth, boundaryRpm + halfWidth, rpm);
-        }
-
-        return MathHelper.Clamp(weight, 0f, 1f);
-    }
-
-    private void UpdateEngineSampleLoop(EngineSampleLoop sample, float rpm, float targetVolume, float dt)
-    {
-        float volume = SmoothEngineSampleVolume(sample, targetVolume, dt);
-        sample.Loop.Update(CalculateEnginePlaybackRatio(rpm, sample.Rpm), volume);
-    }
-
-    private static float SmoothEngineSampleVolume(EngineSampleLoop sample, float targetVolume, float dt)
-    {
-        float clampedTarget = MathHelper.Clamp(targetVolume, 0f, 1f);
-        float clampedDt = MathHelper.Clamp(dt, 0f, 1f / 20f);
-        LogTargetDropIfNeeded(sample, clampedTarget);
-        float attackRate = sample.Limiter ? 72f : 42f;
-        float releaseRate = sample.Limiter ? 24f : 24f;
-        float responseRate = clampedTarget > sample.SmoothedVolume ? attackRate : releaseRate;
-        float blend = 1f - MathF.Exp(-responseRate * clampedDt);
-        sample.SmoothedVolume = MathHelper.Lerp(
-            sample.SmoothedVolume,
-            clampedTarget,
-            MathHelper.Clamp(blend, 0f, 1f));
-        if (sample.SmoothedVolume <= 0.0001f && clampedTarget <= 0.0001f)
-        {
-            sample.SmoothedVolume = 0f;
-        }
-
-        return sample.SmoothedVolume;
-    }
-
-    private static void LogTargetDropIfNeeded(EngineSampleLoop sample, float targetVolume)
-    {
-        if (sample.PreviousTargetVolume <= 0.08f || targetVolume > 0.003f)
-        {
-            sample.PreviousTargetVolume = targetVolume;
-            return;
-        }
-
-        double now = AudioDiagnostics.NowSeconds;
-        if (now - sample.LastTargetDropLogSeconds >= 0.35)
-        {
-            sample.LastTargetDropLogSeconds = now;
-            AudioDiagnostics.Log(
-                "sample-target-drop",
-                $"{sample.Label}: target {sample.PreviousTargetVolume:0.000}->0.000, smoothed {sample.SmoothedVolume:0.000}");
-        }
-
-        sample.PreviousTargetVolume = targetVolume;
-    }
-
-    private float CalculateSampleCrossfadeHalfWidth(EngineSampleLoop lower, EngineSampleLoop upper)
-    {
-        float sampleGap = MathF.Abs(upper.Rpm - lower.Rpm);
-        float configuredWidth = MathF.Max(8f, _parameters.EngineSampleCrossfadeWidthRpm);
-        return MathF.Min(configuredWidth, sampleGap * 0.45f) * 0.5f;
-    }
-
-    private float CalculateSampleBoundaryRpm(EngineSampleLoop lower, EngineSampleLoop upper)
-    {
-        if (lower.Rpm <= 1200f && upper.Rpm >= 1800f)
-        {
-            return MathHelper.Clamp(_parameters.EngineIdleBlendOutRpm, lower.Rpm + 80f, upper.Rpm - 80f);
-        }
-
-        return (lower.Rpm + upper.Rpm) * 0.5f;
-    }
-
-    private static float CalculateLimiterSampleIntensity(VehicleState vehicle)
-    {
-        float source = MathF.Max(
-            vehicle.RevLimiterBounceIntensity,
-            vehicle.RevLimiterActive ? 0.45f : 0f);
-        return SmoothStep(0.04f, 0.85f, source);
     }
 
     private void UpdateTyreScreechLoops(VehicleState vehicle, float pauseScale, float dt)
@@ -922,103 +643,6 @@ public sealed class VehicleAudioSystem : IDisposable
         }
     }
 
-    private float CalculateEnginePlaybackRatio(float rpm)
-    {
-        return CalculateEnginePlaybackRatio(rpm, _parameters.BaseSampleRpm);
-    }
-
-    private float CalculateEnginePlaybackRatio(float rpm, float sampleRpm)
-    {
-        float baseRpm = MathF.Max(100f, sampleRpm);
-        return MathHelper.Clamp(
-            rpm / baseRpm,
-            MathF.Max(0.05f, _parameters.MinimumPlaybackRatio),
-            MathF.Max(_parameters.MinimumPlaybackRatio, _parameters.MaximumPlaybackRatio));
-    }
-
-    private static LoopingPitchedSound? LoadLoop(string path, string label = "")
-    {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return null;
-        }
-
-        WavLoopSource? source = LoadSource(path);
-        return source is null ? null : new LoopingPitchedSound(source, string.IsNullOrWhiteSpace(label) ? path : label);
-    }
-
-    private void LoadEngineSampleBank(EngineAudioSampleParameters[] samples)
-    {
-        List<EngineSampleLoop> loadedSamples = [];
-        try
-        {
-            foreach (EngineAudioSampleParameters sample in samples)
-            {
-                WavLoopSource? source = LoadSource(sample.Path);
-                if (source is null)
-                {
-                    continue;
-                }
-
-                loadedSamples.Add(new EngineSampleLoop(sample, source, CalculateLoopRmsLevel(source)));
-            }
-
-            if (!loadedSamples.Any(sample => !sample.Limiter))
-            {
-                throw new InvalidDataException("Engine sample bank does not contain any regular engine samples.");
-            }
-
-            _engineSampleLoops = [.. loadedSamples.OrderBy(sample => sample.Limiter).ThenBy(sample => sample.Rpm)];
-            _normalEngineSampleLoops = [.. _engineSampleLoops.Where(sample => !sample.HighRpm && !sample.Limiter).OrderBy(sample => sample.Rpm)];
-            _highRpmEngineSampleLoops = [.. _engineSampleLoops.Where(sample => sample.HighRpm && !sample.Limiter).OrderBy(sample => sample.Rpm)];
-            _limiterEngineSampleLoop = _engineSampleLoops.FirstOrDefault(sample => sample.Limiter);
-            NormalizeEngineSampleLoudness();
-            AudioDiagnostics.Log(
-                "engine-sample-bank",
-                $"loaded {_engineSampleLoops.Length} loops: {string.Join(", ", _engineSampleLoops.Select(sample => sample.Label))}");
-        }
-        catch
-        {
-            foreach (EngineSampleLoop sample in loadedSamples)
-            {
-                sample.Dispose();
-            }
-
-            _engineSampleLoops = [];
-            _normalEngineSampleLoops = [];
-            _highRpmEngineSampleLoops = [];
-            _limiterEngineSampleLoop = null;
-            throw;
-        }
-    }
-
-    private void NormalizeEngineSampleLoudness()
-    {
-        float[] regularRmsLevels =
-        [
-            .. _engineSampleLoops
-                .Where(sample => !sample.Limiter && sample.RmsLevel > 0.0001f)
-                .Select(sample => sample.RmsLevel)
-                .OrderBy(rms => rms)
-        ];
-        if (regularRmsLevels.Length == 0)
-        {
-            return;
-        }
-
-        float referenceRms = regularRmsLevels[regularRmsLevels.Length / 2];
-        foreach (EngineSampleLoop sample in _engineSampleLoops)
-        {
-            if (sample.RmsLevel <= 0.0001f)
-            {
-                sample.LoudnessTrim = 1f;
-                continue;
-            }
-
-            sample.LoudnessTrim = MathHelper.Clamp(referenceRms / sample.RmsLevel, 0.12f, 1f);
-        }
-    }
-
     private static WavLoopSource? LoadSource(string path)
     {
         if (string.IsNullOrWhiteSpace(path))
@@ -1028,20 +652,6 @@ public sealed class VehicleAudioSystem : IDisposable
 
         string resolvedPath = ResolveAssetPath(path);
         return WavLoopSource.Load(resolvedPath);
-    }
-
-    private static LoopingPitchedSound? TryLoadLoop(string path, string label = "")
-    {
-        try
-        {
-            return LoadLoop(path, label);
-        }
-        catch (Exception exception) when (exception is IOException or InvalidDataException or InvalidOperationException)
-        {
-            AudioDiagnostics.Log("optional-audio-error", exception.ToString());
-            Console.WriteLine($"Optional audio asset disabled: {exception.Message}");
-            return null;
-        }
     }
 
     private static LoopingPitchedSound? TryLoadSlicedLoop(string path, float startRatio, float endRatio, string label = "")
@@ -1092,95 +702,14 @@ public sealed class VehicleAudioSystem : IDisposable
         return t * t * (3f - 2f * t);
     }
 
-    private static float CalculateHighRpmLoudnessTrim(WavLoopSource? engineSource, WavLoopSource? highRpmSource)
-    {
-        if (engineSource is null || highRpmSource is null)
-        {
-            return 1f;
-        }
-
-        float engineRms = CalculateLoopRmsLevel(engineSource);
-        float highRpmRms = CalculateLoopRmsLevel(highRpmSource);
-        if (engineRms <= 0.0001f || highRpmRms <= 0.0001f)
-        {
-            return 1f;
-        }
-
-        return MathHelper.Clamp(engineRms / highRpmRms, 0.15f, 1f);
-    }
-
-    private static float CalculateLoopRmsLevel(WavLoopSource source)
-    {
-        LoopWindow loopWindow = LoopWindowPlanner.Plan(source);
-        int sampleCount = Math.Clamp(loopWindow.EndFrame, 1, source.FrameCount) * source.ChannelCount;
-        double sumSquares = 0.0;
-        for (int i = 0; i < sampleCount; i++)
-        {
-            float sample = source.Samples[i];
-            sumSquares += sample * sample;
-        }
-
-        return (float)Math.Sqrt(sumSquares / sampleCount);
-    }
-
-    private sealed class EngineSampleLoop : IDisposable
-    {
-        public EngineSampleLoop(EngineAudioSampleParameters parameters, WavLoopSource source, float rmsLevel)
-        {
-            Label = $"{(parameters.Limiter ? "limiter" : parameters.HighRpm ? "high-rpm" : "engine")} {parameters.Path} @ {parameters.Rpm:0} rpm";
-            Loop = new LoopingPitchedSound(source, Label);
-            Rpm = MathF.Max(100f, parameters.Rpm);
-            HighRpm = parameters.HighRpm;
-            Limiter = parameters.Limiter;
-            RmsLevel = rmsLevel;
-        }
-
-        public string Label { get; }
-
-        public LoopingPitchedSound Loop { get; }
-
-        public float Rpm { get; }
-
-        public bool HighRpm { get; }
-
-        public bool Limiter { get; }
-
-        public float RmsLevel { get; }
-
-        public float LoudnessTrim { get; set; } = 1f;
-
-        public float SmoothedVolume { get; set; }
-
-        public float PreviousTargetVolume { get; set; }
-
-        public double LastTargetDropLogSeconds { get; set; } = -999.0;
-
-        public void Dispose()
-        {
-            Loop.Dispose();
-        }
-    }
-
     private void DisposeLoops()
     {
-        _engineLoop?.Dispose();
-        _highRpmLoop?.Dispose();
         _engineSimulatorSound?.Dispose();
-        foreach (EngineSampleLoop sample in _engineSampleLoops)
-        {
-            sample.Dispose();
-        }
 
         _tyreSpinLoop?.Dispose();
         _tyreChirpLoop?.Dispose();
         _controlLossScreechLoop?.Dispose();
-        _engineLoop = null;
-        _highRpmLoop = null;
         _engineSimulatorSound = null;
-        _engineSampleLoops = [];
-        _normalEngineSampleLoops = [];
-        _highRpmEngineSampleLoops = [];
-        _limiterEngineSampleLoop = null;
         _tyreSpinLoop = null;
         _tyreChirpLoop = null;
         _controlLossScreechLoop = null;
