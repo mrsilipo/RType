@@ -30,7 +30,8 @@ internal readonly record struct EngineAudioFrame(
     float ClutchSlipRpm,
     float ClutchTorqueNm,
     float CrankFrictionTorqueNm,
-    float TransmissionRpm)
+    float TransmissionRpm,
+    float Backfire)
 {
     public bool Audible => DriveVolume > 0.001f && PauseScale > 0f;
 
@@ -47,7 +48,8 @@ internal readonly record struct EngineAudioFrame(
         DrivelineDrive,
         SpeedMetersPerSecond,
         Gear,
-        TransmissionRpm);
+        TransmissionRpm,
+        Backfire);
 
     public static EngineAudioFrame FromVehicleState(
         VehicleAudioParameters parameters,
@@ -83,6 +85,12 @@ internal readonly record struct EngineAudioFrame(
             0f,
             1f);
         float clampedTransient = MathHelper.Clamp(throttleTransient, 0f, 1f);
+        float backfire = MathHelper.Clamp(
+            overrun * MathF.Max(
+                MathF.Max(clampedTransient * 0.72f, limiter * 0.78f),
+                shock * 0.24f),
+            0f,
+            1f);
         float intakeDrive = CalculateIntakeDrive(shapedThrottle, load, vtecBlend, overrun, clampedTransient);
         float drivelineDrive = CalculateDrivelineDrive(vehicle, throttle);
 
@@ -112,7 +120,8 @@ internal readonly record struct EngineAudioFrame(
             vehicle.ClutchSlipRpm,
             vehicle.EngineSimulatorClutchTorqueNm,
             vehicle.EngineSimulatorCrankFrictionTorqueNm,
-            vehicle.EngineSimulatorTransmissionRpm);
+            vehicle.EngineSimulatorTransmissionRpm,
+            backfire);
     }
 
     private static float CalculateLoad(VehicleState vehicle, float shapedThrottle, float overrun, float vtecKick)

@@ -37,8 +37,10 @@ internal sealed class EngineSimDspProcessor
     private float _runtimeSpeed;
     private float _runtimeGear;
     private float _runtimeTransmissionRpm;
+    private float _runtimeBackfire;
     private float _mechanicalPhase;
     private float _drivelinePhase;
+    private float _backfirePhase;
     private uint _noiseState = 0x8f93a2bdu;
 
     public EngineSimDspProcessor(VehicleAudioParameters parameters, int sampleRate, int inputChannelCount)
@@ -104,7 +106,8 @@ internal sealed class EngineSimDspProcessor
         float driveline,
         float speedMetersPerSecond,
         float gear,
-        float transmissionRpm)
+        float transmissionRpm,
+        float backfire)
     {
         float rpmTexture = SmoothStep(1500f, 5200f, rpm);
         float loadTexture = SmoothStep(0.22f, 0.82f, load);
@@ -150,6 +153,7 @@ internal sealed class EngineSimDspProcessor
         _runtimeSpeed = MathF.Max(0f, speedMetersPerSecond);
         _runtimeGear = MathHelper.Clamp(gear, -1f, 8f);
         _runtimeTransmissionRpm = MathF.Max(0f, transmissionRpm);
+        _runtimeBackfire = MathHelper.Clamp(backfire, 0f, 1f);
 
         float rpmNorm = SmoothStep(900f, 9000f, _runtimeRpm);
         _exhaustResonanceLow.Set(MathHelper.Lerp(360f, 620f, rpmNorm), 2.2f, _sampleRate);
@@ -211,6 +215,11 @@ internal sealed class EngineSimDspProcessor
         float gearWhine = MathF.Sin(_drivelinePhase * MathF.Tau) *
                           (0.0025f + _runtimeDrivelineLayer * 0.0155f) *
                           MathHelper.Lerp(0.15f, 1f, MathHelper.Clamp(_runtimeSpeed / 30f, 0f, 1f));
+        _backfirePhase = AdvancePhase(_backfirePhase, MathHelper.Lerp(72f, 138f, _runtimeRpm / 9000f));
+        float backfirePulse = _runtimeBackfire *
+                              (MathF.Sin(_backfirePhase * MathF.Tau) * 0.010f +
+                               (NextNoise() * 2f - 1f) * 0.016f) *
+                              MathHelper.Lerp(0.25f, 1f, MathHelper.Clamp(_runtimeSpeed / 22f, 0f, 1f));
         // Restore the cam-change timbre without reintroducing broadband
         // noise: VTEC adds a restrained high-passed harmonic of the same
         // simulated pressure signal.
@@ -218,7 +227,7 @@ internal sealed class EngineSimDspProcessor
         float transientTimbre = transientSource * _runtimeThrottleTransientLayer * 0.075f;
         float drivelineTimbre = drivelineSource * _runtimeDrivelineLayer * 0.040f;
         float vtecHarmonic = intakeSource * _runtimeVtecLayer * 0.55f;
-        return MathHelper.Clamp(output + resonance + mechanical + gearWhine + intakeTimbre + transientTimbre + drivelineTimbre + vtecHarmonic, -1f, 1f);
+        return MathHelper.Clamp(output + resonance + mechanical + gearWhine + backfirePulse + intakeTimbre + transientTimbre + drivelineTimbre + vtecHarmonic, -1f, 1f);
     }
 
     public void Reset()
@@ -232,6 +241,7 @@ internal sealed class EngineSimDspProcessor
         _exhaustResonanceHigh.Reset();
         _mechanicalPhase = 0f;
         _drivelinePhase = 0f;
+        _backfirePhase = 0f;
         _levelingFilter.Reset();
         foreach (ChannelFilters filters in _filters)
         {

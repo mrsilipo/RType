@@ -54,6 +54,8 @@ internal sealed class EngineSimulatorSampleSynth
     private float _currentTransmissionRpm;
     private float _targetGear;
     private float _currentGear;
+    private float _targetBackfire;
+    private float _currentBackfire;
     private float _simulationPhase;
     private bool _hasSimulationInput;
 
@@ -109,6 +111,7 @@ internal sealed class EngineSimulatorSampleSynth
         _targetSpeed = MathF.Max(0f, target.SpeedMetersPerSecond);
         _targetTransmissionRpm = MathF.Max(0f, target.TransmissionRpm);
         _targetGear = MathHelper.Clamp(target.Gear, -1f, 8f);
+        _targetBackfire = MathHelper.Clamp(target.Backfire, 0f, 1f);
     }
 
     public float NextSample()
@@ -130,6 +133,7 @@ internal sealed class EngineSimulatorSampleSynth
         _currentSpeed = MathHelper.Lerp(_currentSpeed, _targetSpeed, SpeedTrackingStep);
         _currentTransmissionRpm = MathHelper.Lerp(_currentTransmissionRpm, _targetTransmissionRpm, TransmissionRpmTrackingStep);
         _currentGear = MathHelper.Lerp(_currentGear, _targetGear, SpeedTrackingStep);
+        _currentBackfire = MathHelper.Lerp(_currentBackfire, _targetBackfire, ThrottleTransientTrackingStep);
 
         _dsp.SetOperatingPoint(
             _currentRpm,
@@ -144,7 +148,8 @@ internal sealed class EngineSimulatorSampleSynth
             _currentDriveline,
             _currentSpeed,
             _currentGear,
-            _currentTransmissionRpm);
+            _currentTransmissionRpm,
+            _currentBackfire);
         ReadInterpolatedSimulationInput();
         return SoftLimit(_dsp.Process(_interpolatedSimulationInput));
     }
@@ -177,6 +182,8 @@ internal sealed class EngineSimulatorSampleSynth
         _currentTransmissionRpm = 0f;
         _targetGear = 0f;
         _currentGear = 0f;
+        _targetBackfire = 0f;
+        _currentBackfire = 0f;
         _simulationPhase = 0f;
         _hasSimulationInput = false;
         Array.Clear(_previousSimulationInput);
@@ -317,7 +324,8 @@ internal readonly record struct EngineSimulatorSynthesisTarget(
     float Driveline,
     float SpeedMetersPerSecond = 0f,
     float Gear = 0f,
-    float TransmissionRpm = 0f)
+    float TransmissionRpm = 0f,
+    float Backfire = 0f)
 {
     public EngineSimulatorSynthesisTarget(
         float rpm,
