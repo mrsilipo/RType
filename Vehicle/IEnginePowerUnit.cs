@@ -60,12 +60,14 @@ internal readonly record struct EnginePowerUnitState(
     float ClutchTorqueNm,
     float CrankFrictionTorqueNm,
     float FuelCutBlend,
-    float CrankPhaseDegrees = 0f)
+    float CrankPhaseDegrees = 0f,
+    float AfterfireBlend = 0f)
 {
     public static EnginePowerUnitState Disabled => new(
         false,
         false,
         false,
+        0f,
         0f,
         0f,
         0f,

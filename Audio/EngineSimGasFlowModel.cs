@@ -54,6 +54,7 @@ internal sealed class EngineSimGasFlowModel
     private double _lastIndicatedTorqueNm;
     private double _lastPositiveTorqueNm;
     private double _lastNegativeTorqueNm;
+    private double _lastAfterfireBlend;
     private uint _noiseState = 0x7654c321u;
 
     public EngineSimGasFlowModel(VehicleAudioParameters parameters, int sampleRate, int? fluidSimulationStepsOverride = null)
@@ -155,7 +156,8 @@ internal sealed class EngineSimGasFlowModel
         (float)_lastPositiveTorqueNm,
         (float)_lastNegativeTorqueNm,
         (float)_fuelCutBlend,
-        CrankPhaseDegrees);
+        CrankPhaseDegrees,
+        (float)_lastAfterfireBlend);
 
     public void Step(float rpm, float throttle, float load, float vtecBlend, float limiter, float overrun, float shock, Span<float> output)
     {
@@ -183,6 +185,7 @@ internal sealed class EngineSimGasFlowModel
         double torqueSum = 0.0;
         double positiveTorqueSum = 0.0;
         double negativeTorqueSum = 0.0;
+        double afterfireSum = 0.0;
 
         for (int i = 0; i < _fluidSimulationSteps; i++)
         {
@@ -194,6 +197,7 @@ internal sealed class EngineSimGasFlowModel
             ProcessExhaustCollectors(subDt);
             ProcessIntake(subDt, effectiveThrottle);
             ProcessCylinderFlow(subDt);
+            afterfireSum += ProcessAfterfire(subDt, clampedLimiter, clampedOverrun, clampedShock);
             GasTorqueSample gasTorque = CalculateGasTorque();
             torqueSum += gasTorque.NetTorqueNm;
             positiveTorqueSum += gasTorque.PositiveTorqueNm;
@@ -204,6 +208,7 @@ internal sealed class EngineSimGasFlowModel
         _lastIndicatedTorqueNm = torqueSum * inverseSteps;
         _lastPositiveTorqueNm = positiveTorqueSum * inverseSteps;
         _lastNegativeTorqueNm = negativeTorqueSum * inverseSteps;
+        _lastAfterfireBlend = Clamp(afterfireSum * inverseSteps, 0.0, 1.0);
         WriteSynthesizerInput(clampedRpm, clampedLoad, clampedLimiter, clampedOverrun, clampedShock, pressureScale, output);
     }
 
@@ -214,6 +219,7 @@ internal sealed class EngineSimGasFlowModel
         _fuelCutBlend = 0.0;
         _cutIgnition = false;
         _noiseState = 0x7654c321u;
+        _lastAfterfireBlend = 0.0;
 
         _intakeSystem.Initialize(AtmosphericPressure, _profile.IntakePlenumVolume, AmbientTemperature);
         _intakeSystem.SetGeometry(
@@ -261,6 +267,51 @@ internal sealed class EngineSimGasFlowModel
         }
 
         return new GasTorqueSample(netTorque, positiveTorque, negativeTorque);
+    }
+
+    private double ProcessAfterfire(double dt, double limiter, double overrun, double shock)
+    {
+        double drive = Clamp(
+            overrun * 0.82 +
+            limiter * _fuelCutBlend * 0.72 +
+            shock * overrun * 0.18,
+            0.0,
+            1.0);
+        if (drive <= 0.001)
+        {
+            return 0.0;
+        }
+
+        double blend = 0.0;
+        for (int i = 0; i < _cylinders.Length; i++)
+        {
+            GasSystem exhaustRunner = _cylinders[i].ExhaustRunner;
+            double availableFuel = exhaustRunner.N * exhaustRunner.Mix.PFuel;
+            double availableOxygen = exhaustRunner.N * exhaustRunner.Mix.PO2;
+            if (availableFuel <= MinimumGasMoles || availableOxygen <= MinimumGasMoles)
+            {
+                continue;
+            }
+
+            double reactantMoles = Math.Min(
+                availableFuel / (2.0 / 27.0),
+                availableOxygen / (25.0 / 27.0));
+            reactantMoles = Math.Min(reactantMoles, exhaustRunner.N * dt * 18.0 * drive);
+            double activeFuel = exhaustRunner.React(reactantMoles, exhaustRunner.Mix);
+            if (activeFuel <= 0.0)
+            {
+                continue;
+            }
+
+            exhaustRunner.ChangeEnergy(activeFuel * _fuel.EnergyDensity * 0.22);
+            double pressurePulse = Clamp(
+                (exhaustRunner.Pressure - AtmosphericPressure) / 450000.0,
+                0.0,
+                1.0);
+            blend = Math.Max(blend, Clamp(activeFuel / Math.Max(MinimumGasMoles, availableFuel) * 8.0, 0.0, 1.0) * pressurePulse);
+        }
+
+        return blend;
     }
 
     private void InitializeCylinder(Cylinder cylinder)
@@ -2305,4 +2356,5 @@ internal readonly record struct EngineSimGasFlowPowerState(
     float PositiveTorqueNm,
     float NegativeTorqueNm,
     float FuelCutBlend,
-    float CrankPhaseDegrees);
+    float CrankPhaseDegrees,
+    float AfterfireBlend);

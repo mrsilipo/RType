@@ -2060,6 +2060,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         State.EngineSimulatorFuelCutBlend = simActive ? enginePower.FuelCutBlend : 0f;
         State.EngineSimulatorCrankRpm = simActive ? enginePower.CrankRpm : 0f;
         State.EngineSimulatorCrankPhaseDegrees = simActive ? enginePower.CrankPhaseDegrees : 0f;
+        State.EngineSimulatorAfterfireBlend = simActive ? enginePower.AfterfireBlend : 0f;
         State.EngineSimulatorTransmissionRpm = simActive ? enginePower.TransmissionRpm : 0f;
         State.EngineSimulatorClutchTorqueNm = simActive ? enginePower.ClutchTorqueNm : 0f;
         State.EngineSimulatorCrankFrictionTorqueNm = simActive ? enginePower.CrankFrictionTorqueNm : 0f;

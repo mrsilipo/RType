@@ -88,7 +88,7 @@ internal readonly record struct EngineAudioFrame(
             1f);
         float clampedTransient = MathHelper.Clamp(throttleTransient, 0f, 1f);
         float backfire = MathHelper.Clamp(
-            overrun * MathF.Max(
+            MathF.Max(vehicle.EngineSimulatorAfterfireBlend, overrun) * MathF.Max(
                 MathF.Max(clampedTransient * 0.72f, limiter * 0.78f),
                 shock * 0.24f),
             0f,
