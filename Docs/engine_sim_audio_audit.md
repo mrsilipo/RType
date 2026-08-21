@@ -127,6 +127,19 @@ Current validation:
 - `--performance-probe`: audio synth around `1.55x` realtime
 - `--physics-smoke-test`: passed
 
+## 2026-08-21 Low-Latency Stream Freshness Pass
+
+The Engine Sim stream now targets `2 x 512` submitted buffers instead of `3 x 512`, reducing the nominal submitted audio queue from `34.8 ms` to `23.2 ms`. Startup still waits for two buffers so playback does not begin empty.
+
+Ready-buffer handling now prefers fresher targets. If an older generated buffer is waiting and a newer generated buffer is available, the older one is recycled instead of submitted. Generated buffers also record the newest synthesis target used during their internal 64-frame target refreshes, so timing telemetry reflects the actual target data used inside the buffer instead of only the target captured at fill start.
+
+Current validation:
+
+- `--engine-sim-stream-stress`: no low-buffer events, no emergency recovery events, worst estimated audible age `42.32 ms`, worst ready age at submit `9.39 ms`
+- `--audio-diagnostics-smoke`: no low-buffer events, worst estimated audible age `43.12 ms`
+- `--performance-probe`: audio synth around `1.60x` realtime
+- `--physics-smoke-test`: passed
+
 Changed files:
 
 - `Audio/EngineAudioFrame.cs`
