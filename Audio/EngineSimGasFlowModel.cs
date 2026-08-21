@@ -678,7 +678,11 @@ internal sealed class EngineSimGasFlowModel
             combustionPressureSignal += Math.Max(0.0, cylinder.Chamber.Pressure - AtmosphericPressure);
             pistonSignal += cylinder.CurrentPistonTravelDerivative;
             valvetrainSignal += cylinder.IntakeFlowRate + cylinder.ExhaustFlowRate;
-            double exhaustFlow = attenuation3 * 1600.0 *
+            // Engine Sim's native exhaust channel normalizes pressure before
+            // the impulse response. The managed path was feeding raw pressure
+            // at 1600x, saturating the exhaust channels and burying the other
+            // physical channels in a harsh high-frequency texture.
+            double exhaustFlow = attenuation3 * 240.0 *
                 (cylinder.ExhaustRunner.Pressure - AtmosphericPressure +
                  0.1 * cylinder.ExhaustRunner.DynamicPressure(1.0, 0.0) +
                  0.1 * cylinder.ExhaustRunner.DynamicPressure(-1.0, 0.0));
