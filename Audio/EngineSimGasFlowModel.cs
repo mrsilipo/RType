@@ -55,6 +55,10 @@ internal sealed class EngineSimGasFlowModel
     private double _lastPositiveTorqueNm;
     private double _lastNegativeTorqueNm;
     private double _lastAfterfireBlend;
+    private double _peakChamberPressurePa;
+    private double _averageExhaustPressurePa;
+    private double _averageIntakePressurePa;
+    private double _afterfireEnergyJ;
     private uint _noiseState = 0x7654c321u;
 
     public EngineSimGasFlowModel(VehicleAudioParameters parameters, int sampleRate, int? fluidSimulationStepsOverride = null)
@@ -159,6 +163,12 @@ internal sealed class EngineSimGasFlowModel
         CrankPhaseDegrees,
         (float)_lastAfterfireBlend);
 
+    public EngineSimGasFlowDiagnostics LastDiagnostics => new(
+        (float)_peakChamberPressurePa,
+        (float)_averageExhaustPressurePa,
+        (float)_averageIntakePressurePa,
+        (float)_afterfireEnergyJ);
+
     public void Step(float rpm, float throttle, float load, float vtecBlend, float limiter, float overrun, float shock, Span<float> output)
     {
         output.Clear();
@@ -186,6 +196,10 @@ internal sealed class EngineSimGasFlowModel
         double positiveTorqueSum = 0.0;
         double negativeTorqueSum = 0.0;
         double afterfireSum = 0.0;
+        double exhaustPressureSum = 0.0;
+        double intakePressureSum = 0.0;
+        _peakChamberPressurePa = 0.0;
+        _afterfireEnergyJ = 0.0;
 
         for (int i = 0; i < _fluidSimulationSteps; i++)
         {
@@ -198,6 +212,13 @@ internal sealed class EngineSimGasFlowModel
             ProcessIntake(subDt, effectiveThrottle);
             ProcessCylinderFlow(subDt);
             afterfireSum += ProcessAfterfire(subDt, clampedLimiter, clampedOverrun, clampedShock);
+            for (int cylinderIndex = 0; cylinderIndex < _cylinders.Length; cylinderIndex++)
+            {
+                Cylinder cylinder = _cylinders[cylinderIndex];
+                _peakChamberPressurePa = Math.Max(_peakChamberPressurePa, cylinder.Chamber.Pressure);
+                exhaustPressureSum += cylinder.ExhaustRunner.Pressure;
+                intakePressureSum += cylinder.IntakeRunner.Pressure;
+            }
             GasTorqueSample gasTorque = CalculateGasTorque();
             torqueSum += gasTorque.NetTorqueNm;
             positiveTorqueSum += gasTorque.PositiveTorqueNm;
@@ -209,6 +230,8 @@ internal sealed class EngineSimGasFlowModel
         _lastPositiveTorqueNm = positiveTorqueSum * inverseSteps;
         _lastNegativeTorqueNm = negativeTorqueSum * inverseSteps;
         _lastAfterfireBlend = Clamp(afterfireSum * inverseSteps, 0.0, 1.0);
+        _averageExhaustPressurePa = exhaustPressureSum * inverseSteps / _cylinders.Length;
+        _averageIntakePressurePa = intakePressureSum * inverseSteps / _cylinders.Length;
         WriteSynthesizerInput(clampedRpm, clampedLoad, clampedLimiter, clampedOverrun, clampedShock, pressureScale, output);
     }
 
@@ -220,6 +243,10 @@ internal sealed class EngineSimGasFlowModel
         _cutIgnition = false;
         _noiseState = 0x7654c321u;
         _lastAfterfireBlend = 0.0;
+        _peakChamberPressurePa = AtmosphericPressure;
+        _averageExhaustPressurePa = AtmosphericPressure;
+        _averageIntakePressurePa = AtmosphericPressure;
+        _afterfireEnergyJ = 0.0;
 
         _intakeSystem.Initialize(AtmosphericPressure, _profile.IntakePlenumVolume, AmbientTemperature);
         _intakeSystem.SetGeometry(
@@ -303,7 +330,9 @@ internal sealed class EngineSimGasFlowModel
                 continue;
             }
 
-            exhaustRunner.ChangeEnergy(activeFuel * _fuel.EnergyDensity * 0.22);
+            double afterfireEnergy = activeFuel * _fuel.EnergyDensity * 0.22;
+            exhaustRunner.ChangeEnergy(afterfireEnergy);
+            _afterfireEnergyJ += afterfireEnergy;
             double pressurePulse = Clamp(
                 (exhaustRunner.Pressure - AtmosphericPressure) / 450000.0,
                 0.0,
@@ -2358,3 +2387,9 @@ internal readonly record struct EngineSimGasFlowPowerState(
     float FuelCutBlend,
     float CrankPhaseDegrees,
     float AfterfireBlend);
+
+internal readonly record struct EngineSimGasFlowDiagnostics(
+    float PeakChamberPressurePa,
+    float AverageExhaustPressurePa,
+    float AverageIntakePressurePa,
+    float AfterfireEnergyJ);
