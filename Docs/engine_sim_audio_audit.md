@@ -155,6 +155,19 @@ Current validation:
 - `--performance-probe`: default `2`-step audio synth around `1.14x` realtime; variant probe `1` step `2.06x`, `2` steps `1.15x`, `4` steps `0.61x`
 - `--physics-smoke-test`: passed
 
+## 2026-08-21 Hybrid Exhaust IR Pass
+
+The Engine Sim DSP now supports a hybrid exhaust convolution path. The first `512` impulse-response taps still run as exact full-rate direct convolution, preserving the attack and early exhaust character. Any remaining tail is folded into a lower-rate convolution tail using 8-sample groups, which keeps the full exhaust response present without paying full direct-convolution cost for every late tap.
+
+The Honda profile now requests `2048` impulse-response taps. The current local `mild_exhaust.wav` clips to `1893` useful taps, so runtime now uses the full useful local IR instead of the previous `512`-tap slice. Diagnostics report the active split, for example `hybrid convolution direct 512, tail 1381->173`.
+
+Current validation was run in a clean temporary worktree because unrelated renderer work-in-progress currently breaks the main worktree build:
+
+- clean worktree `dotnet build`: passed
+- `--performance-probe`: default `2`-step audio synth around `1.07x` realtime; variant probe `1` step `1.93x`, `2` steps `1.12x`, `4` steps `0.59x`
+- `--engine-sim-stream-stress`: no low-buffer events, no emergency recovery events, worst fill `12.84 ms`, worst estimated audible age `39.86 ms`
+- `--audio-diagnostics-smoke`: no low-buffer events, worst fill `15.05 ms`, worst estimated audible age `43.14 ms`
+
 Changed files:
 
 - `Audio/EngineAudioFrame.cs`
@@ -206,15 +219,15 @@ The game is already using the important Honda MR data:
 
 1. Audio simulation rate
 
-   The MR specifies `simulation_frequency: 20000`. The managed C# synth now runs the EK9 audio model at `20000 Hz` with `1` fluid substep for gameplay. That keeps the requested engine timestep while staying above realtime in Debug. Higher fluid settings are still expensive in Debug: `20000 Hz` with `2` fluid substeps measured below realtime, while Release builds have enough headroom for higher settings.
+   The MR specifies `simulation_frequency: 20000`. The managed C# synth now runs the EK9 audio model at `20000 Hz` with `2` fluid substeps for gameplay. That keeps the requested engine timestep while staying above realtime in the command-line stream probes, though the standalone Debug performance margin is still narrow.
 
 2. Fluid simulation substeps
 
-   Engine Sim defaults to multiple fluid substeps per engine timestep. Our port supports configurable fluid substeps and imports the Engine Sim default of `8`, but EK9 gameplay currently overrides this to `1` because higher settings are not realtime in Debug.
+   Engine Sim defaults to more fluid substeps per engine timestep. Our port supports configurable fluid substeps and now runs the EK9 audio profile at `2`, but `4` substeps remains below realtime in Debug and the native Engine Sim default of `8` is still not viable in the managed hot path.
 
 3. Convolution length
 
-   Engine Sim supports up to `10000` impulse-response taps. The local Honda `mild_exhaust.wav` clips to about `1893` useful frames, but the EK9 JSON currently uses `512` taps. This is a reasonable runtime compromise, but it is not the full exhaust response.
+   Engine Sim supports up to `10000` impulse-response taps. The local Honda `mild_exhaust.wav` clips to about `1893` useful frames, and the runtime now uses that full useful local tail through a hybrid convolution path. This is still an approximation for the late tail rather than sample-exact full-rate convolution for every tap.
 
 4. Stream architecture
 
@@ -238,6 +251,6 @@ The game is already using the important Honda MR data:
 2. Use the timing telemetry during real gameplay to confirm whether the remaining perceived lag matches the reported estimated audible age.
 3. Continue optimizing the synth toward `4+` fluid substeps at the Honda MR `20000` Hz rate; `2` is now active but still has limited Debug headroom.
 4. Add a native C++ Engine Sim bridge once CMake/build tooling is available, then feed game RPM/load from the real `PistonEngineSimulator`/constraint system instead of the managed approximation.
-5. Replace the direct convolution with a cheaper partitioned or hybrid convolution so the full `mild_exhaust.wav` tail can be used.
+5. Drive-test the hybrid IR tail for tone and CPU stability during actual gameplay; fall back to `512` taps or a coarser tail only if live gameplay reports buffer pressure.
 6. Revisit the idle jitter/noise scaling after stream underruns are gone.
 7. Continue the physics integration by replacing remaining launch/clutch heuristics with data from the coupled crank, clutch, and wheel-speed solver.

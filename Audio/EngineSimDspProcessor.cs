@@ -63,7 +63,7 @@ internal sealed class EngineSimDspProcessor
 
         AudioDiagnostics.Log(
             "engine-sim-dsp",
-            $"ported synthesizer, channels {channelCount}, hf {_audioParameters.DerivativeMix:0.0000}, noise {_audioParameters.AirNoise:0.000}, jitter {_audioParameters.InputSampleNoise:0.000}, idle texture scaled, conv taps {impulseResponse.Length}, pressure scale {parameters.EngineSimulatorDspPressureScale:0.0}, output gain {_audioParameters.Volume:0.00}");
+            $"ported synthesizer, channels {channelCount}, hf {_audioParameters.DerivativeMix:0.0000}, noise {_audioParameters.AirNoise:0.000}, jitter {_audioParameters.InputSampleNoise:0.000}, idle texture scaled, conv taps {impulseResponse.Length}, {ConvolutionFilter.Describe(impulseResponse.Length)}, pressure scale {parameters.EngineSimulatorDspPressureScale:0.0}, output gain {_audioParameters.Volume:0.00}");
     }
 
     public int ChannelCount => _filters.Length;
@@ -303,38 +303,173 @@ internal sealed class EngineSimDspProcessor
 
     private sealed class ConvolutionFilter
     {
-        private float[] _shiftRegister = [];
-        private float[] _impulseResponse = [];
-        private int _shiftOffset;
+        private const int DirectTapLimit = 512;
+        private const int TailDecimation = 8;
+
+        private float[] _directShiftRegister = [];
+        private float[] _directImpulseResponse = [];
+        private float[] _tailInputDelay = [];
+        private float[] _tailHistory = [];
+        private float[] _tailImpulseResponse = [];
+        private int _directShiftOffset;
+        private int _tailDelayOffset;
+        private int _tailHistoryOffset;
+        private int _tailAccumulatorCount;
+        private int _tailInterpolationPosition = TailDecimation;
+        private float _tailAccumulator;
+        private float _tailPreviousOutput;
+        private float _tailTargetOutput;
+        private float _tailCurrentOutput;
+
+        public static string Describe(int impulseResponseLength)
+        {
+            if (impulseResponseLength <= 0)
+            {
+                return "conv disabled";
+            }
+
+            if (impulseResponseLength <= DirectTapLimit)
+            {
+                return "direct convolution";
+            }
+
+            int tailSamples = impulseResponseLength - DirectTapLimit;
+            int tailTaps = (tailSamples + TailDecimation - 1) / TailDecimation;
+            return $"hybrid convolution direct {DirectTapLimit}, tail {tailSamples}->{tailTaps}";
+        }
 
         public void Initialize(float[] impulseResponse)
         {
-            _impulseResponse = impulseResponse;
-            _shiftRegister = new float[impulseResponse.Length];
-            _shiftOffset = 0;
+            int directLength = Math.Min(impulseResponse.Length, DirectTapLimit);
+            _directImpulseResponse = new float[directLength];
+            _directShiftRegister = new float[directLength];
+            if (directLength > 0)
+            {
+                Array.Copy(impulseResponse, _directImpulseResponse, directLength);
+            }
+
+            int tailSamples = impulseResponse.Length - directLength;
+            if (tailSamples > 0)
+            {
+                int tailLength = (tailSamples + TailDecimation - 1) / TailDecimation;
+                _tailImpulseResponse = new float[tailLength];
+                _tailHistory = new float[tailLength];
+                _tailInputDelay = new float[Math.Max(1, directLength)];
+                for (int tailIndex = 0; tailIndex < tailLength; tailIndex++)
+                {
+                    float sum = 0f;
+                    int sourceStart = directLength + tailIndex * TailDecimation;
+                    int sourceEnd = Math.Min(impulseResponse.Length, sourceStart + TailDecimation);
+                    for (int source = sourceStart; source < sourceEnd; source++)
+                    {
+                        sum += impulseResponse[source];
+                    }
+
+                    _tailImpulseResponse[tailIndex] = sum;
+                }
+            }
+            else
+            {
+                _tailImpulseResponse = [];
+                _tailHistory = [];
+                _tailInputDelay = [];
+            }
+
+            _directShiftOffset = 0;
+            _tailDelayOffset = 0;
+            _tailHistoryOffset = 0;
+            _tailAccumulator = 0f;
+            _tailAccumulatorCount = 0;
+            _tailPreviousOutput = 0f;
+            _tailTargetOutput = 0f;
+            _tailCurrentOutput = 0f;
+            _tailInterpolationPosition = TailDecimation;
         }
 
         public float Process(float sample)
         {
-            if (_impulseResponse.Length == 0)
+            if (_directImpulseResponse.Length == 0 && _tailImpulseResponse.Length == 0)
             {
                 return sample;
             }
 
-            _shiftRegister[_shiftOffset] = sample;
+            return ProcessDirect(sample) + ProcessTail(sample);
+        }
 
-            int split = _impulseResponse.Length - _shiftOffset;
-            float result =
-                Dot(_impulseResponse, 0, _shiftRegister, _shiftOffset, split) +
-                Dot(_impulseResponse, split, _shiftRegister, 0, _impulseResponse.Length - split);
-
-            _shiftOffset--;
-            if (_shiftOffset < 0)
+        private float ProcessDirect(float sample)
+        {
+            if (_directImpulseResponse.Length == 0)
             {
-                _shiftOffset = _impulseResponse.Length - 1;
+                return 0f;
+            }
+
+            _directShiftRegister[_directShiftOffset] = sample;
+
+            int split = _directImpulseResponse.Length - _directShiftOffset;
+            float result =
+                Dot(_directImpulseResponse, 0, _directShiftRegister, _directShiftOffset, split) +
+                Dot(_directImpulseResponse, split, _directShiftRegister, 0, _directImpulseResponse.Length - split);
+
+            _directShiftOffset--;
+            if (_directShiftOffset < 0)
+            {
+                _directShiftOffset = _directImpulseResponse.Length - 1;
             }
 
             return result;
+        }
+
+        private float ProcessTail(float sample)
+        {
+            if (_tailImpulseResponse.Length == 0)
+            {
+                return 0f;
+            }
+
+            float delayedSample = _tailInputDelay[_tailDelayOffset];
+            _tailInputDelay[_tailDelayOffset] = sample;
+            _tailDelayOffset--;
+            if (_tailDelayOffset < 0)
+            {
+                _tailDelayOffset = _tailInputDelay.Length - 1;
+            }
+
+            _tailAccumulator += delayedSample;
+            _tailAccumulatorCount++;
+            if (_tailAccumulatorCount >= TailDecimation)
+            {
+                float averagedSample = _tailAccumulator / _tailAccumulatorCount;
+                _tailAccumulator = 0f;
+                _tailAccumulatorCount = 0;
+
+                _tailHistoryOffset--;
+                if (_tailHistoryOffset < 0)
+                {
+                    _tailHistoryOffset = _tailHistory.Length - 1;
+                }
+
+                _tailHistory[_tailHistoryOffset] = averagedSample;
+                int split = _tailImpulseResponse.Length - _tailHistoryOffset;
+                float nextOutput =
+                    Dot(_tailImpulseResponse, 0, _tailHistory, _tailHistoryOffset, split) +
+                    Dot(_tailImpulseResponse, split, _tailHistory, 0, _tailImpulseResponse.Length - split);
+                _tailPreviousOutput = _tailCurrentOutput;
+                _tailTargetOutput = nextOutput;
+                _tailInterpolationPosition = 0;
+            }
+
+            if (_tailInterpolationPosition < TailDecimation)
+            {
+                float t = (_tailInterpolationPosition + 1f) / TailDecimation;
+                _tailCurrentOutput = MathHelper.Lerp(_tailPreviousOutput, _tailTargetOutput, t);
+                _tailInterpolationPosition++;
+            }
+            else
+            {
+                _tailCurrentOutput = _tailTargetOutput;
+            }
+
+            return _tailCurrentOutput;
         }
 
         private static float Dot(float[] left, int leftOffset, float[] right, int rightOffset, int count)
@@ -367,8 +502,18 @@ internal sealed class EngineSimDspProcessor
 
         public void Reset()
         {
-            Array.Clear(_shiftRegister);
-            _shiftOffset = 0;
+            Array.Clear(_directShiftRegister);
+            Array.Clear(_tailInputDelay);
+            Array.Clear(_tailHistory);
+            _directShiftOffset = 0;
+            _tailDelayOffset = 0;
+            _tailHistoryOffset = 0;
+            _tailAccumulator = 0f;
+            _tailAccumulatorCount = 0;
+            _tailPreviousOutput = 0f;
+            _tailTargetOutput = 0f;
+            _tailCurrentOutput = 0f;
+            _tailInterpolationPosition = TailDecimation;
         }
     }
 

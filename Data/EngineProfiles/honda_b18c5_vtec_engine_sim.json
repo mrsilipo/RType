@@ -10,7 +10,7 @@
       "value": 0.01
     },
     "impulseResponseTaps": {
-      "value": 512
+      "value": 2048
     },
     "simulationFrequencyHz": {
       "value": 20000
