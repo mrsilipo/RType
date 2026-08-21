@@ -128,6 +128,14 @@ public sealed class VehicleAudioParameters
 
     public float EngineSimulatorProfileMaxEngineBrakeTorqueNm { get; init; }
 
+    public float[] EngineSimulatorProfileTorqueCurveRpm { get; init; } = [];
+
+    public float[] EngineSimulatorProfileTorqueCurveNm { get; init; } = [];
+
+    public float[] EngineSimulatorProfileEngineBrakeCurveRpm { get; init; } = [];
+
+    public float[] EngineSimulatorProfileEngineBrakeCurveNm { get; init; } = [];
+
     public float EngineSimulatorLimiterDurationSeconds { get; init; } = 0.05f;
 
     public float EngineSimulatorLowIntakeDurationDegrees { get; init; } = 210f;

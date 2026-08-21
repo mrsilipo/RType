@@ -123,7 +123,8 @@ internal sealed class EngineSimPowerUnit : IEnginePowerUnit
         float simDriveTorque = MathHelper.Clamp(
             MathF.Max(0f, rawPositiveTorque) *
             SmoothStep(0.02f, 0.82f, clampedThrottle) *
-            MathF.Max(0f, _parameters.EngineSimulatorPhysicsTorqueScale),
+            MathF.Max(0f, _parameters.EngineSimulatorPhysicsTorqueScale) *
+            ProfileTorqueEnvelope(clampedRpm),
             0f,
             MathF.Max(1f, EffectiveMaxTorqueNm));
         if (_parameters.EngineSimulatorPhysicsUseReferenceTorqueCalibration)
@@ -140,7 +141,8 @@ internal sealed class EngineSimPowerUnit : IEnginePowerUnit
             _parameters.ClosedThrottleEngineBrakeTorqueNm,
             _parameters.EngineBrakeTorqueAtRpm(clampedRpm));
         float simBrakeTorque = MathHelper.Clamp(
-            MathF.Max(0f, -rawNegativeTorque) * MathF.Max(0f, _parameters.EngineSimulatorPhysicsEngineBrakeScale),
+            MathF.Max(0f, -rawNegativeTorque) * MathF.Max(0f, _parameters.EngineSimulatorPhysicsEngineBrakeScale) *
+            ProfileEngineBrakeEnvelope(clampedRpm),
             0f,
             MathF.Max(1f, EffectiveMaxEngineBrakeTorqueNm));
         float brakeBlend = MathHelper.Clamp(_parameters.EngineSimulatorPhysicsEngineBrakeBlend, 0f, 1f);
@@ -231,6 +233,62 @@ internal sealed class EngineSimPowerUnit : IEnginePowerUnit
             RpmToOmega(450f),
             RpmToOmega(maxRpm));
         return OmegaToRpm(_crankOmegaRadiansPerSecond);
+    }
+
+    private float ProfileTorqueEnvelope(float rpm)
+    {
+        return ProfileEnvelope(
+            rpm,
+            _parameters.Audio.EngineSimulatorProfileTorqueCurveRpm,
+            _parameters.Audio.EngineSimulatorProfileTorqueCurveNm);
+    }
+
+    private float ProfileEngineBrakeEnvelope(float rpm)
+    {
+        return ProfileEnvelope(
+            rpm,
+            _parameters.Audio.EngineSimulatorProfileEngineBrakeCurveRpm,
+            _parameters.Audio.EngineSimulatorProfileEngineBrakeCurveNm);
+    }
+
+    private static float ProfileEnvelope(float rpm, float[] sampleRpm, float[] sampleTorque)
+    {
+        int count = Math.Min(sampleRpm.Length, sampleTorque.Length);
+        if (count < 2)
+        {
+            return 1f;
+        }
+
+        float peak = 0f;
+        for (int i = 0; i < count; i++)
+        {
+            peak = MathF.Max(peak, MathF.Abs(sampleTorque[i]));
+        }
+
+        if (peak <= 0.001f)
+        {
+            return 1f;
+        }
+
+        if (rpm <= sampleRpm[0])
+        {
+            return MathHelper.Clamp(sampleTorque[0] / peak, 0.25f, 1.15f);
+        }
+
+        for (int i = 1; i < count; i++)
+        {
+            if (rpm > sampleRpm[i])
+            {
+                continue;
+            }
+
+            float span = MathF.Max(1f, sampleRpm[i] - sampleRpm[i - 1]);
+            float t = MathHelper.Clamp((rpm - sampleRpm[i - 1]) / span, 0f, 1f);
+            float torque = MathHelper.Lerp(sampleTorque[i - 1], sampleTorque[i], t);
+            return MathHelper.Clamp(torque / peak, 0.25f, 1.15f);
+        }
+
+        return MathHelper.Clamp(sampleTorque[count - 1] / peak, 0.25f, 1.15f);
     }
 
     private EngineSimDrivelineSample AdvanceFullDriveline(

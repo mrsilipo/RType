@@ -58,6 +58,10 @@
     "maxTorqueNm": {
       "value": 190
     },
+    "torqueCurveRpm": [1500, 3000, 4500, 6000, 7000, 8000, 8500],
+    "torqueCurveNm": [118, 151, 173, 184, 188, 190, 184],
+    "engineBrakeCurveRpm": [1500, 3000, 4500, 6000, 7000, 8000, 8500],
+    "engineBrakeCurveNm": [36, 52, 72, 96, 118, 135, 140],
     "maxEngineBrakeTorqueNm": {
       "value": 140
     },
