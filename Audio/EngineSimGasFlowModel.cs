@@ -143,11 +143,19 @@ internal sealed class EngineSimGasFlowModel
 
     public int FluidSimulationSteps => _fluidSimulationSteps;
 
+    public float CrankPhaseDegrees => (float)_crankDegrees;
+
+    public void SynchronizeCrankPhase(float phaseDegrees)
+    {
+        _crankDegrees = WrapCycleDegrees(phaseDegrees);
+    }
+
     public EngineSimGasFlowPowerState LastPowerState => new(
         (float)_lastIndicatedTorqueNm,
         (float)_lastPositiveTorqueNm,
         (float)_lastNegativeTorqueNm,
-        (float)_fuelCutBlend);
+        (float)_fuelCutBlend,
+        CrankPhaseDegrees);
 
     public void Step(float rpm, float throttle, float load, float vtecBlend, float limiter, float overrun, float shock, Span<float> output)
     {
@@ -2296,4 +2304,5 @@ internal readonly record struct EngineSimGasFlowPowerState(
     float IndicatedTorqueNm,
     float PositiveTorqueNm,
     float NegativeTorqueNm,
-    float FuelCutBlend);
+    float FuelCutBlend,
+    float CrankPhaseDegrees);

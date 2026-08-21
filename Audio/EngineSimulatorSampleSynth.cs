@@ -56,6 +56,8 @@ internal sealed class EngineSimulatorSampleSynth
     private float _currentGear;
     private float _targetBackfire;
     private float _currentBackfire;
+    private float _targetCrankPhase;
+    private bool _phaseSyncPending;
     private float _simulationPhase;
     private bool _hasSimulationInput;
 
@@ -112,6 +114,12 @@ internal sealed class EngineSimulatorSampleSynth
         _targetTransmissionRpm = MathF.Max(0f, target.TransmissionRpm);
         _targetGear = MathHelper.Clamp(target.Gear, -1f, 8f);
         _targetBackfire = MathHelper.Clamp(target.Backfire, 0f, 1f);
+        _targetCrankPhase = target.CrankPhaseDegrees;
+        float phaseError = SignedPhaseDifference(_targetCrankPhase, _engineModel.CrankPhaseDegrees);
+        if (MathF.Abs(phaseError) > 75f)
+        {
+            _phaseSyncPending = true;
+        }
     }
 
     public float NextSample()
@@ -134,6 +142,11 @@ internal sealed class EngineSimulatorSampleSynth
         _currentTransmissionRpm = MathHelper.Lerp(_currentTransmissionRpm, _targetTransmissionRpm, TransmissionRpmTrackingStep);
         _currentGear = MathHelper.Lerp(_currentGear, _targetGear, SpeedTrackingStep);
         _currentBackfire = MathHelper.Lerp(_currentBackfire, _targetBackfire, ThrottleTransientTrackingStep);
+        if (_phaseSyncPending)
+        {
+            _engineModel.SynchronizeCrankPhase(_targetCrankPhase);
+            _phaseSyncPending = false;
+        }
 
         _dsp.SetOperatingPoint(
             _currentRpm,
@@ -184,6 +197,8 @@ internal sealed class EngineSimulatorSampleSynth
         _currentGear = 0f;
         _targetBackfire = 0f;
         _currentBackfire = 0f;
+        _targetCrankPhase = 0f;
+        _phaseSyncPending = false;
         _simulationPhase = 0f;
         _hasSimulationInput = false;
         Array.Clear(_previousSimulationInput);
@@ -253,6 +268,21 @@ internal sealed class EngineSimulatorSampleSynth
         float range = ceiling - threshold;
         float compressed = threshold + range * (1f - MathF.Exp(-(absolute - threshold) / range));
         return MathF.CopySign(MathF.Min(ceiling, compressed), value);
+    }
+
+    private static float SignedPhaseDifference(float target, float current)
+    {
+        float difference = (target - current) % 720f;
+        if (difference > 360f)
+        {
+            difference -= 720f;
+        }
+        else if (difference < -360f)
+        {
+            difference += 720f;
+        }
+
+        return difference;
     }
 
     private static string FormatScriptPath(string path)
@@ -325,7 +355,8 @@ internal readonly record struct EngineSimulatorSynthesisTarget(
     float SpeedMetersPerSecond = 0f,
     float Gear = 0f,
     float TransmissionRpm = 0f,
-    float Backfire = 0f)
+    float Backfire = 0f,
+    float CrankPhaseDegrees = 0f)
 {
     public EngineSimulatorSynthesisTarget(
         float rpm,

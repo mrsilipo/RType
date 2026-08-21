@@ -114,6 +114,8 @@ public sealed class VehicleState
 
     public float EngineSimulatorCrankRpm { get; set; }
 
+    public float EngineSimulatorCrankPhaseDegrees { get; set; }
+
     public float EngineSimulatorTransmissionRpm { get; set; }
 
     public float EngineSimulatorClutchTorqueNm { get; set; }

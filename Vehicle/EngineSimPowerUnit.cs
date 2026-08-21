@@ -78,6 +78,7 @@ internal sealed class EngineSimPowerUnit : IEnginePowerUnit
         float positiveTorqueSum = 0f;
         float negativeTorqueSum = 0f;
         float fuelCutSum = 0f;
+        float crankPhaseDegrees = 0f;
         for (int i = 0; i < steps; i++)
         {
             _gasModel.Step(
@@ -94,6 +95,7 @@ internal sealed class EngineSimPowerUnit : IEnginePowerUnit
             positiveTorqueSum += gas.PositiveTorqueNm;
             negativeTorqueSum += gas.NegativeTorqueNm;
             fuelCutSum += gas.FuelCutBlend;
+            crankPhaseDegrees = gas.CrankPhaseDegrees;
         }
 
         float inverseSteps = 1f / steps;
@@ -176,7 +178,8 @@ internal sealed class EngineSimPowerUnit : IEnginePowerUnit
             transmissionRpm,
             clutchTorque,
             crankFrictionTorque,
-            fuelCutBlend);
+            fuelCutBlend,
+            crankPhaseDegrees);
         return State;
     }
 

@@ -31,7 +31,8 @@ internal readonly record struct EngineAudioFrame(
     float ClutchTorqueNm,
     float CrankFrictionTorqueNm,
     float TransmissionRpm,
-    float Backfire)
+    float Backfire,
+    float CrankPhaseDegrees)
 {
     public bool Audible => DriveVolume > 0.001f && PauseScale > 0f;
 
@@ -49,7 +50,8 @@ internal readonly record struct EngineAudioFrame(
         SpeedMetersPerSecond,
         Gear,
         TransmissionRpm,
-        Backfire);
+        Backfire,
+        CrankPhaseDegrees);
 
     public static EngineAudioFrame FromVehicleState(
         VehicleAudioParameters parameters,
@@ -121,7 +123,8 @@ internal readonly record struct EngineAudioFrame(
             vehicle.EngineSimulatorClutchTorqueNm,
             vehicle.EngineSimulatorCrankFrictionTorqueNm,
             vehicle.EngineSimulatorTransmissionRpm,
-            backfire);
+            backfire,
+            vehicle.EngineSimulatorCrankPhaseDegrees);
     }
 
     private static float CalculateLoad(VehicleState vehicle, float shapedThrottle, float overrun, float vtecKick)
