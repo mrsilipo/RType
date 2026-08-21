@@ -678,16 +678,18 @@ internal sealed class EngineSimGasFlowModel
             combustionPressureSignal += Math.Max(0.0, cylinder.Chamber.Pressure - AtmosphericPressure);
             pistonSignal += cylinder.CurrentPistonTravelDerivative;
             valvetrainSignal += cylinder.IntakeFlowRate + cylinder.ExhaustFlowRate;
-            // Engine Sim's native exhaust channel normalizes pressure before
-            // the impulse response. The managed path was feeding raw pressure
-            // at 1600x, saturating the exhaust channels and burying the other
-            // physical channels in a harsh high-frequency texture.
             double exhaustFlow = attenuation3 * 240.0 *
                 (cylinder.ExhaustRunner.Pressure - AtmosphericPressure +
                  0.1 * cylinder.ExhaustRunner.DynamicPressure(1.0, 0.0) +
                  0.1 * cylinder.ExhaustRunner.DynamicPressure(-1.0, 0.0));
+            // Integrate pressure excitation into a continuous acoustic state
+            // before the runner waveguide, preventing solver-step edges from
+            // becoming the audible narrow buzz.
+            double acousticAlpha = 1.0 - Math.Exp(-2.0 * Math.PI * 900.0 * _dt);
+            cylinder.ExhaustAcousticState +=
+                (exhaustFlow - cylinder.ExhaustAcousticState) * acousticAlpha;
             double delayed = cylinder.Delay.Process(
-                exhaustFlow,
+                cylinder.ExhaustAcousticState,
                 Lerp(
                     0.10,
                     0.24,
@@ -1012,6 +1014,8 @@ internal sealed class EngineSimGasFlowModel
 
         public double CurrentPistonTravelDerivative { get; set; }
 
+        public double ExhaustAcousticState { get; set; }
+
         public double IntakeFlowRate { get; set; }
 
         public double ExhaustFlowRate { get; set; }
@@ -1034,6 +1038,7 @@ internal sealed class EngineSimGasFlowModel
         {
             CurrentVolume = volume;
             CurrentPistonTravelDerivative = 0.0;
+            ExhaustAcousticState = 0.0;
             IntakeFlowRate = 0.0;
             ExhaustFlowRate = 0.0;
             LastTimestepExhaustFlow = 0.0;
