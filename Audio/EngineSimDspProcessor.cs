@@ -13,6 +13,7 @@ internal sealed class EngineSimDspProcessor
     // only the deliberately noisy presentation layer.
     private const float RealtimeJitterScale = 0.10f;
     private const float RealtimeAirNoiseScale = 0.12f;
+    private const int RealtimeImpulseResponseTapLimit = 512;
     private readonly ChannelFilters[] _filters;
     private readonly ButterworthLowPassFilter _antialiasing = new();
     private readonly LevelingFilter _levelingFilter = new();
@@ -204,7 +205,12 @@ internal sealed class EngineSimDspProcessor
             }
 
             int requestedTaps = Math.Clamp(parameters.EngineSimulatorImpulseResponseTaps, 8, 10000);
-            int sampleCount = Math.Min(requestedTaps, clippedLength);
+            // Keep live playback on the stable early exhaust response. The
+            // long tail is useful for offline fidelity but can smear the
+            // realtime combustion signal and add CPU scheduling jitter.
+            int sampleCount = Math.Min(
+                Math.Min(requestedTaps, RealtimeImpulseResponseTapLimit),
+                clippedLength);
             if (sampleCount <= 0)
             {
                 return [];
