@@ -198,6 +198,24 @@ Validation after this change:
 - `--audio-diagnostics-smoke`: no low-buffer or emergency recovery events, worst fill `7.77 ms`
 - `--performance-probe`: live `20000 Hz / 1` fluid-step synth measured about `2.04x` realtime; profile `20000 Hz / 2` remains about `1.12x` realtime offline
 
+## 2026-08-21 Live Latency Trim
+
+The next live run felt much better and confirmed the starvation path was fixed:
+
+- no `engine-sim-buffer-low` events
+- no `engine-sim-stream-recovery` events
+- emergency generation stayed at `0`
+
+The remaining issue moved from starvation to latency. Stream health showed steady pending depth and stable fills, but the estimated audible age sat around `105 ms`, with ready buffers often around `77 ms` old at submit time. That is stable, but it can smear quick state changes such as shifts, limiter pulses, VTEC transition, and throttle snaps.
+
+The stream now targets `2` steady pending buffers, keeps startup at `3`, reduces worker ready capacity to `3`, and recycles stale ready buffers older than `40 ms` only when at least one fresher reserve buffer remains. Diagnostics now include a `stale` count in `engine-sim-stream-health` so the next live run can show whether stale recycling is active without reintroducing starvation.
+
+Validation after this change:
+
+- `dotnet build RetroRacer.csproj`: passed
+- `--engine-sim-stream-stress`: `0` low-buffer events, `0` emergency recovery events, worst fill `7.66 ms`, worst estimated audible age `48.30 ms`
+- `--audio-diagnostics-smoke`: no low-buffer or emergency recovery events, worst fill `11.57 ms`, worst estimated audible age `50.99 ms`
+
 Changed files:
 
 - `Audio/EngineAudioFrame.cs`
