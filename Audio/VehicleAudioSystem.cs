@@ -143,7 +143,7 @@ public sealed class VehicleAudioSystem : IDisposable
                 dt);
             float highBlendRate = _engineSampleLoops.Length > 0
                 ? (vehicle.IsShifting ? 95f : 72f)
-                : (vehicle.IsShifting ? 18f : 10f);
+                : (vehicle.IsShifting ? 72f : 42f);
             float highBlendStep = 1f - MathF.Exp(-highBlendRate * MathHelper.Clamp(dt, 0f, 1f / 20f));
             _highRpmBlend = MathHelper.Lerp(_highRpmBlend, targetHighBlend, MathHelper.Clamp(highBlendStep, 0f, 1f));
             float normalGain = 1f - _highRpmBlend;

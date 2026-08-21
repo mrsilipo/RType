@@ -56,7 +56,7 @@ Guardrails added:
 - Engine Sim audio parameter defaults now match the realtime Honda gameplay profile instead of the expensive generic fallback.
 - The loader falls back to the bundled Honda Engine Sim profile/MR only when Engine Sim is enabled and the vehicle data has no usable profile or MR path.
 - The live audio stream caps realtime gas-flow audio to `1` fluid substep until the deeper gas-flow optimizer makes higher substep counts safe.
-- The live stream queue is now `512` frames per buffer, `3` pending target buffers, `2` startup buffers, and `12` ready buffers.
+- The live stream queue is now `512` frames per buffer, `3` pending target buffers, `2` startup buffers, and `4` ready buffers.
 
 Current Debug validation after the fix:
 
@@ -74,13 +74,25 @@ The live stream now uses smaller `512`-frame buffers and targets `3` submitted b
 - buffer duration: `11.6 ms`
 - target submitted latency: `34.8 ms`
 - startup buffers: `2`
-- ready queue cap: `12`
+- ready queue cap: initially `12`, then reduced to `4` in the freshness pass
 
 Current Debug validation:
 
 - `--engine-sim-stream-stress`: no low-buffer events, no emergency recovery events, worst reported fill `8.80 ms`
 - `--audio-diagnostics-smoke`: no low-buffer events
 - `--performance-probe`: audio synth around `1.38x` realtime
+
+## 2026-08-21 Engine Audio Freshness Pass
+
+After submitted latency was reduced to `34.8 ms`, remaining delay was likely coming from pre-generated buffers and target smoothing rather than the MonoGame submitted queue. The worker had been allowed to prebuild `12` ready buffers, which kept underruns away but could leave up to another `139 ms` of stale generated engine audio waiting behind newer RPM/load targets.
+
+The ready queue is now capped at `4` buffers, and the Engine Sim-only target path tracks RPM, VTEC, limiter, shock, throttle transient, load, and overrun more quickly. The submitted playback queue remains `3 x 512` frames, so the playable audio queue is still `34.8 ms`; the extra pre-generated cushion is now much smaller and should feel more attached to the visual tach and car motion.
+
+Current Debug validation:
+
+- `--engine-sim-stream-stress`: no low-buffer events, no emergency recovery events, worst reported fill `13.76 ms`, ready cap `4`
+- `--audio-diagnostics-smoke`: no low-buffer events
+- `--performance-probe`: audio synth around `1.51x` realtime
 
 Changed files:
 

@@ -5,6 +5,18 @@ namespace RetroRacer.Audio;
 
 internal sealed class EngineSimulatorSampleSynth
 {
+    private const float RpmTrackingStep = 0.0032f;
+    private const float FastRpmTrackingStep = 0.0068f;
+    private const float ThrottleTrackingStep = 0.0062f;
+    private const float LoadTrackingStep = 0.0058f;
+    private const float VtecTrackingStep = 0.0064f;
+    private const float LimiterTrackingStep = 0.0092f;
+    private const float OverrunTrackingStep = 0.0052f;
+    private const float ShockTrackingStep = 0.0094f;
+    private const float IntakeTrackingStep = 0.0062f;
+    private const float ThrottleTransientTrackingStep = 0.0115f;
+    private const float DrivelineTrackingStep = 0.0048f;
+
     private readonly VehicleAudioParameters _parameters;
     private readonly EngineSimGasFlowModel _engineModel;
     private readonly EngineSimDspProcessor _dsp;
@@ -90,16 +102,20 @@ internal sealed class EngineSimulatorSampleSynth
 
     public float NextSample()
     {
-        _currentRpm = MathHelper.Lerp(_currentRpm, _targetRpm, 0.0018f);
-        _currentThrottle = MathHelper.Lerp(_currentThrottle, _targetThrottle, 0.0048f);
-        _currentLoad = MathHelper.Lerp(_currentLoad, _targetLoad, 0.0038f);
-        _currentVtec = MathHelper.Lerp(_currentVtec, _targetVtec, 0.0045f);
-        _currentLimiter = MathHelper.Lerp(_currentLimiter, _targetLimiter, 0.0072f);
-        _currentOverrun = MathHelper.Lerp(_currentOverrun, _targetOverrun, 0.0034f);
-        _currentShock = MathHelper.Lerp(_currentShock, _targetShock, 0.0068f);
-        _currentIntake = MathHelper.Lerp(_currentIntake, _targetIntake, 0.0048f);
-        _currentThrottleTransient = MathHelper.Lerp(_currentThrottleTransient, _targetThrottleTransient, 0.0088f);
-        _currentDriveline = MathHelper.Lerp(_currentDriveline, _targetDriveline, 0.0034f);
+        float rpmDelta = MathF.Abs(_targetRpm - _currentRpm);
+        float rpmTrackingStep = rpmDelta > 850f || _targetLimiter > 0.12f || _targetShock > 0.18f
+            ? FastRpmTrackingStep
+            : RpmTrackingStep;
+        _currentRpm = MathHelper.Lerp(_currentRpm, _targetRpm, rpmTrackingStep);
+        _currentThrottle = MathHelper.Lerp(_currentThrottle, _targetThrottle, ThrottleTrackingStep);
+        _currentLoad = MathHelper.Lerp(_currentLoad, _targetLoad, LoadTrackingStep);
+        _currentVtec = MathHelper.Lerp(_currentVtec, _targetVtec, VtecTrackingStep);
+        _currentLimiter = MathHelper.Lerp(_currentLimiter, _targetLimiter, LimiterTrackingStep);
+        _currentOverrun = MathHelper.Lerp(_currentOverrun, _targetOverrun, OverrunTrackingStep);
+        _currentShock = MathHelper.Lerp(_currentShock, _targetShock, ShockTrackingStep);
+        _currentIntake = MathHelper.Lerp(_currentIntake, _targetIntake, IntakeTrackingStep);
+        _currentThrottleTransient = MathHelper.Lerp(_currentThrottleTransient, _targetThrottleTransient, ThrottleTransientTrackingStep);
+        _currentDriveline = MathHelper.Lerp(_currentDriveline, _targetDriveline, DrivelineTrackingStep);
 
         _dsp.SetOperatingPoint(
             _currentRpm,
