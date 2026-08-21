@@ -87,12 +87,14 @@ internal readonly record struct EngineAudioFrame(
             0f,
             1f);
         float clampedTransient = MathHelper.Clamp(throttleTransient, 0f, 1f);
-        float backfire = MathHelper.Clamp(
-            MathF.Max(vehicle.EngineSimulatorAfterfireBlend, overrun) * MathF.Max(
-                MathF.Max(clampedTransient * 0.72f, limiter * 0.78f),
-                shock * 0.24f),
-            0f,
-            1f);
+        float backfire = vehicle.EngineSimulatorPowerActive
+            ? MathHelper.Clamp(vehicle.EngineSimulatorAfterfireBlend, 0f, 1f)
+            : MathHelper.Clamp(
+                overrun * MathF.Max(
+                    MathF.Max(clampedTransient * 0.72f, limiter * 0.78f),
+                    shock * 0.24f),
+                0f,
+                1f);
         float intakeDrive = CalculateIntakeDrive(shapedThrottle, load, vtecBlend, overrun, clampedTransient);
         float drivelineDrive = CalculateDrivelineDrive(vehicle, throttle);
 
