@@ -4,8 +4,11 @@ setlocal
 cd /d "%~dp0"
 
 set "GAME_EXE=bin\Debug\net8.0-windows\RetroRacer.exe"
-if not exist "%GAME_EXE%" (
-    set "GAME_EXE=bin\Debug\net8.0\RetroRacer.exe"
+set "GAME_DLL=bin\Debug\net8.0-windows\RetroRacer.dll"
+
+if exist "%GAME_DLL%" (
+    dotnet "%GAME_DLL%" %*
+    exit /b %ERRORLEVEL%
 )
 
 if not exist "%GAME_EXE%" (
