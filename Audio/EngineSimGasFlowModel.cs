@@ -136,7 +136,7 @@ internal sealed class EngineSimGasFlowModel
 
     public int ExhaustChannelCount => _exhausts.Length;
 
-    public int AudioChannelCount => _exhausts.Length + 1;
+    public int AudioChannelCount => _exhausts.Length + 4;
 
     public string EventRouteSummary => string.Join("/", OrderedByFiring().Select(cylinder => cylinder.ExhaustIndex));
 
@@ -667,11 +667,17 @@ internal sealed class EngineSimGasFlowModel
         drive *= Lerp(1.0, 1.08, Clamp(shock, 0.0, 1.0));
         drive *= Lerp(1.0, 0.82, Clamp(overrun, 0.0, 1.0));
         double limiterValveNoise = Clamp(limiter, 0.0, 1.0) * _fuelCutBlend * 0.04 * (0.35 + NextUnit() * 0.65);
+        double combustionPressureSignal = 0.0;
+        double pistonSignal = 0.0;
+        double valvetrainSignal = 0.0;
 
         for (int i = 0; i < _cylinders.Length; i++)
         {
             Cylinder cylinder = _cylinders[i];
             ExhaustCollector exhaust = cylinder.Exhaust;
+            combustionPressureSignal += Math.Max(0.0, cylinder.Chamber.Pressure - AtmosphericPressure);
+            pistonSignal += cylinder.CurrentPistonTravelDerivative;
+            valvetrainSignal += cylinder.IntakeFlowRate + cylinder.ExhaustFlowRate;
             double exhaustFlow = attenuation3 * 1600.0 *
                 (cylinder.ExhaustRunner.Pressure - AtmosphericPressure +
                  0.1 * cylinder.ExhaustRunner.DynamicPressure(1.0, 0.0) +
@@ -712,6 +718,24 @@ internal sealed class EngineSimGasFlowModel
             double intakeSignal = intakePressure * pressureScale *
                                   Lerp(0.16, 0.48, Clamp(load, 0.0, 1.0));
             output[intakeOutputIndex] += (float)intakeSignal;
+        }
+
+        int combustionOutputIndex = _exhausts.Length + 1;
+        int pistonOutputIndex = _exhausts.Length + 2;
+        int valvetrainOutputIndex = _exhausts.Length + 3;
+        if (combustionOutputIndex < output.Length)
+        {
+            output[combustionOutputIndex] += (float)(combustionPressureSignal / Math.Max(1, _cylinders.Length) * 0.00042 * pressureScale * drive);
+        }
+
+        if (pistonOutputIndex < output.Length)
+        {
+            output[pistonOutputIndex] += (float)(pistonSignal / Math.Max(1, _cylinders.Length) * 420000.0 * drive);
+        }
+
+        if (valvetrainOutputIndex < output.Length)
+        {
+            output[valvetrainOutputIndex] += (float)(valvetrainSignal / Math.Max(1, _cylinders.Length) * 90.0 * pressureScale * drive);
         }
     }
 
