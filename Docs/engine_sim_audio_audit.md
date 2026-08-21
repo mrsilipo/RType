@@ -320,3 +320,5 @@ Offline Engine Sim renders from the same clean path are continuous, confirming t
 The next live run was a dramatic improvement but still reached a two-buffer minimum during frame-time spikes. The device target is increased from three to four pending buffers, with startup raised to five, to remove that near-empty transition. This is another 11.6 ms of device protection; the synthesis and waveform are unchanged.
 
 The clean isolation output was stable but too blunt compared with the Engine Sim reference. Direct 512-tap exhaust convolution and the profile's low high-frequency derivative mix are restored for harmonic richness. The long IR tail, noise, jitter, and extra presentation layers remain disabled until the live result is confirmed clean.
+
+The current stable build was cleaner but had lost the earlier VTEC timbre distinction because all post-signal layers were disabled during isolation. A deterministic high-passed harmonic derived from the same simulated pressure signal is restored and driven only by `vtecBlend`; it does not add broadband noise or a separate sample.

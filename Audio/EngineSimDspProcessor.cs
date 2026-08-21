@@ -25,6 +25,7 @@ internal sealed class EngineSimDspProcessor
     private float _runtimeInputSampleNoise;
     private float _runtimeAirNoise;
     private float _runtimeIntakeLayer;
+    private float _runtimeVtecLayer;
     private float _runtimeThrottleTransientLayer;
     private float _runtimeDrivelineLayer;
     private uint _noiseState = 0x8f93a2bdu;
@@ -49,6 +50,7 @@ internal sealed class EngineSimDspProcessor
         _runtimeDerivativeMix = _audioParameters.DerivativeMix;
         _runtimeInputSampleNoise = _audioParameters.InputSampleNoise;
         _runtimeAirNoise = _audioParameters.AirNoise;
+        _runtimeVtecLayer = 0f;
 
         float safeSampleRate = MathF.Max(1f, sampleRate);
         float[] impulseResponse = LoadImpulseResponse(parameters);
@@ -116,6 +118,7 @@ internal sealed class EngineSimDspProcessor
             vtecBlend * MathHelper.Clamp(throttle, 0f, 1f) * 0.10f,
             0f,
             1f);
+        _runtimeVtecLayer = MathHelper.Clamp(vtecBlend, 0f, 1f);
         _runtimeThrottleTransientLayer = MathHelper.Clamp(
             throttleTransient * MathHelper.Lerp(0.62f, 1f, loadTexture) +
             shock * 0.12f,
@@ -160,7 +163,11 @@ internal sealed class EngineSimDspProcessor
         float intakeSource = output - _intakeBodyFilter.Process(output);
         float transientSource = output - _transientBodyFilter.Process(output);
         float drivelineSource = _drivelineBodyFilter.Process(output);
-        return MathHelper.Clamp(output, -1f, 1f);
+        // Restore the cam-change timbre without reintroducing broadband
+        // noise: VTEC adds a restrained high-passed harmonic of the same
+        // simulated pressure signal.
+        float vtecHarmonic = intakeSource * _runtimeVtecLayer * 0.10f;
+        return MathHelper.Clamp(output + vtecHarmonic, -1f, 1f);
     }
 
     public void Reset()
