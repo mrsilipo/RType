@@ -359,7 +359,11 @@ internal sealed class EngineSimGasFlowModel
         cylinder.IntakeRunner.SetGeometry(intakeRunnerLength, Math.Sqrt(_profile.IntakeRunnerCrossSectionArea), 1.0, 0.0);
         cylinder.ExhaustRunner.Initialize(AtmosphericPressure, exhaustRunnerVolume, AmbientTemperature);
         cylinder.ExhaustRunner.SetGeometry(exhaustRunnerLength, Math.Sqrt(_profile.ExhaustRunnerCrossSectionArea), 1.0, 0.0);
-        cylinder.Reset(volume, _profile.ExhaustPrimaryTubeLength + cylinder.Exhaust.Length, _sampleRate);
+        cylinder.Reset(
+            volume,
+            _profile.ExhaustPrimaryTubeLength + cylinder.Exhaust.Length,
+            _sampleRate,
+            intakeRunnerLength);
     }
 
     private void UpdateFuelCut(double limiter)
@@ -686,8 +690,18 @@ internal sealed class EngineSimGasFlowModel
         int intakeOutputIndex = _exhausts.Length;
         if (intakeOutputIndex < output.Length)
         {
+            double delayedRunnerPressure = 0.0;
+            for (int i = 0; i < _cylinders.Length; i++)
+            {
+                Cylinder cylinder = _cylinders[i];
+                delayedRunnerPressure += cylinder.IntakeDelay.Process(
+                    cylinder.IntakeRunner.Pressure - AtmosphericPressure +
+                    0.12 * cylinder.IntakeRunner.DynamicPressure(1.0, 0.0));
+            }
+
             double intakePressure = _intakeSystem.Pressure - AtmosphericPressure +
-                                    0.18 * _intakeSystem.DynamicPressure(0.0, -1.0);
+                                    0.18 * _intakeSystem.DynamicPressure(0.0, -1.0) +
+                                    delayedRunnerPressure / Math.Max(1, _cylinders.Length) * 0.32;
             double intakeSignal = intakePressure * pressureScale *
                                   Lerp(0.16, 0.48, Clamp(load, 0.0, 1.0));
             output[intakeOutputIndex] += (float)intakeSignal;
@@ -957,6 +971,8 @@ internal sealed class EngineSimGasFlowModel
 
         public DelayFilter Delay { get; private set; }
 
+        public DelayFilter IntakeDelay { get; private set; } = new(0.0, 1);
+
         public double CurrentVolume { get; set; }
 
         public double CurrentPistonTravelDerivative { get; set; }
@@ -979,7 +995,7 @@ internal sealed class EngineSimGasFlowModel
 
         private double PistonSpeedSum { get; set; }
 
-        public void Reset(double volume, double delayLength, int sampleRate)
+        public void Reset(double volume, double delayLength, int sampleRate, double intakeDelayLength = 0.0)
         {
             CurrentVolume = volume;
             CurrentPistonTravelDerivative = 0.0;
@@ -991,6 +1007,7 @@ internal sealed class EngineSimGasFlowModel
             PistonSpeedSum = 0.0;
             Flame = default;
             Delay = new DelayFilter(delayLength / SpeedOfSoundMetersPerSecond, sampleRate);
+            IntakeDelay = new DelayFilter(intakeDelayLength / SpeedOfSoundMetersPerSecond, sampleRate);
         }
 
         public void ResetTimestepFlow()
