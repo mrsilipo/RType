@@ -53,20 +53,18 @@ internal sealed class EngineSimDspProcessor
         _filters = new ChannelFilters[channelCount];
         _channelEnergy = new double[channelCount];
         _channelPeak = new float[channelCount];
-        _exhaustChannelCount = Math.Clamp(parameters.EngineSimulatorExhaustVolumes.Length, 1, Math.Max(1, channelCount - 4));
+        _exhaustChannelCount = Math.Clamp(parameters.EngineSimulatorExhaustVolumes.Length, 1, channelCount);
         _audioParameters = new AudioParameters
         {
             Volume = MathF.Max(0f, parameters.EngineSimulatorDspOutputGain),
-            // Match the known-good clean realtime path from commit 5425575.
-            // Optional presentation DSP is kept out of the base waveform.
-            Convolution = 0f,
-            DerivativeMix = 0f,
-            InputSampleNoise = 0f,
+            Convolution = 1f,
+            DerivativeMix = MathHelper.Clamp(parameters.EngineSimulatorHighFrequencyGain, 0f, 0.25f),
+            InputSampleNoise = MathHelper.Clamp(parameters.EngineSimulatorJitter, 0f, 1f),
             InputSampleNoiseFrequencyCutoff = 10000f,
-            AirNoise = 0f,
+            AirNoise = MathHelper.Clamp(parameters.EngineSimulatorNoise, 0f, 1f),
             AirNoiseFrequencyCutoff = 2000f,
-            LevelerTarget = 24000f,
-            LevelerMaxGain = 1.25f,
+            LevelerTarget = 30000f,
+            LevelerMaxGain = 1.9f,
             LevelerMinGain = 0.00001f
         };
         _runtimeDerivativeMix = _audioParameters.DerivativeMix;
@@ -79,7 +77,7 @@ internal sealed class EngineSimDspProcessor
         float[] impulseResponse = LoadImpulseResponse(parameters);
         for (int i = 0; i < _filters.Length; i++)
         {
-            _filters[i] = new ChannelFilters(safeSampleRate, impulseResponse, ChannelSourceCutoff(i, safeSampleRate));
+            _filters[i] = new ChannelFilters(safeSampleRate, impulseResponse);
         }
 
         _antialiasing.SetCutoffFrequency(safeSampleRate * 0.45f, safeSampleRate);
@@ -188,13 +186,14 @@ internal sealed class EngineSimDspProcessor
             float derivativeMix = _runtimeDerivativeMix;
             float vIn = fP * derivativeMix +
                         f * rMixed * (1f - derivativeMix);
-            vIn = filters.SourceFilter.Process(vIn);
             if (MathF.Abs(vIn) < 1.0e-30f)
             {
                 vIn = 0f;
             }
 
-            float v = vIn;
+            float convolved = filters.Convolution.Process(vIn);
+            float v = _audioParameters.Convolution * convolved +
+                      (1f - _audioParameters.Convolution) * vIn;
             _channelEnergy[i] += v * v;
             _channelPeak[i] = MathF.Max(_channelPeak[i], MathF.Abs(v));
             signal += v * ChannelGain(i);
@@ -205,18 +204,21 @@ internal sealed class EngineSimDspProcessor
         signal = _antialiasing.Process(signal);
         _levelingFilter.Target = _audioParameters.LevelerTarget;
         float output = _levelingFilter.Process(signal) * _audioParameters.Volume / Int16Scale;
-        // The base engine waveform must remain the Engine Sim waveform. The
-        // former synthetic resonance, sine, and texture overlays were the
-        // source of the insect-like character and are handled by their own
-        // physical channels in the simulator instead.
-        return MathHelper.Clamp(output, -1f, 1f);
+        float intakeSource = output - _intakeBodyFilter.Process(output);
+        float transientSource = output - _transientBodyFilter.Process(output);
+        float drivelineSource = _drivelineBodyFilter.Process(output);
+        float layered = output +
+                        intakeSource * _runtimeIntakeLayer * 0.115f +
+                        transientSource * _runtimeThrottleTransientLayer * 0.075f +
+                        drivelineSource * _runtimeDrivelineLayer * 0.040f;
+        return MathHelper.Clamp(layered, -1f, 1f);
     }
 
     private float ChannelGain(int channelIndex)
     {
         if (channelIndex < _exhaustChannelCount)
         {
-            return 0.55f;
+            return 1f;
         }
 
         int relative = channelIndex - _exhaustChannelCount;
@@ -402,13 +404,11 @@ internal sealed class EngineSimDspProcessor
 
     private sealed class ChannelFilters
     {
-        public ChannelFilters(float sampleRate, float[] impulseResponse, float sourceCutoff)
+        public ChannelFilters(float sampleRate, float[] impulseResponse)
         {
             Derivative.Dt = 1f / sampleRate;
             InputDcFilter.Dt = 1f / sampleRate;
             InputDcFilter.SetCutoffFrequency(10f);
-            SourceFilter.Dt = 1f / sampleRate;
-            SourceFilter.SetCutoffFrequency(sourceCutoff);
             Jitter.Initialize(10, 10000f, sampleRate);
             AirNoiseLowPass.SetCutoffFrequency(2000f, sampleRate);
             Convolution.Initialize(impulseResponse);
@@ -424,8 +424,6 @@ internal sealed class EngineSimDspProcessor
 
         public OnePoleLowPassFilter InputDcFilter { get; } = new();
 
-        public OnePoleLowPassFilter SourceFilter { get; } = new();
-
         public void Reset()
         {
             Convolution.Reset();
@@ -433,7 +431,6 @@ internal sealed class EngineSimDspProcessor
             Jitter.Reset();
             AirNoiseLowPass.Reset();
             InputDcFilter.Reset();
-            SourceFilter.Reset();
         }
     }
 
