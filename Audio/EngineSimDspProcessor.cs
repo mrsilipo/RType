@@ -57,13 +57,13 @@ internal sealed class EngineSimDspProcessor
         _audioParameters = new AudioParameters
         {
             Volume = MathF.Max(0f, parameters.EngineSimulatorDspOutputGain),
-            // Engine Sim uses its impulse response as the output stage. Keep
-            // the source graph fully wet; synthetic overlays are not part of it.
-            Convolution = 1.0f,
-            DerivativeMix = MathHelper.Clamp(parameters.EngineSimulatorHighFrequencyGain, 0f, 0.25f),
-            InputSampleNoise = MathHelper.Clamp(parameters.EngineSimulatorJitter * RealtimeJitterScale, 0f, 1f),
+            // Match the known-good clean realtime path from commit 5425575.
+            // Optional presentation DSP is kept out of the base waveform.
+            Convolution = 0f,
+            DerivativeMix = 0f,
+            InputSampleNoise = 0f,
             InputSampleNoiseFrequencyCutoff = 10000f,
-            AirNoise = MathHelper.Clamp(parameters.EngineSimulatorNoise * RealtimeAirNoiseScale, 0f, 1f),
+            AirNoise = 0f,
             AirNoiseFrequencyCutoff = 2000f,
             LevelerTarget = 24000f,
             LevelerMaxGain = 1.25f,
@@ -194,9 +194,7 @@ internal sealed class EngineSimDspProcessor
                 vIn = 0f;
             }
 
-            float convolved = filters.Convolution.Process(vIn);
-            float v = _audioParameters.Convolution * convolved +
-                      (1f - _audioParameters.Convolution) * vIn;
+            float v = vIn;
             _channelEnergy[i] += v * v;
             _channelPeak[i] = MathF.Max(_channelPeak[i], MathF.Abs(v));
             signal += v * ChannelGain(i);
