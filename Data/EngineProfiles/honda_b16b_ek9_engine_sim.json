@@ -137,7 +137,7 @@
       "value": 20000
     },
     "fluidSimulationSteps": {
-      "value": 2
+      "value": 8
     },
     "throttleGamma": {
       "value": 2

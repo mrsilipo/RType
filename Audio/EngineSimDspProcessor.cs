@@ -42,9 +42,6 @@ internal sealed class EngineSimDspProcessor
     private float _runtimeGear;
     private float _runtimeTransmissionRpm;
     private float _runtimeBackfire;
-    private float _mechanicalPhase;
-    private float _drivelinePhase;
-    private float _backfirePhase;
     private uint _noiseState = 0x8f93a2bdu;
 
     public EngineSimDspProcessor(VehicleAudioParameters parameters, int sampleRate, int inputChannelCount)
@@ -55,9 +52,9 @@ internal sealed class EngineSimDspProcessor
         _audioParameters = new AudioParameters
         {
             Volume = MathF.Max(0f, parameters.EngineSimulatorDspOutputGain),
-            // Keep the simulated combustion waveform present. A fully wet
-            // mild-exhaust IR masks the cylinder pulse and sounds filtered.
-            Convolution = 0.35f,
+            // Engine Sim uses its impulse response as the output stage. Keep
+            // the source graph fully wet; synthetic overlays are not part of it.
+            Convolution = 1.0f,
             DerivativeMix = MathHelper.Clamp(parameters.EngineSimulatorHighFrequencyGain, 0f, 0.25f),
             InputSampleNoise = MathHelper.Clamp(parameters.EngineSimulatorJitter * RealtimeJitterScale, 0f, 1f),
             InputSampleNoiseFrequencyCutoff = 10000f,
@@ -181,7 +178,7 @@ internal sealed class EngineSimDspProcessor
             float fP = filters.Derivative.Process(fIn);
             float noise = NextNoise();
             float r = filters.AirNoiseLowPass.Process(noise);
-            float rMixed = _runtimeAirNoise * r + (1f - _runtimeAirNoise);
+            float rMixed = 1f + _runtimeAirNoise * r;
 
             float derivativeMix = _runtimeDerivativeMix;
             float vIn = fP * derivativeMix +
@@ -200,41 +197,11 @@ internal sealed class EngineSimDspProcessor
         signal = _antialiasing.Process(signal);
         _levelingFilter.Target = _audioParameters.LevelerTarget;
         float output = _levelingFilter.Process(signal) * _audioParameters.Volume / Int16Scale;
-        float intakeSource = output - _intakeBodyFilter.Process(output);
-        float transientSource = output - _transientBodyFilter.Process(output);
-        float drivelineSource = _drivelineBodyFilter.Process(output);
-        float resonance = (_exhaustResonanceLow.Process(output) * 0.16f +
-                           _exhaustResonanceHigh.Process(output) * 0.08f) *
-                          MathHelper.Lerp(0.25f, 1f, _runtimeLoad);
-
-        float mechanicalFrequency = MathF.Max(20f, _runtimeRpm / 60f * 2f);
-        _mechanicalPhase = AdvancePhase(_mechanicalPhase, mechanicalFrequency);
-        float mechanical = MathF.Sin(_mechanicalPhase * MathF.Tau) *
-                           (0.006f + _runtimeRpm / 9000f * 0.016f) *
-                           MathHelper.Lerp(0.18f, 1f, _runtimeLoad);
-
-        float gearRatio = MathF.Max(0.55f, MathF.Abs(_runtimeGear) + 0.5f);
-        float drivelineFrequency = MathHelper.Clamp(
-            MathF.Max(_runtimeSpeed * gearRatio * 7.5f, _runtimeTransmissionRpm / 60f * 0.35f),
-            18f,
-            1200f);
-        _drivelinePhase = AdvancePhase(_drivelinePhase, drivelineFrequency);
-        float gearWhine = MathF.Sin(_drivelinePhase * MathF.Tau) *
-                          (0.0025f + _runtimeDrivelineLayer * 0.0155f) *
-                          MathHelper.Lerp(0.15f, 1f, MathHelper.Clamp(_runtimeSpeed / 30f, 0f, 1f));
-        _backfirePhase = AdvancePhase(_backfirePhase, MathHelper.Lerp(72f, 138f, _runtimeRpm / 9000f));
-        float backfirePulse = _runtimeBackfire *
-                              (MathF.Sin(_backfirePhase * MathF.Tau) * 0.010f +
-                               (NextNoise() * 2f - 1f) * 0.016f) *
-                              MathHelper.Lerp(0.25f, 1f, MathHelper.Clamp(_runtimeSpeed / 22f, 0f, 1f));
-        // Restore the cam-change timbre without reintroducing broadband
-        // noise: VTEC adds a restrained high-passed harmonic of the same
-        // simulated pressure signal.
-        float intakeTimbre = intakeSource * _runtimeIntakeLayer * 0.115f;
-        float transientTimbre = transientSource * _runtimeThrottleTransientLayer * 0.075f;
-        float drivelineTimbre = drivelineSource * _runtimeDrivelineLayer * 0.040f;
-        float vtecHarmonic = intakeSource * _runtimeVtecLayer * 0.55f;
-        return MathHelper.Clamp(output + resonance + mechanical + gearWhine + backfirePulse + intakeTimbre + transientTimbre + drivelineTimbre + vtecHarmonic, -1f, 1f);
+        // The base engine waveform must remain the Engine Sim waveform. The
+        // former synthetic resonance, sine, and texture overlays were the
+        // source of the insect-like character and are handled by their own
+        // physical channels in the simulator instead.
+        return MathHelper.Clamp(output, -1f, 1f);
     }
 
     private float ChannelGain(int channelIndex)
@@ -264,9 +231,6 @@ internal sealed class EngineSimDspProcessor
         _drivelineBodyFilter.Reset();
         _exhaustResonanceLow.Reset();
         _exhaustResonanceHigh.Reset();
-        _mechanicalPhase = 0f;
-        _drivelinePhase = 0f;
-        _backfirePhase = 0f;
         _levelingFilter.Reset();
         foreach (ChannelFilters filters in _filters)
         {
