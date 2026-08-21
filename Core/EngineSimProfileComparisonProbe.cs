@@ -17,15 +17,17 @@ public static class EngineSimProfileComparisonProbe
 
         Console.WriteLine("Engine Sim profile comparison");
         Console.WriteLine("  same EK9 chassis, separate engine profiles");
-        Console.WriteLine("  rpm | B16 torque/brake/VTEC | B18 torque/brake/VTEC");
+        Console.WriteLine($"  B16 torque profile: {string.Join(",", b16.Audio.EngineSimulatorProfileTorqueCurveNm.Select(value => value.ToString("0")))}");
+        Console.WriteLine($"  B18 torque profile: {string.Join(",", b18.Audio.EngineSimulatorProfileTorqueCurveNm.Select(value => value.ToString("0")))}");
+        Console.WriteLine("  rpm | B16 engine/final/raw/brake/VTEC | B18 engine/final/raw/brake/VTEC");
 
         foreach (float rpm in new[] { 2500f, 4500f, 5800f, 6500f, 7800f, 8500f })
         {
             EnginePowerUnitState b16State = Advance(b16, rpm, 1f, EnginePowerUnitPhase.Driving);
             EnginePowerUnitState b18State = Advance(b18, rpm, 1f, EnginePowerUnitPhase.Driving);
             Console.WriteLine(
-                $"  {rpm,4:0} | {b16State.DriveTorqueNm,6:0.0}/{b16State.EngineBrakeTorqueNm,6:0.0}/{b16State.VtecBlend:0.00} | " +
-                $"{b18State.DriveTorqueNm,6:0.0}/{b18State.EngineBrakeTorqueNm,6:0.0}/{b18State.VtecBlend:0.00}");
+                $"  {rpm,4:0} | {b16State.EngineDriveTorqueNm,6:0.0}/{b16State.DriveTorqueNm,6:0.0}/{b16State.RawPositiveTorqueNm,6:0.0}/{b16State.EngineBrakeTorqueNm,6:0.0}/{b16State.VtecBlend:0.00} | " +
+                $"{b18State.EngineDriveTorqueNm,6:0.0}/{b18State.DriveTorqueNm,6:0.0}/{b18State.RawPositiveTorqueNm,6:0.0}/{b18State.EngineBrakeTorqueNm,6:0.0}/{b18State.VtecBlend:0.00}");
         }
 
         Console.WriteLine("  launch | peak drive torque / final crank rpm");
