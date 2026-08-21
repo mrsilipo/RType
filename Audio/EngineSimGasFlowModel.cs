@@ -696,7 +696,8 @@ internal sealed class EngineSimGasFlowModel
                 Cylinder cylinder = _cylinders[i];
                 delayedRunnerPressure += cylinder.IntakeDelay.Process(
                     cylinder.IntakeRunner.Pressure - AtmosphericPressure +
-                    0.12 * cylinder.IntakeRunner.DynamicPressure(1.0, 0.0));
+                    0.12 * cylinder.IntakeRunner.DynamicPressure(1.0, 0.0),
+                    Lerp(0.08, 0.22, Clamp(load, 0.0, 1.0)));
             }
 
             double intakePressure = _intakeSystem.Pressure - AtmosphericPressure +
@@ -971,7 +972,7 @@ internal sealed class EngineSimGasFlowModel
 
         public DelayFilter Delay { get; private set; }
 
-        public DelayFilter IntakeDelay { get; private set; } = new(0.0, 1);
+        public PressureWaveGuide IntakeDelay { get; private set; } = new(0.0, 1);
 
         public double CurrentVolume { get; set; }
 
@@ -1007,7 +1008,7 @@ internal sealed class EngineSimGasFlowModel
             PistonSpeedSum = 0.0;
             Flame = default;
             Delay = new DelayFilter(delayLength / SpeedOfSoundMetersPerSecond, sampleRate);
-            IntakeDelay = new DelayFilter(intakeDelayLength / SpeedOfSoundMetersPerSecond, sampleRate);
+            IntakeDelay = new PressureWaveGuide(intakeDelayLength / SpeedOfSoundMetersPerSecond, sampleRate);
         }
 
         public void ResetTimestepFlow()
@@ -1851,6 +1852,41 @@ internal sealed class EngineSimGasFlowModel
             }
 
             return _history[readIndex];
+        }
+    }
+
+    private sealed class PressureWaveGuide
+    {
+        private readonly double[] _history;
+        private readonly int _latencySamples;
+        private int _writeOffset;
+        private int _size;
+
+        public PressureWaveGuide(double delaySeconds, int sampleRate)
+        {
+            _latencySamples = Math.Max(0, (int)Math.Round(delaySeconds * Math.Max(1, sampleRate)));
+            _history = new double[Math.Max(1, _latencySamples + 32)];
+        }
+
+        public double Process(double sample, double reflectionGain)
+        {
+            double delayed = 0.0;
+            if (_size > _latencySamples)
+            {
+                int readIndex = _writeOffset - _latencySamples - 1;
+                if (readIndex < 0)
+                {
+                    readIndex += _history.Length;
+                }
+
+                delayed = _history[readIndex];
+            }
+
+            double boundedReflection = Math.Clamp(reflectionGain, 0.0, 0.28);
+            _history[_writeOffset] = sample + delayed * boundedReflection;
+            _writeOffset = (_writeOffset + 1) % _history.Length;
+            _size = Math.Min(_size + 1, _history.Length);
+            return delayed;
         }
     }
 
