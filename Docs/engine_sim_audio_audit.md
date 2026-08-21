@@ -168,6 +168,18 @@ Current validation was run in a clean temporary worktree because unrelated rende
 - `--engine-sim-stream-stress`: no low-buffer events, no emergency recovery events, worst fill `12.84 ms`, worst estimated audible age `39.86 ms`
 - `--audio-diagnostics-smoke`: no low-buffer events, worst fill `15.05 ms`, worst estimated audible age `43.14 ms`
 
+## 2026-08-21 Live Stream Quality Fallback
+
+Two live gameplay runs with the `20000 Hz / 2` fluid-step profile plus the full hybrid exhaust IR showed the command-line probes were too optimistic under real render/gameplay load. The live logs showed repeated starvation:
+
+- latest run: repeated `engine-sim-buffer-low` and `engine-sim-stream-recovery`
+- worst fill `83.71 ms` against an `11.6 ms` buffer
+- worst estimated audible age `110.33 ms`
+
+The live `EngineSimulatorSound` stream now caps realtime gas-flow audio to `1` fluid step again. The shared Honda profile still requests `2` fluid steps so offline/fidelity probes can continue measuring the richer profile, but gameplay chooses the safer setting to keep buffers ahead of MonoGame. The full hybrid exhaust IR remains active.
+
+Expected live diagnostics now include `engine-sim-realtime-cap` with `fluid steps 2 -> 1 for live audio stream`.
+
 Changed files:
 
 - `Audio/EngineAudioFrame.cs`
@@ -219,11 +231,11 @@ The game is already using the important Honda MR data:
 
 1. Audio simulation rate
 
-   The MR specifies `simulation_frequency: 20000`. The managed C# synth now runs the EK9 audio model at `20000 Hz` with `2` fluid substeps for gameplay. That keeps the requested engine timestep while staying above realtime in the command-line stream probes, though the standalone Debug performance margin is still narrow.
+   The MR specifies `simulation_frequency: 20000`. The managed C# synth now runs live gameplay audio at `20000 Hz` with `1` fluid substep for stability under render/gameplay load. The Honda profile still requests `2` substeps for offline/fidelity measurement, but the live stream caps it down.
 
 2. Fluid simulation substeps
 
-   Engine Sim defaults to more fluid substeps per engine timestep. Our port supports configurable fluid substeps and now runs the EK9 audio profile at `2`, but `4` substeps remains below realtime in Debug and the native Engine Sim default of `8` is still not viable in the managed hot path.
+   Engine Sim defaults to more fluid substeps per engine timestep. Our port supports configurable fluid substeps and the EK9 audio profile targets `2`, but live gameplay currently caps to `1` after real runs showed repeated buffer starvation at `2`. `4` substeps remains below realtime in Debug and the native Engine Sim default of `8` is still not viable in the managed hot path.
 
 3. Convolution length
 
@@ -249,7 +261,7 @@ The game is already using the important Honda MR data:
 
 1. Drive-test the new stream and confirm whether `engine-sim-buffer-low` stops appearing during real gameplay.
 2. Use the timing telemetry during real gameplay to confirm whether the remaining perceived lag matches the reported estimated audible age.
-3. Continue optimizing the synth toward `4+` fluid substeps at the Honda MR `20000` Hz rate; `2` is now active but still has limited Debug headroom.
+3. Continue optimizing the synth toward live `2+` fluid substeps at the Honda MR `20000` Hz rate; `2` is useful offline but not stable enough during real gameplay yet.
 4. Add a native C++ Engine Sim bridge once CMake/build tooling is available, then feed game RPM/load from the real `PistonEngineSimulator`/constraint system instead of the managed approximation.
 5. Drive-test the hybrid IR tail for tone and CPU stability during actual gameplay; fall back to `512` taps or a coarser tail only if live gameplay reports buffer pressure.
 6. Revisit the idle jitter/noise scaling after stream underruns are gone.
