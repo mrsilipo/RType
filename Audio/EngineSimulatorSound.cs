@@ -15,7 +15,9 @@ internal sealed class EngineSimulatorSound : IDisposable
     private const int FramesPerBuffer = 512;
     private const int TargetPendingBuffers = 2;
     private const int MinimumStartupBuffers = 3;
-    private const int ReadyBufferCapacity = 3;
+    // Keep one extra generated buffer outside the playback queue so a slow
+    // synthesis pass cannot immediately starve the audio callback.
+    private const int ReadyBufferCapacity = 4;
     private const int StaleReadyBufferReserve = 1;
     private const int BufferPoolSize = TargetPendingBuffers + ReadyBufferCapacity + 6;
     private const int BufferBytes = FramesPerBuffer * sizeof(short);

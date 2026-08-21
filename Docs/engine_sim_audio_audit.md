@@ -302,3 +302,7 @@ The game is already using the important Honda MR data:
 5. Drive-test the hybrid IR tail for tone and CPU stability during actual gameplay; fall back to `512` taps or a coarser tail only if live gameplay reports buffer pressure.
 6. Revisit the idle jitter/noise scaling after stream underruns are gone.
 7. Continue the physics integration by replacing remaining launch/clutch heuristics with data from the coupled crank, clutch, and wheel-speed solver.
+
+### 2026-08-21 Live underrun cushion
+
+The latest live run was mostly stable at roughly 49-60 ms estimated audible age, but it recorded one real low-buffer event at 8400 RPM. The stream was generating about 80 buffers per second while one synthesis pass reached 22 ms for an 11.6 ms audio buffer. The playback target remains two buffers; the ready-buffer capacity is increased from three to four so one slow synthesis pass has an additional non-audible scheduling cushion without increasing the normal playback latency.
