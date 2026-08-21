@@ -7,6 +7,12 @@ namespace RetroRacer.Audio;
 internal sealed class EngineSimDspProcessor
 {
     private const float Int16Scale = 32768f;
+    // The MR texture values are useful reference settings, but are too hot
+    // for a real-time managed output path and make the result sound like
+    // digital static. Keep the simulated pressure signal intact and soften
+    // only the deliberately noisy presentation layer.
+    private const float RealtimeJitterScale = 0.10f;
+    private const float RealtimeAirNoiseScale = 0.12f;
     private readonly ChannelFilters[] _filters;
     private readonly ButterworthLowPassFilter _antialiasing = new();
     private readonly LevelingFilter _levelingFilter = new();
@@ -31,12 +37,12 @@ internal sealed class EngineSimDspProcessor
             Volume = MathF.Max(0f, parameters.EngineSimulatorDspOutputGain),
             Convolution = 1f,
             DerivativeMix = MathHelper.Clamp(parameters.EngineSimulatorHighFrequencyGain, 0f, 0.25f),
-            InputSampleNoise = MathHelper.Clamp(parameters.EngineSimulatorJitter, 0f, 1f),
+            InputSampleNoise = MathHelper.Clamp(parameters.EngineSimulatorJitter * RealtimeJitterScale, 0f, 1f),
             InputSampleNoiseFrequencyCutoff = 10000f,
-            AirNoise = MathHelper.Clamp(parameters.EngineSimulatorNoise, 0f, 1f),
+            AirNoise = MathHelper.Clamp(parameters.EngineSimulatorNoise * RealtimeAirNoiseScale, 0f, 1f),
             AirNoiseFrequencyCutoff = 2000f,
-            LevelerTarget = 30000f,
-            LevelerMaxGain = 1.9f,
+            LevelerTarget = 24000f,
+            LevelerMaxGain = 1.25f,
             LevelerMinGain = 0.00001f
         };
         _runtimeDerivativeMix = _audioParameters.DerivativeMix;
