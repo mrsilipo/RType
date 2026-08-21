@@ -234,7 +234,10 @@ internal sealed class EngineSimDspProcessor
     {
         if (channelIndex < _exhaustChannelCount)
         {
-            return MathF.Min(9000f, sampleRate * 0.40f);
+            // Exhaust pressure is the dominant source of the mosquito
+            // artifact. Keep the firing fundamental and lower harmonics, but
+            // reject the narrow high-frequency solver texture.
+            return MathF.Min(1800f, sampleRate * 0.40f);
         }
 
         return (channelIndex - _exhaustChannelCount) switch
