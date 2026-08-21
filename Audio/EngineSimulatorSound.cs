@@ -13,17 +13,17 @@ internal sealed class EngineSimulatorSound : IDisposable
 {
     private const int SampleRate = 44100;
     private const int FramesPerBuffer = 512;
-    private const int TargetPendingBuffers = 2;
-    private const int MinimumStartupBuffers = 2;
-    private const int ReadyBufferCapacity = 4;
+    private const int TargetPendingBuffers = 3;
+    private const int MinimumStartupBuffers = 3;
+    private const int ReadyBufferCapacity = 6;
     private const int BufferPoolSize = TargetPendingBuffers + ReadyBufferCapacity + 6;
     private const int BufferBytes = FramesPerBuffer * sizeof(short);
     private const int DeClickFrames = 96;
     private const float DeClickThreshold = 0.18f;
     private const int RealtimeFluidSimulationStepLimit = 1;
-    private const int EmergencyGenerationPendingThreshold = 1;
-    private const int EmergencyRecoveryPendingBuffers = 2;
-    private const int MaximumEmergencyBuffersPerUpdate = 2;
+    private const int EmergencyGenerationPendingThreshold = 0;
+    private const int EmergencyRecoveryPendingBuffers = 1;
+    private const int MaximumEmergencyBuffersPerUpdate = 1;
     private const double StreamHealthLogIntervalSeconds = 3.0;
     private const double StreamRecoveryLogIntervalSeconds = 1.0;
 
@@ -195,20 +195,12 @@ internal sealed class EngineSimulatorSound : IDisposable
         lock (_submitLock)
         {
             int currentGeneration = Volatile.Read(ref _generation);
-            long newestTargetUpdatedTicks = Volatile.Read(ref _targetUpdatedTicks);
             while (_instance.PendingBufferCount < TargetPendingBuffers &&
                    _readyBuffers.TryDequeue(out GeneratedBuffer generated))
             {
                 Interlocked.Decrement(ref _readyBufferCount);
                 if (generated.Generation == currentGeneration)
                 {
-                    if (generated.TargetUpdatedTicks < newestTargetUpdatedTicks &&
-                        Volatile.Read(ref _readyBufferCount) > 0)
-                    {
-                        _freeBuffers.Enqueue(generated.Buffer);
-                        continue;
-                    }
-
                     long submitTicks = Stopwatch.GetTimestamp();
                     int pendingBeforeSubmit = _instance.PendingBufferCount;
                     UpdateMaximum(ref _maximumReadyAgeAtSubmitTicks, submitTicks - generated.GeneratedTicks);

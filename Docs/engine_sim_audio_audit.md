@@ -180,6 +180,24 @@ The live `EngineSimulatorSound` stream now caps realtime gas-flow audio to `1` f
 
 Expected live diagnostics now include `engine-sim-realtime-cap` with `fluid steps 2 -> 1 for live audio stream`.
 
+## 2026-08-21 Stream Continuity Fix
+
+A follow-up gameplay run confirmed the realtime fluid-step cap was active, but audio was still choppy and frame rate suffered:
+
+- `engine-sim-synth` reported `sim 20000 Hz, fluid steps 1`
+- the stream still logged repeated `engine-sim-buffer-low` and `engine-sim-stream-recovery`
+- typical emergency fills were `26-32 ms`, with health samples up to roughly `57 ms`
+- estimated audible age still floated around `60-90 ms`
+
+The remaining issue was the live stream policy. It discarded already-generated buffers whenever the game target state was newer, even while the audio device was below its pending-buffer target. That kept the stream chasing fresh RPM/load data, but it wasted generated audio and forced emergency synthesis on the game thread. The stream now keeps valid generated buffers for continuity, starts with `3` submitted buffers, keeps a larger worker-side reserve, and only uses emergency game-thread synthesis when the audio device has no pending buffers left.
+
+Validation after this change:
+
+- `dotnet build RetroRacer.csproj`: passed
+- `--engine-sim-stream-stress`: `0` low-buffer events, `0` emergency recovery events, worst fill `9.66 ms`
+- `--audio-diagnostics-smoke`: no low-buffer or emergency recovery events, worst fill `7.77 ms`
+- `--performance-probe`: live `20000 Hz / 1` fluid-step synth measured about `2.04x` realtime; profile `20000 Hz / 2` remains about `1.12x` realtime offline
+
 Changed files:
 
 - `Audio/EngineAudioFrame.cs`
