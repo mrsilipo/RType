@@ -94,6 +94,24 @@ Current Debug validation:
 - `--audio-diagnostics-smoke`: no low-buffer events
 - `--performance-probe`: audio synth around `1.51x` realtime
 
+## 2026-08-21 Engine Audio Timing Telemetry
+
+The stream diagnostics now timestamp each game-side synthesis target and each generated audio buffer. Health logs report:
+
+- target age at fill start
+- target age at submit
+- ready-buffer age at submit
+- estimated audible age including pending submitted buffers
+- target update gap from the game/audio update path
+
+This makes the remaining lag measurable without a live drive test. Current validation shows the `3 x 512` submitted queue and `4` ready-buffer cap stay stable, with estimated audible age around `55-61 ms` in the command-line stress/smoke probes and no low-buffer or emergency recovery events.
+
+Current validation:
+
+- `--engine-sim-stream-stress`: no low-buffer events, no emergency recovery events, worst estimated audible age `54.85 ms`, worst target age at submit `31.63 ms`
+- `--audio-diagnostics-smoke`: no low-buffer events, worst estimated audible age `60.59 ms`
+- `--performance-probe`: audio synth around `1.51x` realtime
+
 Changed files:
 
 - `Audio/EngineAudioFrame.cs`

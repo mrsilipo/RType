@@ -46,6 +46,11 @@ public static class EngineSimStreamStressProbe
         Console.WriteLine($"  emergency recovery events: {summary.RecoveryEvents}");
         Console.WriteLine($"  worst reported fill: {summary.MaximumFillMilliseconds:0.00} ms");
         Console.WriteLine($"  worst reported emergency fill: {summary.MaximumEmergencyFillMilliseconds:0.00} ms");
+        Console.WriteLine($"  worst target age at fill: {summary.MaximumTargetAgeAtFillMilliseconds:0.00} ms");
+        Console.WriteLine($"  worst target age at submit: {summary.MaximumTargetAgeAtSubmitMilliseconds:0.00} ms");
+        Console.WriteLine($"  worst ready age at submit: {summary.MaximumReadyAgeAtSubmitMilliseconds:0.00} ms");
+        Console.WriteLine($"  worst estimated audible age: {summary.MaximumEstimatedAudibleAgeMilliseconds:0.00} ms");
+        Console.WriteLine($"  worst target update gap: {summary.MaximumTargetUpdateGapMilliseconds:0.00} ms");
     }
 
     private static VehicleInput BuildInput(float time)
@@ -107,6 +112,21 @@ public static class EngineSimStreamStressProbe
                 summary.MaximumEmergencyFillMilliseconds = Math.Max(
                     summary.MaximumEmergencyFillMilliseconds,
                     ExtractMilliseconds(line, "max emergency "));
+                summary.MaximumTargetAgeAtFillMilliseconds = Math.Max(
+                    summary.MaximumTargetAgeAtFillMilliseconds,
+                    ExtractMilliseconds(line, "target age fill "));
+                summary.MaximumTargetAgeAtSubmitMilliseconds = Math.Max(
+                    summary.MaximumTargetAgeAtSubmitMilliseconds,
+                    ExtractMilliseconds(line, "target age submit "));
+                summary.MaximumReadyAgeAtSubmitMilliseconds = Math.Max(
+                    summary.MaximumReadyAgeAtSubmitMilliseconds,
+                    ExtractMilliseconds(line, "ready age submit "));
+                summary.MaximumEstimatedAudibleAgeMilliseconds = Math.Max(
+                    summary.MaximumEstimatedAudibleAgeMilliseconds,
+                    ExtractMilliseconds(line, "estimated audible age "));
+                summary.MaximumTargetUpdateGapMilliseconds = Math.Max(
+                    summary.MaximumTargetUpdateGapMilliseconds,
+                    ExtractMilliseconds(line, "target update gap "));
             }
         }
 
@@ -146,6 +166,16 @@ public static class EngineSimStreamStressProbe
         public double MaximumFillMilliseconds { get; set; }
 
         public double MaximumEmergencyFillMilliseconds { get; set; }
+
+        public double MaximumTargetAgeAtFillMilliseconds { get; set; }
+
+        public double MaximumTargetAgeAtSubmitMilliseconds { get; set; }
+
+        public double MaximumReadyAgeAtSubmitMilliseconds { get; set; }
+
+        public double MaximumEstimatedAudibleAgeMilliseconds { get; set; }
+
+        public double MaximumTargetUpdateGapMilliseconds { get; set; }
     }
 
     private sealed class FlatSurfaceSampler : ITrackSurfaceSampler
