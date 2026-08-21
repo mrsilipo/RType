@@ -44,7 +44,10 @@ internal readonly record struct EngineAudioFrame(
         Shock,
         IntakeDrive,
         ThrottleTransient,
-        DrivelineDrive);
+        DrivelineDrive,
+        SpeedMetersPerSecond,
+        Gear,
+        TransmissionRpm);
 
     public static EngineAudioFrame FromVehicleState(
         VehicleAudioParameters parameters,

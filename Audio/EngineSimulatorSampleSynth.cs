@@ -16,6 +16,8 @@ internal sealed class EngineSimulatorSampleSynth
     private const float IntakeTrackingStep = 0.0062f;
     private const float ThrottleTransientTrackingStep = 0.0115f;
     private const float DrivelineTrackingStep = 0.0048f;
+    private const float SpeedTrackingStep = 0.008f;
+    private const float TransmissionRpmTrackingStep = 0.006f;
 
     private readonly VehicleAudioParameters _parameters;
     private readonly EngineSimGasFlowModel _engineModel;
@@ -46,6 +48,12 @@ internal sealed class EngineSimulatorSampleSynth
     private float _currentThrottleTransient;
     private float _targetDriveline;
     private float _currentDriveline;
+    private float _targetSpeed;
+    private float _currentSpeed;
+    private float _targetTransmissionRpm;
+    private float _currentTransmissionRpm;
+    private float _targetGear;
+    private float _currentGear;
     private float _simulationPhase;
     private bool _hasSimulationInput;
 
@@ -98,6 +106,9 @@ internal sealed class EngineSimulatorSampleSynth
         _targetIntake = MathHelper.Clamp(target.Intake, 0f, 1f);
         _targetThrottleTransient = MathHelper.Clamp(target.ThrottleTransient, 0f, 1f);
         _targetDriveline = MathHelper.Clamp(target.Driveline, 0f, 1f);
+        _targetSpeed = MathF.Max(0f, target.SpeedMetersPerSecond);
+        _targetTransmissionRpm = MathF.Max(0f, target.TransmissionRpm);
+        _targetGear = MathHelper.Clamp(target.Gear, -1f, 8f);
     }
 
     public float NextSample()
@@ -116,6 +127,9 @@ internal sealed class EngineSimulatorSampleSynth
         _currentIntake = MathHelper.Lerp(_currentIntake, _targetIntake, IntakeTrackingStep);
         _currentThrottleTransient = MathHelper.Lerp(_currentThrottleTransient, _targetThrottleTransient, ThrottleTransientTrackingStep);
         _currentDriveline = MathHelper.Lerp(_currentDriveline, _targetDriveline, DrivelineTrackingStep);
+        _currentSpeed = MathHelper.Lerp(_currentSpeed, _targetSpeed, SpeedTrackingStep);
+        _currentTransmissionRpm = MathHelper.Lerp(_currentTransmissionRpm, _targetTransmissionRpm, TransmissionRpmTrackingStep);
+        _currentGear = MathHelper.Lerp(_currentGear, _targetGear, SpeedTrackingStep);
 
         _dsp.SetOperatingPoint(
             _currentRpm,
@@ -127,7 +141,10 @@ internal sealed class EngineSimulatorSampleSynth
             _currentShock,
             _currentIntake,
             _currentThrottleTransient,
-            _currentDriveline);
+            _currentDriveline,
+            _currentSpeed,
+            _currentGear,
+            _currentTransmissionRpm);
         ReadInterpolatedSimulationInput();
         return SoftLimit(_dsp.Process(_interpolatedSimulationInput));
     }
@@ -154,6 +171,12 @@ internal sealed class EngineSimulatorSampleSynth
         _currentThrottleTransient = 0f;
         _targetDriveline = 0f;
         _currentDriveline = 0f;
+        _targetSpeed = 0f;
+        _currentSpeed = 0f;
+        _targetTransmissionRpm = 0f;
+        _currentTransmissionRpm = 0f;
+        _targetGear = 0f;
+        _currentGear = 0f;
         _simulationPhase = 0f;
         _hasSimulationInput = false;
         Array.Clear(_previousSimulationInput);
@@ -291,7 +314,10 @@ internal readonly record struct EngineSimulatorSynthesisTarget(
     float Shock,
     float Intake,
     float ThrottleTransient,
-    float Driveline)
+    float Driveline,
+    float SpeedMetersPerSecond = 0f,
+    float Gear = 0f,
+    float TransmissionRpm = 0f)
 {
     public EngineSimulatorSynthesisTarget(
         float rpm,
@@ -301,7 +327,7 @@ internal readonly record struct EngineSimulatorSynthesisTarget(
         float limiter,
         float overrun,
         float shock)
-        : this(rpm, throttle, load, vtecBlend, limiter, overrun, shock, 0f, 0f, 0f)
+        : this(rpm, throttle, load, vtecBlend, limiter, overrun, shock, 0f, 0f, 0f, 0f, 0f, 0f)
     {
     }
 }

@@ -19,7 +19,10 @@ internal sealed class EngineSimDspProcessor
     private readonly OnePoleLowPassFilter _intakeBodyFilter = new();
     private readonly OnePoleLowPassFilter _transientBodyFilter = new();
     private readonly OnePoleLowPassFilter _drivelineBodyFilter = new();
+    private readonly BiquadBandPassFilter _exhaustResonanceLow = new();
+    private readonly BiquadBandPassFilter _exhaustResonanceHigh = new();
     private readonly AudioParameters _audioParameters;
+    private readonly float _sampleRate;
     private float _runtimeDerivativeMix;
     private float _runtimeInputSampleNoise;
     private float _runtimeAirNoise;
@@ -27,6 +30,15 @@ internal sealed class EngineSimDspProcessor
     private float _runtimeVtecLayer;
     private float _runtimeThrottleTransientLayer;
     private float _runtimeDrivelineLayer;
+    private float _runtimeRpm;
+    private float _runtimeThrottle;
+    private float _runtimeLoad;
+    private float _runtimeVtec;
+    private float _runtimeSpeed;
+    private float _runtimeGear;
+    private float _runtimeTransmissionRpm;
+    private float _mechanicalPhase;
+    private float _drivelinePhase;
     private uint _noiseState = 0x8f93a2bdu;
 
     public EngineSimDspProcessor(VehicleAudioParameters parameters, int sampleRate, int inputChannelCount)
@@ -52,6 +64,7 @@ internal sealed class EngineSimDspProcessor
         _runtimeVtecLayer = 0f;
 
         float safeSampleRate = MathF.Max(1f, sampleRate);
+        _sampleRate = safeSampleRate;
         float[] impulseResponse = LoadImpulseResponse(parameters);
         for (int i = 0; i < _filters.Length; i++)
         {
@@ -65,6 +78,8 @@ internal sealed class EngineSimDspProcessor
         _transientBodyFilter.SetCutoffFrequency(1450f);
         _drivelineBodyFilter.Dt = 1f / safeSampleRate;
         _drivelineBodyFilter.SetCutoffFrequency(240f);
+        _exhaustResonanceLow.Set(420f, 2.2f, safeSampleRate);
+        _exhaustResonanceHigh.Set(980f, 2.8f, safeSampleRate);
         _levelingFilter.Target = _audioParameters.LevelerTarget;
         _levelingFilter.MaxLevel = _audioParameters.LevelerMaxGain;
         _levelingFilter.MinLevel = _audioParameters.LevelerMinGain;
@@ -86,7 +101,10 @@ internal sealed class EngineSimDspProcessor
         float shock,
         float intake,
         float throttleTransient,
-        float driveline)
+        float driveline,
+        float speedMetersPerSecond,
+        float gear,
+        float transmissionRpm)
     {
         float rpmTexture = SmoothStep(1500f, 5200f, rpm);
         float loadTexture = SmoothStep(0.22f, 0.82f, load);
@@ -113,7 +131,8 @@ internal sealed class EngineSimDspProcessor
             0f,
             0.25f);
         _runtimeIntakeLayer = MathHelper.Clamp(
-            intake * MathHelper.Lerp(0.58f, 1f, SmoothStep(1600f, 7200f, rpm)) +
+            intake * MathHelper.Lerp(0.45f, 1f, SmoothStep(1600f, 7200f, rpm)) *
+            (0.55f + MathHelper.Clamp(throttle, 0f, 1f) * 0.25f + MathHelper.Clamp(load, 0f, 1f) * 0.20f) +
             vtecBlend * MathHelper.Clamp(throttle, 0f, 1f) * 0.10f,
             0f,
             1f);
@@ -124,6 +143,17 @@ internal sealed class EngineSimDspProcessor
             0f,
             1f);
         _runtimeDrivelineLayer = MathHelper.Clamp(driveline, 0f, 1f);
+        _runtimeRpm = MathF.Max(450f, rpm);
+        _runtimeThrottle = MathHelper.Clamp(throttle, 0f, 1f);
+        _runtimeLoad = MathHelper.Clamp(load, 0f, 1f);
+        _runtimeVtec = MathHelper.Clamp(vtecBlend, 0f, 1f);
+        _runtimeSpeed = MathF.Max(0f, speedMetersPerSecond);
+        _runtimeGear = MathHelper.Clamp(gear, -1f, 8f);
+        _runtimeTransmissionRpm = MathF.Max(0f, transmissionRpm);
+
+        float rpmNorm = SmoothStep(900f, 9000f, _runtimeRpm);
+        _exhaustResonanceLow.Set(MathHelper.Lerp(360f, 620f, rpmNorm), 2.2f, _sampleRate);
+        _exhaustResonanceHigh.Set(MathHelper.Lerp(820f, 1850f, rpmNorm), 2.8f, _sampleRate);
     }
 
     public float Process(ReadOnlySpan<float> input)
@@ -162,6 +192,25 @@ internal sealed class EngineSimDspProcessor
         float intakeSource = output - _intakeBodyFilter.Process(output);
         float transientSource = output - _transientBodyFilter.Process(output);
         float drivelineSource = _drivelineBodyFilter.Process(output);
+        float resonance = (_exhaustResonanceLow.Process(output) * 0.16f +
+                           _exhaustResonanceHigh.Process(output) * 0.08f) *
+                          MathHelper.Lerp(0.25f, 1f, _runtimeLoad);
+
+        float mechanicalFrequency = MathF.Max(20f, _runtimeRpm / 60f * 2f);
+        _mechanicalPhase = AdvancePhase(_mechanicalPhase, mechanicalFrequency);
+        float mechanical = MathF.Sin(_mechanicalPhase * MathF.Tau) *
+                           (0.006f + _runtimeRpm / 9000f * 0.016f) *
+                           MathHelper.Lerp(0.18f, 1f, _runtimeLoad);
+
+        float gearRatio = MathF.Max(0.55f, MathF.Abs(_runtimeGear) + 0.5f);
+        float drivelineFrequency = MathHelper.Clamp(
+            MathF.Max(_runtimeSpeed * gearRatio * 7.5f, _runtimeTransmissionRpm / 60f * 0.35f),
+            18f,
+            1200f);
+        _drivelinePhase = AdvancePhase(_drivelinePhase, drivelineFrequency);
+        float gearWhine = MathF.Sin(_drivelinePhase * MathF.Tau) *
+                          (0.0025f + _runtimeDrivelineLayer * 0.0155f) *
+                          MathHelper.Lerp(0.15f, 1f, MathHelper.Clamp(_runtimeSpeed / 30f, 0f, 1f));
         // Restore the cam-change timbre without reintroducing broadband
         // noise: VTEC adds a restrained high-passed harmonic of the same
         // simulated pressure signal.
@@ -169,7 +218,7 @@ internal sealed class EngineSimDspProcessor
         float transientTimbre = transientSource * _runtimeThrottleTransientLayer * 0.075f;
         float drivelineTimbre = drivelineSource * _runtimeDrivelineLayer * 0.040f;
         float vtecHarmonic = intakeSource * _runtimeVtecLayer * 0.55f;
-        return MathHelper.Clamp(output + intakeTimbre + transientTimbre + drivelineTimbre + vtecHarmonic, -1f, 1f);
+        return MathHelper.Clamp(output + resonance + mechanical + gearWhine + intakeTimbre + transientTimbre + drivelineTimbre + vtecHarmonic, -1f, 1f);
     }
 
     public void Reset()
@@ -179,11 +228,21 @@ internal sealed class EngineSimDspProcessor
         _intakeBodyFilter.Reset();
         _transientBodyFilter.Reset();
         _drivelineBodyFilter.Reset();
+        _exhaustResonanceLow.Reset();
+        _exhaustResonanceHigh.Reset();
+        _mechanicalPhase = 0f;
+        _drivelinePhase = 0f;
         _levelingFilter.Reset();
         foreach (ChannelFilters filters in _filters)
         {
             filters.Reset();
         }
+    }
+
+    private float AdvancePhase(float phase, float frequency)
+    {
+        phase += frequency / _sampleRate;
+        return phase >= 1f ? phase - MathF.Floor(phase) : phase;
     }
 
     private static float[] LoadImpulseResponse(VehicleAudioParameters parameters)
@@ -570,6 +629,50 @@ internal sealed class EngineSimDspProcessor
         public void Reset()
         {
             _y = 0f;
+        }
+    }
+
+    private sealed class BiquadBandPassFilter
+    {
+        private float _b0;
+        private float _b1;
+        private float _b2;
+        private float _a1;
+        private float _a2;
+        private float _x1;
+        private float _x2;
+        private float _y1;
+        private float _y2;
+
+        public void Set(float frequency, float q, float sampleRate)
+        {
+            float w0 = MathF.Tau * MathHelper.Clamp(frequency, 20f, sampleRate * 0.45f) / sampleRate;
+            float alpha = MathF.Sin(w0) / (2f * MathF.Max(0.25f, q));
+            float cos = MathF.Cos(w0);
+            float a0 = 1f + alpha;
+            _b0 = alpha / a0;
+            _b1 = 0f;
+            _b2 = -alpha / a0;
+            _a1 = -2f * cos / a0;
+            _a2 = (1f - alpha) / a0;
+        }
+
+        public float Process(float sample)
+        {
+            float y = _b0 * sample + _b1 * _x1 + _b2 * _x2 - _a1 * _y1 - _a2 * _y2;
+            _x2 = _x1;
+            _x1 = sample;
+            _y2 = _y1;
+            _y1 = y;
+            return y;
+        }
+
+        public void Reset()
+        {
+            _x1 = 0f;
+            _x2 = 0f;
+            _y1 = 0f;
+            _y2 = 0f;
         }
     }
 
