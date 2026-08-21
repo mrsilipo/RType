@@ -322,3 +322,5 @@ The next live run was a dramatic improvement but still reached a two-buffer mini
 The clean isolation output was stable but too blunt compared with the Engine Sim reference. Direct 512-tap exhaust convolution and the profile's low high-frequency derivative mix are restored for harmonic richness. The long IR tail, noise, jitter, and extra presentation layers remain disabled until the live result is confirmed clean.
 
 The current stable build was cleaner but had lost the earlier VTEC timbre distinction because all post-signal layers were disabled during isolation. A deterministic high-passed harmonic derived from the same simulated pressure signal is restored and driven only by `vtecBlend`; it does not add broadband noise or a separate sample.
+
+The VTEC harmonic contribution is increased from 10% to 20% of the filtered simulated pressure signal for a stronger cam-profile distinction without increasing the base engine volume.

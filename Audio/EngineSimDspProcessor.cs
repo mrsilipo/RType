@@ -166,7 +166,7 @@ internal sealed class EngineSimDspProcessor
         // Restore the cam-change timbre without reintroducing broadband
         // noise: VTEC adds a restrained high-passed harmonic of the same
         // simulated pressure signal.
-        float vtecHarmonic = intakeSource * _runtimeVtecLayer * 0.10f;
+        float vtecHarmonic = intakeSource * _runtimeVtecLayer * 0.20f;
         return MathHelper.Clamp(output + vtecHarmonic, -1f, 1f);
     }
 
