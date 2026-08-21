@@ -332,3 +332,5 @@ The missing richness was the original deterministic intake timbre layer, which h
 The full deterministic timbre mix is now restored: intake, throttle-transient, and driveline shaping are active again. Broadband noise, jitter, long convolution tail, and the device-buffer protections remain unchanged.
 
 The richer reference comparison showed that scaled Engine Sim jitter and air texture were still missing. They are restored at the previously softened realtime levels (10% jitter scale and 12% air-noise scale), rather than the raw MR values, to recover character without returning to the earlier static.
+
+The final missing tonal component was the useful long exhaust-response tail. With the playback queue now protected by four pending buffers, live playback restores the full available 1,893-tap Honda response instead of the 512-tap early slice.
