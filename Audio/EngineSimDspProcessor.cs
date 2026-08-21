@@ -26,6 +26,7 @@ internal sealed class EngineSimDspProcessor
     private readonly BiquadBandPassFilter _exhaustResonanceHigh = new();
     private readonly AudioParameters _audioParameters;
     private readonly float _sampleRate;
+    private readonly int _exhaustChannelCount;
     private float _runtimeDerivativeMix;
     private float _runtimeInputSampleNoise;
     private float _runtimeAirNoise;
@@ -50,6 +51,7 @@ internal sealed class EngineSimDspProcessor
     {
         int channelCount = Math.Max(1, inputChannelCount);
         _filters = new ChannelFilters[channelCount];
+        _exhaustChannelCount = Math.Clamp(parameters.EngineSimulatorExhaustVolumes.Length, 1, Math.Max(1, channelCount - 4));
         _audioParameters = new AudioParameters
         {
             Volume = MathF.Max(0f, parameters.EngineSimulatorDspOutputGain),
@@ -192,7 +194,7 @@ internal sealed class EngineSimDspProcessor
             float convolved = filters.Convolution.Process(vIn);
             float v = _audioParameters.Convolution * convolved +
                       (1f - _audioParameters.Convolution) * vIn;
-            signal += v;
+            signal += v * ChannelGain(i);
         }
 
         signal = _antialiasing.Process(signal);
@@ -233,6 +235,24 @@ internal sealed class EngineSimDspProcessor
         float drivelineTimbre = drivelineSource * _runtimeDrivelineLayer * 0.040f;
         float vtecHarmonic = intakeSource * _runtimeVtecLayer * 0.55f;
         return MathHelper.Clamp(output + resonance + mechanical + gearWhine + backfirePulse + intakeTimbre + transientTimbre + drivelineTimbre + vtecHarmonic, -1f, 1f);
+    }
+
+    private float ChannelGain(int channelIndex)
+    {
+        if (channelIndex < _exhaustChannelCount)
+        {
+            return 0.55f;
+        }
+
+        int relative = channelIndex - _exhaustChannelCount;
+        return relative switch
+        {
+            0 => 0.34f, // intake
+            1 => 0.90f, // combustion pressure
+            2 => 0.26f, // piston/crank motion
+            3 => 0.20f, // valvetrain flow
+            _ => 0.25f
+        };
     }
 
     public void Reset()
