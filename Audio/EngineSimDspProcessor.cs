@@ -50,7 +50,9 @@ internal sealed class EngineSimDspProcessor
         _audioParameters = new AudioParameters
         {
             Volume = MathF.Max(0f, parameters.EngineSimulatorDspOutputGain),
-            Convolution = 1f,
+            // Keep the simulated combustion waveform present. A fully wet
+            // mild-exhaust IR masks the cylinder pulse and sounds filtered.
+            Convolution = 0.35f,
             DerivativeMix = MathHelper.Clamp(parameters.EngineSimulatorHighFrequencyGain, 0f, 0.25f),
             InputSampleNoise = MathHelper.Clamp(parameters.EngineSimulatorJitter * RealtimeJitterScale, 0f, 1f),
             InputSampleNoiseFrequencyCutoff = 10000f,
@@ -88,7 +90,7 @@ internal sealed class EngineSimDspProcessor
 
         AudioDiagnostics.Log(
             "engine-sim-dsp",
-            $"ported synthesizer, channels {channelCount}, hf {_audioParameters.DerivativeMix:0.0000}, noise {_audioParameters.AirNoise:0.000}, jitter {_audioParameters.InputSampleNoise:0.000}, idle texture scaled, conv taps {impulseResponse.Length}, {ConvolutionFilter.Describe(impulseResponse.Length)}, pressure scale {parameters.EngineSimulatorDspPressureScale:0.0}, output gain {_audioParameters.Volume:0.00}");
+            $"ported synthesizer, channels {channelCount}, hf {_audioParameters.DerivativeMix:0.0000}, noise {_audioParameters.AirNoise:0.000}, jitter {_audioParameters.InputSampleNoise:0.000}, idle texture scaled, convolution wet {_audioParameters.Convolution:0.00}, conv taps {impulseResponse.Length}, {ConvolutionFilter.Describe(impulseResponse.Length)}, pressure scale {parameters.EngineSimulatorDspPressureScale:0.0}, output gain {_audioParameters.Volume:0.00}");
     }
 
     public int ChannelCount => _filters.Length;
