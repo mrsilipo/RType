@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework;
 
-namespace RetroRacer.Ui;
+namespace RType.Ui;
 
 public sealed class TachometerConfig
 {

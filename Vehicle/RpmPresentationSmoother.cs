@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework;
 
-namespace RetroRacer.Vehicle;
+namespace RType.Vehicle;
 
 public static class RpmPresentationSmoother
 {
@@ -21,7 +21,7 @@ public static class RpmPresentationSmoother
             projectedRpm = ApplyLimiterNeedleBounce(projectedRpm, state);
         }
 
-        float vtecKick = MathHelper.Clamp(state.EngineSimulatorVtecKickIntensity, 0f, 1f);
+        float vtecKick = MathHelper.Clamp(state.EnginePowerUnitVtecKickIntensity, 0f, 1f);
         bool vtecTransient = !limiterPinned &&
                              vtecKick > 0.02f &&
                              state.Gear > 0 &&
@@ -77,6 +77,13 @@ public static class RpmPresentationSmoother
         float targetRpm = limiterPinned
             ? MathF.Min(state.DisplayedRpmTarget, state.RedlineRpm)
             : state.DisplayedRpmTarget;
+        if (limiterPinned && state.RevLimiterBounceIntensity > 0.05f)
+        {
+            state.DisplayedRpm = targetRpm;
+            state.DisplayedRpmVelocity = 0f;
+            return;
+        }
+
         float delta = targetRpm - state.DisplayedRpm;
         float displayResponseRate;
         float maxRisePerSecond;
@@ -162,7 +169,7 @@ public static class RpmPresentationSmoother
         }
 
         float pulse = SmoothStep(0.02f, 0.90f, bounce);
-        float visualDrop = MathHelper.Lerp(110f, 460f, pulse);
+        float visualDrop = MathHelper.Lerp(220f, 1000f, pulse);
         float bouncedRpm = state.RedlineRpm - visualDrop;
         return MathF.Min(projectedRpm, MathF.Max(300f, bouncedRpm));
     }

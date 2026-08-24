@@ -1,15 +1,16 @@
 using Microsoft.Xna.Framework.Audio;
 
-namespace RetroRacer.Audio;
+namespace RType.Audio;
 
 public sealed class WavLoopSource
 {
-    private WavLoopSource(int sampleRate, int channelCount, float[] samples)
+    private WavLoopSource(int sampleRate, int channelCount, float[] samples, short[] pcmSamples)
     {
         SampleRate = sampleRate;
         ChannelCount = channelCount;
         Channels = channelCount == 2 ? AudioChannels.Stereo : AudioChannels.Mono;
         Samples = samples;
+        PcmSamples = pcmSamples;
         FrameCount = samples.Length / channelCount;
     }
 
@@ -23,6 +24,8 @@ public sealed class WavLoopSource
 
     public float[] Samples { get; }
 
+    public short[] PcmSamples { get; }
+
     public WavLoopSource Slice(float startRatio, float endRatio)
     {
         startRatio = Math.Clamp(startRatio, 0f, 0.98f);
@@ -32,14 +35,21 @@ public sealed class WavLoopSource
         int endFrame = Math.Clamp((int)(FrameCount * endRatio), startFrame + 1, FrameCount);
         int sliceFrameCount = endFrame - startFrame;
         float[] slicedSamples = new float[sliceFrameCount * ChannelCount];
+        short[] slicedPcmSamples = new short[slicedSamples.Length];
         Array.Copy(
             Samples,
             startFrame * ChannelCount,
             slicedSamples,
             0,
             slicedSamples.Length);
+        Array.Copy(
+            PcmSamples,
+            startFrame * ChannelCount,
+            slicedPcmSamples,
+            0,
+            slicedPcmSamples.Length);
 
-        return new WavLoopSource(SampleRate, ChannelCount, slicedSamples);
+        return new WavLoopSource(SampleRate, ChannelCount, slicedSamples, slicedPcmSamples);
     }
 
     public static WavLoopSource Load(string path)
@@ -90,13 +100,15 @@ public sealed class WavLoopSource
         }
 
         float[] samples = new float[pcmData.Length / 2];
+        short[] pcmSamples = new short[samples.Length];
         for (int i = 0; i < samples.Length; i++)
         {
             short value = BitConverter.ToInt16(pcmData, i * 2);
+            pcmSamples[i] = value;
             samples[i] = value / 32768f;
         }
 
-        return new WavLoopSource(sampleRate, channelCount, samples);
+        return new WavLoopSource(sampleRate, channelCount, samples, pcmSamples);
     }
 
     private static string ReadFourCc(BinaryReader reader)

@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "catalog": "alignments",
+  "slot": "alignment",
+  "parts": [
+    { "id": "stock_ek9_alignment", "displayName": "Stock EK9 Alignment", "tier": "stock", "compatibility": ["ek9"], "data": { "frontCamberDegrees": -0.6, "rearCamberDegrees": -0.8, "frontCasterDegrees": 3.0, "frontToeDegrees": 0.02, "rearToeDegrees": 0.08 } },
+    { "id": "street_sport_alignment", "displayName": "Street Sport Alignment", "tier": "street", "compatibility": ["ek9"], "data": { "frontCamberDegrees": -1.4, "rearCamberDegrees": -1.2, "frontCasterDegrees": 3.4, "frontToeDegrees": 0.00, "rearToeDegrees": 0.06 } },
+    { "id": "club_sport_alignment", "displayName": "Club Sport Alignment", "tier": "clubSport", "compatibility": ["ek9"], "data": { "frontCamberDegrees": -2.2, "rearCamberDegrees": -1.8, "frontCasterDegrees": 3.8, "frontToeDegrees": -0.04, "rearToeDegrees": 0.04 } },
+    { "id": "pro_racing_alignment", "displayName": "Pro Racing Alignment", "tier": "proRacing", "compatibility": ["ek9"], "data": { "frontCamberDegrees": -3.2, "rearCamberDegrees": -2.4, "frontCasterDegrees": 4.5, "frontToeDegrees": -0.08, "rearToeDegrees": 0.02 } }
+  ]
+}

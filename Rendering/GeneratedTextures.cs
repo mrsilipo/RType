@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace RetroRacer.Rendering;
+namespace RType.Rendering;
 
 public sealed class GeneratedTextures : IDisposable
 {
@@ -15,6 +15,8 @@ public sealed class GeneratedTextures : IDisposable
         Texture2D carRed,
         Texture2D carGlass,
         Texture2D tire,
+        Texture2D taillightRedLens,
+        Texture2D taillightClearLens,
         Texture2D shadow)
     {
         Road = road;
@@ -24,6 +26,8 @@ public sealed class GeneratedTextures : IDisposable
         CarRed = carRed;
         CarGlass = carGlass;
         Tire = tire;
+        TaillightRedLens = taillightRedLens;
+        TaillightClearLens = taillightClearLens;
         Shadow = shadow;
     }
 
@@ -41,6 +45,10 @@ public sealed class GeneratedTextures : IDisposable
 
     public Texture2D Tire { get; }
 
+    public Texture2D TaillightRedLens { get; }
+
+    public Texture2D TaillightClearLens { get; }
+
     public Texture2D Shadow { get; }
 
     public static GeneratedTextures Create(GraphicsDevice graphicsDevice)
@@ -53,6 +61,8 @@ public sealed class GeneratedTextures : IDisposable
             CreateSolid(graphicsDevice, new Color(178, 42, 36)),
             CreateSolid(graphicsDevice, new Color(36, 58, 74)),
             CreateSolid(graphicsDevice, new Color(14, 14, 16)),
+            CreateTaillightLens(graphicsDevice, clearLens: false),
+            CreateTaillightLens(graphicsDevice, clearLens: true),
             CreateShadow(graphicsDevice));
     }
 
@@ -65,6 +75,8 @@ public sealed class GeneratedTextures : IDisposable
         CarRed.Dispose();
         CarGlass.Dispose();
         Tire.Dispose();
+        TaillightRedLens.Dispose();
+        TaillightClearLens.Dispose();
         Shadow.Dispose();
     }
 
@@ -108,6 +120,34 @@ public sealed class GeneratedTextures : IDisposable
             float distance = nx * nx + ny * ny;
             int alpha = distance < 1f ? (int)(135f * (1f - distance)) : 0;
             return new Color(0, 0, 0, alpha);
+        });
+    }
+
+    private static Texture2D CreateTaillightLens(GraphicsDevice graphicsDevice, bool clearLens)
+    {
+        return CreateTexture(graphicsDevice, 64, 64, (x, y) =>
+        {
+            float horizontalRib = (y % 8) switch
+            {
+                0 or 1 => 1.22f,
+                4 => 0.78f,
+                _ => 1.0f
+            };
+            float verticalPrism = x % 10 is 0 or 1 ? 1.12f : 1.0f;
+            float dot = ((x / 4) + (y / 4)) % 2 == 0 ? 1.06f : 0.94f;
+            float edgeDarkening = MathHelper.Lerp(0.78f, 1f, MathF.Min(1f, MathF.Min(x, 63 - x) / 8f));
+            float value = MathHelper.Clamp(horizontalRib * verticalPrism * dot * edgeDarkening, 0.50f, 1.0f);
+
+            if (clearLens)
+            {
+                int channel = (int)(210f * value);
+                return new Color(channel, channel, Math.Min(255, channel + 8), 255);
+            }
+
+            int red = (int)(245f * value);
+            int green = (int)(42f * value);
+            int blue = (int)(34f * value);
+            return new Color(red, green, blue, 255);
         });
     }
 

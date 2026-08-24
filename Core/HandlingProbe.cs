@@ -1,9 +1,9 @@
 using Microsoft.Xna.Framework;
-using RetroRacer.Data;
-using RetroRacer.Vehicle;
-using RetroRacer.World;
+using RType.Data;
+using RType.Vehicle;
+using RType.World;
 
-namespace RetroRacer.Core;
+namespace RType.Core;
 
 public static class HandlingProbe
 {

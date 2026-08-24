@@ -1,8 +1,8 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-using RetroRacer.Vehicle;
+using RType.Vehicle;
 
-namespace RetroRacer.Input;
+namespace RType.Input;
 
 public sealed class RacingInputReader
 {

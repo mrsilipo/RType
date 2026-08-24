@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace RetroRacer.Rendering;
+namespace RType.Rendering;
 
 public sealed class StaticMesh : IDisposable
 {
@@ -21,16 +21,18 @@ public sealed class StaticMesh : IDisposable
         float alpha = 1f,
         Vector3? specularColor = null,
         float specularPower = 16f,
-        Vector3? emissiveColor = null)
+        Vector3? emissiveColor = null,
+        VehicleMaterial? vehicleMaterial = null)
     {
         Name = name;
         Texture = texture;
-        DiffuseColor = diffuseColor;
         IsWheelMesh = isWheelMesh;
-        Alpha = MathHelper.Clamp(alpha, 0f, 1f);
-        SpecularColor = specularColor ?? Vector3.Zero;
-        SpecularPower = MathF.Max(1f, specularPower);
-        EmissiveColor = emissiveColor ?? Vector3.Zero;
+        VehicleMaterial = vehicleMaterial;
+        DiffuseColor = vehicleMaterial?.BaseColor ?? diffuseColor;
+        Alpha = vehicleMaterial?.Opacity ?? MathHelper.Clamp(alpha, 0f, 1f);
+        SpecularColor = vehicleMaterial?.ToBasicEffectSpecularColor() ?? specularColor ?? Vector3.Zero;
+        SpecularPower = vehicleMaterial?.ToBasicEffectSpecularPower() ?? MathF.Max(1f, specularPower);
+        EmissiveColor = vehicleMaterial?.ToBasicEffectEmissiveColor() ?? emissiveColor ?? Vector3.Zero;
         _vertexCount = vertices.Length;
         _primitiveCount = indices.Length / 3;
 
@@ -65,6 +67,8 @@ public sealed class StaticMesh : IDisposable
 
     public bool IsWheelMesh { get; }
 
+    public VehicleMaterial? VehicleMaterial { get; }
+
     public bool IsTransparent => Alpha < 0.995f;
 
     public void Draw(GraphicsDevice graphicsDevice, BasicEffect effect, Matrix world)
@@ -72,16 +76,43 @@ public sealed class StaticMesh : IDisposable
         effect.World = world;
         effect.Texture = Texture;
         effect.TextureEnabled = true;
-        effect.DiffuseColor = DiffuseColor;
-        effect.Alpha = Alpha;
-        effect.SpecularColor = SpecularColor;
-        effect.SpecularPower = SpecularPower;
-        effect.EmissiveColor = EmissiveColor;
+        if (VehicleMaterial is VehicleMaterial vehicleMaterial)
+        {
+            effect.DiffuseColor = vehicleMaterial.ToBasicEffectDiffuseColor();
+            effect.Alpha = vehicleMaterial.Opacity;
+            effect.SpecularColor = vehicleMaterial.ToBasicEffectSpecularColor();
+            effect.SpecularPower = vehicleMaterial.ToBasicEffectSpecularPower();
+            effect.EmissiveColor = vehicleMaterial.ToBasicEffectEmissiveColor();
+        }
+        else
+        {
+            effect.DiffuseColor = DiffuseColor;
+            effect.Alpha = Alpha;
+            effect.SpecularColor = SpecularColor;
+            effect.SpecularPower = SpecularPower;
+            effect.EmissiveColor = EmissiveColor;
+        }
 
+        DrawIndexed(graphicsDevice, effect.CurrentTechnique.Passes);
+    }
+
+    public void Draw(GraphicsDevice graphicsDevice, Effect effect)
+    {
+        DrawIndexed(graphicsDevice, effect.CurrentTechnique.Passes);
+    }
+
+    public void Dispose()
+    {
+        _vertexBuffer.Dispose();
+        _indexBuffer.Dispose();
+    }
+
+    private void DrawIndexed(GraphicsDevice graphicsDevice, EffectPassCollection passes)
+    {
         graphicsDevice.SetVertexBuffer(_vertexBuffer);
         graphicsDevice.Indices = _indexBuffer;
 
-        foreach (EffectPass pass in effect.CurrentTechnique.Passes)
+        foreach (EffectPass pass in passes)
         {
             pass.Apply();
             graphicsDevice.DrawIndexedPrimitives(
@@ -90,11 +121,5 @@ public sealed class StaticMesh : IDisposable
                 0,
                 _primitiveCount);
         }
-    }
-
-    public void Dispose()
-    {
-        _vertexBuffer.Dispose();
-        _indexBuffer.Dispose();
     }
 }

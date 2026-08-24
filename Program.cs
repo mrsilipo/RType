@@ -1,4 +1,4 @@
-using RetroRacer.Core;
+using RType.Core;
 
 if (args.Any(arg => arg.Equals("--physics-smoke-test", StringComparison.OrdinalIgnoreCase)))
 {
@@ -21,12 +21,6 @@ if (args.Any(arg => arg.Equals("--launch-probe", StringComparison.OrdinalIgnoreC
 if (args.Any(arg => arg.Equals("--shift-probe", StringComparison.OrdinalIgnoreCase)))
 {
     ShiftProbe.Run(GameLaunchOptions.FromArgs(args));
-    return;
-}
-
-if (args.Any(arg => arg.Equals("--performance-probe", StringComparison.OrdinalIgnoreCase)))
-{
-    PerformanceProbe.Run(GameLaunchOptions.FromArgs(args));
     return;
 }
 
@@ -55,64 +49,10 @@ if (args.Any(arg => arg.Equals("--audio-probe", StringComparison.OrdinalIgnoreCa
     return;
 }
 
-if (args.Any(arg => arg.Equals("--engine-sim-probe", StringComparison.OrdinalIgnoreCase)))
+if (args.Any(arg => arg.Equals("--rtype-engine-room", StringComparison.OrdinalIgnoreCase)))
 {
-    EngineSimProfileProbe.Run();
-    return;
-}
-
-if (args.Any(arg => arg.Equals("--engine-sim-profile-audit", StringComparison.OrdinalIgnoreCase)))
-{
-    EngineSimProfileAudit.Run();
-    return;
-}
-
-if (args.Any(arg => arg.Equals("--engine-sim-profile-compare", StringComparison.OrdinalIgnoreCase)))
-{
-    EngineSimProfileComparisonProbe.Run();
-    return;
-}
-
-if (args.Any(arg => arg.Equals("--engine-sim-dyno-probe", StringComparison.OrdinalIgnoreCase)))
-{
-    EngineSimDynoProbe.Run();
-    return;
-}
-
-if (args.Any(arg => arg.Equals("--engine-sim-power-probe", StringComparison.OrdinalIgnoreCase)))
-{
-    EngineSimPowerProbe.Run();
-    return;
-}
-
-if (args.Any(arg => arg.Equals("--engine-sim-fidelity-probe", StringComparison.OrdinalIgnoreCase)))
-{
-    EngineSimFidelityProbe.Run(GameLaunchOptions.FromArgs(args));
-    return;
-}
-
-if (args.Any(arg => arg.Equals("--engine-sim-stream-stress", StringComparison.OrdinalIgnoreCase)))
-{
-    EngineSimStreamStressProbe.Run(GameLaunchOptions.FromArgs(args));
-    return;
-}
-
-if (args.Any(arg => arg.Equals("--engine-sim-compare", StringComparison.OrdinalIgnoreCase)))
-{
-    int referenceIndex = Array.FindIndex(args, arg => arg.Equals("--reference-wav", StringComparison.OrdinalIgnoreCase));
-    if (referenceIndex < 0 || referenceIndex + 1 >= args.Length)
-    {
-        Console.Error.WriteLine("Usage: --engine-sim-compare --reference-wav <path>");
-        return;
-    }
-
-    EngineSimWaveformCompareTool.Run(GameLaunchOptions.FromArgs(args), args[referenceIndex + 1]);
-    return;
-}
-
-if (args.Any(arg => arg.Equals("--render-engine-audio", StringComparison.OrdinalIgnoreCase)))
-{
-    EngineAudioRenderTool.Run();
+    using var engineRoom = RTypeEngineRoomGame.CreateFromArgs(args);
+    engineRoom.Run();
     return;
 }
 

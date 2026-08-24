@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "catalog": "steeringSetups",
+  "slot": "steeringSetup",
+  "tunes": [
+    {
+      "id": "stock_ek9_steering_setup",
+      "displayName": "Stock EK9 Steering Setup",
+      "tier": "stock",
+      "compatibility": ["ek9"],
+      "data": {
+        "type": "rackAndPinion",
+        "ratio": 14.2,
+        "steeringWheelLockDegrees": 1080,
+        "inputRatePerSecond": 5.8,
+        "returnRatePerSecond": 8.4,
+        "maxInnerWheelAngleDegrees": 38,
+        "ackermannPercent": 100,
+        "powerAssist": "hydraulic",
+        "speedSensitiveAssist": {
+          "fullLockSpeedKph": 0,
+          "reducedLockSpeedKph": 220,
+          "highSpeedLockMultiplier": 0.62,
+          "highSpeedInputRateMultiplier": 0.70,
+          "highSpeedReturnRateMultiplier": 0.78,
+          "targetLateralAccelerationG": 1.18,
+          "peakSlipAngleFraction": 0.70,
+          "lowSpeedReferenceKph": 22,
+          "minimumRoadWheelAngleDegrees": 4.2
+        }
+      }
+    },
+    {
+      "id": "street_quick_steering_setup",
+      "displayName": "Street Quick Steering Setup",
+      "tier": "street",
+      "compatibility": ["ek9"],
+      "data": {
+        "ratio": 13.8,
+        "steeringWheelLockDegrees": 960,
+        "inputRatePerSecond": 6.2,
+        "returnRatePerSecond": 8.8,
+        "maxInnerWheelAngleDegrees": 38,
+        "ackermannPercent": 100,
+        "speedSensitiveAssist": {
+          "reducedLockSpeedKph": 210,
+          "highSpeedLockMultiplier": 0.60,
+          "highSpeedInputRateMultiplier": 0.68,
+          "highSpeedReturnRateMultiplier": 0.78
+        }
+      }
+    },
+    {
+      "id": "club_sport_steering_setup",
+      "displayName": "Club Sport Steering Setup",
+      "tier": "clubSport",
+      "compatibility": ["ek9"],
+      "data": {
+        "ratio": 13.2,
+        "steeringWheelLockDegrees": 900,
+        "inputRatePerSecond": 6.8,
+        "returnRatePerSecond": 9.4,
+        "maxInnerWheelAngleDegrees": 37,
+        "ackermannPercent": 92,
+        "speedSensitiveAssist": {
+          "reducedLockSpeedKph": 205,
+          "highSpeedLockMultiplier": 0.58,
+          "highSpeedInputRateMultiplier": 0.64,
+          "highSpeedReturnRateMultiplier": 0.75
+        }
+      }
+    },
+    {
+      "id": "pro_racing_steering_setup",
+      "displayName": "Pro Racing Steering Setup",
+      "tier": "proRacing",
+      "compatibility": ["ek9"],
+      "data": {
+        "ratio": 12.6,
+        "steeringWheelLockDegrees": 760,
+        "inputRatePerSecond": 7.6,
+        "returnRatePerSecond": 10.6,
+        "maxInnerWheelAngleDegrees": 36,
+        "ackermannPercent": 86,
+        "speedSensitiveAssist": {
+          "reducedLockSpeedKph": 190,
+          "highSpeedLockMultiplier": 0.55,
+          "highSpeedInputRateMultiplier": 0.60,
+          "highSpeedReturnRateMultiplier": 0.72
+        }
+      }
+    }
+  ]
+}

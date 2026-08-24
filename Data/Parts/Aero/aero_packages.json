@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "catalog": "aeroPackages",
+  "slot": "aeroPackage",
+  "parts": [
+    {
+      "id": "stock_ek9_aero_package",
+      "displayName": "Stock EK9 Aero Package",
+      "tier": "stock",
+      "compatibility": ["ek9"],
+      "data": {
+        "dragCoefficient": 0.34,
+        "frontalAreaSquareMeters": 1.95,
+        "frontLiftCoefficient": 0.05,
+        "rearLiftCoefficient": 0.03,
+        "centreOfPressure": { "x": 0.0, "y": 0.45, "z": 1.45 }
+      }
+    },
+    {
+      "id": "street_lip_aero_package",
+      "displayName": "Street Lip Aero Package",
+      "tier": "street",
+      "compatibility": ["ek9"],
+      "data": {
+        "dragCoefficient": 0.35,
+        "frontalAreaSquareMeters": 1.96,
+        "frontLiftCoefficient": 0.02,
+        "rearLiftCoefficient": 0.01,
+        "centreOfPressure": { "x": 0.0, "y": 0.43, "z": 1.40 }
+      }
+    },
+    {
+      "id": "club_sport_aero_package",
+      "displayName": "Club Sport Aero Package",
+      "tier": "clubSport",
+      "compatibility": ["ek9"],
+      "data": {
+        "dragCoefficient": 0.38,
+        "frontalAreaSquareMeters": 1.98,
+        "frontLiftCoefficient": -0.04,
+        "rearLiftCoefficient": -0.08,
+        "centreOfPressure": { "x": 0.0, "y": 0.39, "z": 1.22 }
+      }
+    },
+    {
+      "id": "pro_racing_aero_package",
+      "displayName": "Pro Racing Aero Package",
+      "tier": "proRacing",
+      "compatibility": ["ek9"],
+      "data": {
+        "dragCoefficient": 0.42,
+        "frontalAreaSquareMeters": 2.02,
+        "frontLiftCoefficient": -0.10,
+        "rearLiftCoefficient": -0.18,
+        "centreOfPressure": { "x": 0.0, "y": 0.36, "z": 1.05 }
+      }
+    }
+  ]
+}

@@ -2,7 +2,7 @@ using System.Globalization;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace RetroRacer.Ui;
+namespace RType.Ui;
 
 public sealed class TachometerHudRenderer : IDisposable
 {

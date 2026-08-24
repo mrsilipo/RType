@@ -1,4 +1,4 @@
-namespace RetroRacer.Input;
+namespace RType.Input;
 
 public sealed class ControlScheme
 {

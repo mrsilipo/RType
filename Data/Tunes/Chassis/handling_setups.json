@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "catalog": "handlingSetups",
+  "slot": "handlingSetup",
+  "tunes": [
+    {
+      "id": "stock_ek9_arcade_handling_setup",
+      "displayName": "Stock EK9 Arcade Handling Setup",
+      "tier": "stock",
+      "compatibility": ["ek9"],
+      "data": {
+        "drivetrainEfficiency": 0.9,
+        "closedThrottleEngineBrakeTorqueNm": 68,
+        "lateralGripResponse": 10.4,
+        "rollingResistanceCoefficient": 0.013,
+        "airDensityKgM3": 1.225,
+        "automaticUpshiftRpm": 8150,
+        "automaticMinimumUpshiftSpeedKph": 28,
+        "automaticDownshiftRpm": 4300,
+        "engineFreeRevResponseRate": 9.5,
+        "launchSlipTargetRpm": 6000,
+        "launchSlipBlend": 0.22,
+        "wallCollisionPointRadiusMeters": 0.08,
+        "wallCollisionRestitution": 0.05,
+        "wallImpactFriction": 0.14,
+        "wallScrapeFriction": 0.01,
+        "wallYawImpulseScale": 0.22,
+        "arcadeHandling": {
+          "pseudoLateralTransferScale": 0.014,
+          "pseudoLateralTransferBlend": 0.72,
+          "drivenGripAllowance": 0.46,
+          "genericGripAllowance": 0.05,
+          "brakingGripAllowance": 0.46,
+          "brakingSlidingFrictionFloor": 0.82,
+          "passiveSlideRecoveryLateralSpeedMetersPerSecond": 1.2,
+          "passiveSlideRecoveryYawRateDegreesPerSecond": 8.0,
+          "wallImpactVelocityMultiplier": 0.35,
+          "wallDirectImpactBlendStart": 0.55,
+          "wallDirectImpactBlendEnd": 0.92,
+          "visualSuspensionMotionScale": 5.6,
+          "visualSuspensionHeavePitchScale": 0.35,
+          "visualSuspensionLoadTransferMeters": 0.38,
+          "visualSuspensionSpringRate": 118.0,
+          "visualSuspensionDampingRate": 26.0,
+          "frontVisualSuspensionMultiplier": 1.08,
+          "rearVisualSuspensionMultiplier": 0.72,
+          "visualBodyPitchScale": 0.82,
+          "visualBodyRollScale": 0.54,
+          "visualBodyPitchLimitRadians": 0.13,
+          "visualBodyRollLimitRadians": 0.058
+        }
+      }
+    },
+    {
+      "id": "street_arcade_handling_setup",
+      "displayName": "Street Arcade Handling Setup",
+      "tier": "street",
+      "compatibility": ["ek9"],
+      "data": {
+        "drivetrainEfficiency": 0.91,
+        "closedThrottleEngineBrakeTorqueNm": 72,
+        "lateralGripResponse": 10.8,
+        "launchSlipTargetRpm": 6200,
+        "launchSlipBlend": 0.20
+      }
+    },
+    {
+      "id": "club_sport_arcade_handling_setup",
+      "displayName": "Club Sport Arcade Handling Setup",
+      "tier": "clubSport",
+      "compatibility": ["ek9"],
+      "data": {
+        "drivetrainEfficiency": 0.92,
+        "closedThrottleEngineBrakeTorqueNm": 78,
+        "lateralGripResponse": 11.4,
+        "launchSlipTargetRpm": 6600,
+        "launchSlipBlend": 0.18
+      }
+    },
+    {
+      "id": "pro_racing_arcade_handling_setup",
+      "displayName": "Pro Racing Arcade Handling Setup",
+      "tier": "proRacing",
+      "compatibility": ["ek9"],
+      "data": {
+        "drivetrainEfficiency": 0.93,
+        "closedThrottleEngineBrakeTorqueNm": 84,
+        "lateralGripResponse": 12.2,
+        "launchSlipTargetRpm": 7200,
+        "launchSlipBlend": 0.14
+      }
+    }
+  ]
+}

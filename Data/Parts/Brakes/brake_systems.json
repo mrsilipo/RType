@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "catalog": "brakeSystems",
+  "slot": "brakeSystem",
+  "parts": [
+    {
+      "id": "stock_ek9_brake_system",
+      "displayName": "Stock EK9 Brake System",
+      "tier": "stock",
+      "compatibility": ["ek9"],
+      "data": {
+        "maxLinePressureBar": 108,
+        "brakeBiasFront": 0.82,
+        "handbrakeRearTorqueNm": 900,
+        "pressureRiseRatePerSecond": 12.5,
+        "pressureReleaseRatePerSecond": 36,
+        "maxBrakeForceN": 14000,
+        "abs": {
+          "enabled": true,
+          "targetSlipRatio": -0.10,
+          "releaseSlipRatio": -0.17,
+          "applyRatePerSecond": 13,
+          "releaseRatePerSecond": 30,
+          "minimumSpeedKph": 8,
+          "minimumPressureRatio": 0.22
+        }
+      },
+      "durability": {
+        "rating": 0.86,
+        "heatTolerance": 0.84,
+        "fatigueResistance": 0.84
+      }
+    },
+    {
+      "id": "street_sport_brake_system",
+      "displayName": "Street Sport Brake System",
+      "tier": "street",
+      "compatibility": ["ek9"],
+      "data": {
+        "maxLinePressureBar": 112,
+        "brakeBiasFront": 0.79,
+        "handbrakeRearTorqueNm": 950,
+        "pressureRiseRatePerSecond": 14.0,
+        "pressureReleaseRatePerSecond": 39,
+        "maxBrakeForceN": 15000,
+        "abs": {
+          "enabled": true,
+          "targetSlipRatio": -0.105,
+          "releaseSlipRatio": -0.18,
+          "applyRatePerSecond": 14,
+          "releaseRatePerSecond": 31,
+          "minimumSpeedKph": 8,
+          "minimumPressureRatio": 0.20
+        }
+      },
+      "durability": {
+        "rating": 0.89,
+        "heatTolerance": 0.88,
+        "fatigueResistance": 0.87
+      }
+    },
+    {
+      "id": "club_sport_brake_system",
+      "displayName": "Club Sport Brake System",
+      "tier": "clubSport",
+      "compatibility": ["ek9"],
+      "data": {
+        "maxLinePressureBar": 118,
+        "brakeBiasFront": 0.75,
+        "handbrakeRearTorqueNm": 1050,
+        "pressureRiseRatePerSecond": 17.0,
+        "pressureReleaseRatePerSecond": 44,
+        "maxBrakeForceN": 16400,
+        "abs": {
+          "enabled": true,
+          "targetSlipRatio": -0.11,
+          "releaseSlipRatio": -0.19,
+          "applyRatePerSecond": 16,
+          "releaseRatePerSecond": 35,
+          "minimumSpeedKph": 7,
+          "minimumPressureRatio": 0.18
+        }
+      },
+      "durability": {
+        "rating": 0.92,
+        "heatTolerance": 0.94,
+        "fatigueResistance": 0.91
+      }
+    },
+    {
+      "id": "pro_racing_brake_system",
+      "displayName": "Pro Racing Brake System",
+      "tier": "proRacing",
+      "compatibility": ["ek9"],
+      "data": {
+        "maxLinePressureBar": 124,
+        "brakeBiasFront": 0.72,
+        "handbrakeRearTorqueNm": 1180,
+        "pressureRiseRatePerSecond": 22.0,
+        "pressureReleaseRatePerSecond": 52,
+        "maxBrakeForceN": 18200,
+        "abs": {
+          "enabled": true,
+          "targetSlipRatio": -0.12,
+          "releaseSlipRatio": -0.20,
+          "applyRatePerSecond": 19,
+          "releaseRatePerSecond": 42,
+          "minimumSpeedKph": 6,
+          "minimumPressureRatio": 0.16
+        }
+      },
+      "durability": {
+        "rating": 0.94,
+        "heatTolerance": 0.98,
+        "fatigueResistance": 0.94
+      }
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "catalog": "wheels",
+  "slot": "wheels",
+  "parts": [
+    { "id": "stock_ek9_15x6_wheel", "displayName": "Stock EK9 15x6 Wheel", "tier": "stock", "compatibility": ["ek9", "4x100"], "weightKg": 7.2, "data": { "diameterIn": 15, "widthIn": 6.0, "offsetMm": 45, "pcd": "4x100" }, "durability": { "rating": 0.86, "fatigueResistance": 0.84 } },
+    { "id": "street_15x6_5_lightweight_wheel", "displayName": "Street 15x6.5 Lightweight Wheel", "tier": "street", "compatibility": ["ek9", "4x100"], "weightKg": 6.3, "data": { "diameterIn": 15, "widthIn": 6.5, "offsetMm": 42, "pcd": "4x100" }, "durability": { "rating": 0.88, "fatigueResistance": 0.87 } },
+    { "id": "club_sport_15x7_wheel", "displayName": "Club Sport 15x7 Wheel", "tier": "clubSport", "compatibility": ["ek9", "4x100"], "weightKg": 5.5, "data": { "diameterIn": 15, "widthIn": 7.0, "offsetMm": 40, "pcd": "4x100" }, "durability": { "rating": 0.91, "fatigueResistance": 0.91 } },
+    { "id": "pro_racing_15x8_forged_wheel", "displayName": "Pro Racing 15x8 Forged Wheel", "tier": "proRacing", "compatibility": ["ek9", "4x100"], "weightKg": 4.8, "data": { "diameterIn": 15, "widthIn": 8.0, "offsetMm": 35, "pcd": "4x100" }, "durability": { "rating": 0.93, "fatigueResistance": 0.94 } }
+  ]
+}

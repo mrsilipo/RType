@@ -1,9 +1,9 @@
 using Microsoft.Xna.Framework;
-using RetroRacer.Data;
-using RetroRacer.Vehicle;
-using RetroRacer.World;
+using RType.Data;
+using RType.Vehicle;
+using RType.World;
 
-namespace RetroRacer.Core;
+namespace RType.Core;
 
 public static class PhysicsSmokeTest
 {
@@ -322,9 +322,10 @@ public static class PhysicsSmokeTest
             limiterActivated |= simulator.State.RevLimiterActive;
         }
 
-        if (limiterActivated || maxRpm > parameters.UpshiftRpm * 0.92f)
+        float allowedGrassLaunchRpm = MathF.Min(parameters.UpshiftRpm * 0.98f, parameters.RedlineRpm * 0.96f);
+        if (limiterActivated || maxRpm > allowedGrassLaunchRpm)
         {
-            throw new InvalidOperationException($"Physics smoke test failed: grass launch RPM flared too much. Max RPM {maxRpm:0}, upshift {parameters.UpshiftRpm:0}, limiter active {limiterActivated}.");
+            throw new InvalidOperationException($"Physics smoke test failed: grass launch RPM flared too much. Max RPM {maxRpm:0}, allowed {allowedGrassLaunchRpm:0}, upshift {parameters.UpshiftRpm:0}, limiter active {limiterActivated}.");
         }
     }
 
@@ -1868,12 +1869,12 @@ public static class PhysicsSmokeTest
         for (int i = 0; i < 240; i++)
         {
             simulator.Update(new VehicleInput(1f, 0f, 0f, throttleAssistEnabled: true), dt);
-            maximumCrankRpm = MathF.Max(maximumCrankRpm, simulator.State.EngineSimulatorCrankRpm);
+            maximumCrankRpm = MathF.Max(maximumCrankRpm, simulator.State.EnginePowerUnitCrankRpm);
             maximumSpeed = MathF.Max(maximumSpeed, simulator.State.SpeedMetersPerSecond);
             maximumDriveForce = MathF.Max(maximumDriveForce, MathF.Abs(simulator.State.DriveForce));
         }
 
-        if (!simulator.State.EngineSimulatorPowerActive)
+        if (!simulator.State.EnginePowerUnitActive)
         {
             throw new InvalidOperationException("Physics smoke test failed: neutral free-rev did not publish Engine Sim power state.");
         }

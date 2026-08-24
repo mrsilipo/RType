@@ -1,0 +1,53 @@
+{
+  "catalog": "engineAudioDsp",
+  "slot": "engineAudioDsp",
+  "description": "RType engine audio DSP profiles. These shape the resolved combustion/exhaust output without being sample-loop engines.",
+  "parts": [
+    {
+      "id": "engine_audio_stock",
+      "displayName": "Stock Engine Audio DSP",
+      "tier": "stock",
+      "compatibility": ["honda_b_series", "honda_d_series", "honda_k_series"],
+      "weightKg": 0.0,
+      "durability": { "rating": 1.0, "heatTolerance": 1.0, "fatigueResistance": 1.0, "safePowerMultiplier": 1.0, "repairCostMultiplier": 0.0 },
+      "modifies": {
+        "audio": {
+          "derivativeMix": 0.012,
+          "airNoise": 0.26,
+          "jitter": 0.16,
+          "outputGain": 0.34,
+          "impulseResponsePath": "Assets/Sounds/EngineSim/HondaB18C5/es/sound-library/new/mild_exhaust.wav",
+          "impulseResponseVolume": 0.01,
+          "impulseResponseTaps": 512
+        }
+      }
+    },
+    {
+      "id": "engine_audio_street",
+      "displayName": "Street Engine Audio DSP",
+      "tier": "street",
+      "compatibility": ["honda_b_series", "honda_d_series", "honda_k_series"],
+      "weightKg": 0.0,
+      "durability": { "rating": 1.0, "heatTolerance": 1.0, "fatigueResistance": 1.0, "safePowerMultiplier": 1.0, "repairCostMultiplier": 0.0 },
+      "modifies": { "audio": { "derivativeMix": 0.014, "airNoise": 0.28, "jitter": 0.17, "outputGain": 0.35, "impulseResponseVolume": 0.012, "impulseResponseTaps": 512 } }
+    },
+    {
+      "id": "engine_audio_club_sport",
+      "displayName": "Club Sport Engine Audio DSP",
+      "tier": "clubSport",
+      "compatibility": ["honda_b_series", "honda_d_series", "honda_k_series"],
+      "weightKg": 0.0,
+      "durability": { "rating": 1.0, "heatTolerance": 1.0, "fatigueResistance": 1.0, "safePowerMultiplier": 1.0, "repairCostMultiplier": 0.0 },
+      "modifies": { "audio": { "derivativeMix": 0.016, "airNoise": 0.30, "jitter": 0.18, "outputGain": 0.36, "impulseResponseVolume": 0.014, "impulseResponseTaps": 768 } }
+    },
+    {
+      "id": "engine_audio_pro_racing",
+      "displayName": "Pro Racing Engine Audio DSP",
+      "tier": "proRacing",
+      "compatibility": ["honda_b_series", "honda_d_series", "honda_k_series"],
+      "weightKg": 0.0,
+      "durability": { "rating": 1.0, "heatTolerance": 1.0, "fatigueResistance": 1.0, "safePowerMultiplier": 1.0, "repairCostMultiplier": 0.0 },
+      "modifies": { "audio": { "derivativeMix": 0.018, "airNoise": 0.32, "jitter": 0.19, "outputGain": 0.37, "impulseResponseVolume": 0.016, "impulseResponseTaps": 1024 } }
+    }
+  ]
+}

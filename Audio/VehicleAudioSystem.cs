@@ -1,8 +1,8 @@
 using Microsoft.Xna.Framework;
-using RetroRacer.Camera;
-using RetroRacer.Vehicle;
+using RType.Camera;
+using RType.Vehicle;
 
-namespace RetroRacer.Audio;
+namespace RType.Audio;
 
 public sealed class VehicleAudioSystem : IDisposable
 {
@@ -16,7 +16,7 @@ public sealed class VehicleAudioSystem : IDisposable
     private const float ControlLossScreechLoopEndRatio = 0.86f;
 
     private VehicleAudioParameters _parameters = new();
-    private EngineSimulatorSound? _engineSimulatorSound;
+    private RaceEngineSampleSound? _raceEngineSound;
     private LoopingPitchedSound? _tyreSpinLoop;
     private LoopingPitchedSound? _tyreChirpLoop;
     private LoopingPitchedSound? _controlLossScreechLoop;
@@ -34,12 +34,7 @@ public sealed class VehicleAudioSystem : IDisposable
     private float _throttleTransientEnvelope;
     private bool _hasEngineAudioFrameHistory;
     private bool _available = true;
-    private readonly bool _muteEngineSimulator;
-
-    public VehicleAudioSystem(bool muteEngineSimulator = false)
-    {
-        _muteEngineSimulator = muteEngineSimulator;
-    }
+    private RaceEngineAudioState _lastRaceEngineState;
 
     public void SetVehicle(VehicleAudioParameters parameters)
     {
@@ -54,32 +49,31 @@ public sealed class VehicleAudioSystem : IDisposable
         _previousEngineAudioThrottle = 0f;
         _throttleTransientEnvelope = 0f;
         _hasEngineAudioFrameHistory = false;
+        _lastRaceEngineState = default;
         ResetSwayScreechHistory();
         _available = true;
 
         try
         {
-            bool useEngineSimulatorOnly = parameters.EngineSimulatorEnabled && parameters.EngineSimulatorVolume > 0.001f;
+            bool useRaceEngineSamples = parameters.EngineSampleVolume > 0.001f &&
+                                        (parameters.EngineSamples.Length > 0 ||
+                                         !string.IsNullOrWhiteSpace(parameters.EngineLoopPath) ||
+                                         !string.IsNullOrWhiteSpace(parameters.HighRpmLoopPath));
             AudioDiagnostics.Log(
                 "vehicle-audio",
-                $"initializing vehicle audio, engineSimOnly={useEngineSimulatorOnly}");
+                $"initializing vehicle audio, raceSamples={useRaceEngineSamples}, legacyProceduralEngine=False");
 
-            _engineSimulatorSound = parameters.EngineSimulatorEnabled && !_muteEngineSimulator
-                ? new EngineSimulatorSound(parameters)
+            _raceEngineSound = useRaceEngineSamples
+                ? new RaceEngineSampleSound(parameters)
                 : null;
 
-            if (_muteEngineSimulator)
+            if (useRaceEngineSamples)
             {
-                AudioDiagnostics.Log("engine-audio-diagnostic", "Engine Sim muted by --mute-engine-sim");
-            }
-
-            if (useEngineSimulatorOnly)
-            {
-                AudioDiagnostics.Log("engine-audio-mode", "Engine Sim only");
+                AudioDiagnostics.Log("engine-audio-mode", "Race sample engine runtime");
             }
             else
             {
-                AudioDiagnostics.Log("engine-audio-mode", "Engine Sim disabled; no legacy engine sample fallback");
+                AudioDiagnostics.Log("engine-audio-mode", "Engine audio disabled; no race sample profile configured");
             }
 
             _tyreSpinLoop = TryLoadSlicedLoop(TyreSpinLoopPath, TyreSpinLoopStartRatio, TyreSpinLoopEndRatio, "tyre-spin sustain");
@@ -105,10 +99,10 @@ public sealed class VehicleAudioSystem : IDisposable
 
         try
         {
-            float rpm = MathF.Max(300f, vehicle.DisplayedRpm);
+            float actualRpm = MathF.Max(300f, vehicle.Rpm);
             if (_smoothedEngineRpm <= 0f)
             {
-                _smoothedEngineRpm = rpm;
+                _smoothedEngineRpm = actualRpm;
             }
             else
             {
@@ -118,16 +112,15 @@ public sealed class VehicleAudioSystem : IDisposable
                         ? 22f
                         : 18f;
                 float rpmBlend = 1f - MathF.Exp(-responseRate * MathHelper.Clamp(dt, 0f, 1f / 20f));
-                _smoothedEngineRpm = MathHelper.Lerp(_smoothedEngineRpm, rpm, MathHelper.Clamp(rpmBlend, 0f, 1f));
+                _smoothedEngineRpm = MathHelper.Lerp(_smoothedEngineRpm, actualRpm, MathHelper.Clamp(rpmBlend, 0f, 1f));
             }
 
-            rpm = _smoothedEngineRpm;
             float pauseScale = paused ? 0f : 1f;
             float driveVolume = MathHelper.Clamp(_parameters.EngineVolume * pauseScale, 0f, 1f);
-            float engineSimulatorRpm = SelectEngineSimulatorAudioRpm(vehicle, rpm);
+            float enginePowerUnitRpm = SelectEnginePowerUnitAudioRpm(vehicle, actualRpm);
             float targetHighBlend = CalculateTargetHighRpmBlend(
                 vehicle,
-                MathF.Max(300f, vehicle.EngineSimulatorPowerActive ? engineSimulatorRpm : vehicle.Rpm));
+                MathF.Max(300f, vehicle.EnginePowerUnitActive ? enginePowerUnitRpm : vehicle.Rpm));
             float highBlendRate = vehicle.IsShifting ? 72f : 42f;
             float highBlendStep = 1f - MathF.Exp(-highBlendRate * MathHelper.Clamp(dt, 0f, 1f / 20f));
             _highRpmBlend = MathHelper.Lerp(_highRpmBlend, targetHighBlend, MathHelper.Clamp(highBlendStep, 0f, 1f));
@@ -136,13 +129,15 @@ public sealed class VehicleAudioSystem : IDisposable
             EngineAudioFrame engineFrame = EngineAudioFrame.FromVehicleState(
                 _parameters,
                 vehicle,
-                engineSimulatorRpm,
+                enginePowerUnitRpm,
                 _highRpmBlend,
                 driveVolume,
                 cameraMode,
                 paused,
-                throttleTransient);
-            _engineSimulatorSound?.Update(engineFrame);
+                throttleTransient,
+                dt);
+            _raceEngineSound?.Update(engineFrame);
+            MirrorRaceEngineState(vehicle);
             UpdateTyreScreechLoops(vehicle, pauseScale, dt);
         }
         catch (InvalidOperationException exception)
@@ -156,7 +151,7 @@ public sealed class VehicleAudioSystem : IDisposable
 
     public void Stop()
     {
-        _engineSimulatorSound?.Stop();
+        _raceEngineSound?.Stop();
         _tyreSpinLoop?.Stop();
         _tyreChirpLoop?.Stop();
         _controlLossScreechLoop?.Stop();
@@ -172,9 +167,39 @@ public sealed class VehicleAudioSystem : IDisposable
         ResetSwayScreechHistory();
     }
 
-    private static float SelectEngineSimulatorAudioRpm(VehicleState vehicle, float fallbackRpm)
+    public bool TryGetRaceEngineState(out RaceEngineAudioState state)
     {
-        float crankRpm = vehicle.EngineSimulatorPowerActive ? vehicle.EngineSimulatorCrankRpm : 0f;
+        state = _lastRaceEngineState;
+        return state.Active;
+    }
+
+    private void MirrorRaceEngineState(VehicleState vehicle)
+    {
+        if (_raceEngineSound is null)
+        {
+            vehicle.RTypeEngineActive = false;
+            _lastRaceEngineState = default;
+            return;
+        }
+
+        RaceEngineAudioState state = _raceEngineSound.State;
+        _lastRaceEngineState = state;
+        vehicle.RTypeEngineActive = state.Active;
+        vehicle.RTypeEngineProfileId = state.ProfileId;
+        vehicle.RTypeEngineRpm = state.Rpm;
+        vehicle.RTypeEngineCrankPhaseDegrees = state.CrankPhaseDegrees;
+        vehicle.RTypeEngineVtecBlend = state.VtecBlend;
+        vehicle.RTypeEngineLimiterCut = state.LimiterCut;
+        vehicle.RTypeEngineRevLimitTimerSeconds = state.RevLimitTimerSeconds;
+        vehicle.RTypeEngineLastIgnitedCylinder = state.LastIgnitedCylinder;
+        vehicle.RTypeEngineThrottle = state.LastThrottle;
+        vehicle.RTypeEngineOutputPeak = state.LastOutputPeak;
+        vehicle.RTypeEngineOutputRms = state.LastOutputRms;
+    }
+
+    private static float SelectEnginePowerUnitAudioRpm(VehicleState vehicle, float fallbackRpm)
+    {
+        float crankRpm = vehicle.EnginePowerUnitActive ? vehicle.EnginePowerUnitCrankRpm : 0f;
         return crankRpm > 450f ? crankRpm : fallbackRpm;
     }
 
@@ -213,9 +238,9 @@ public sealed class VehicleAudioSystem : IDisposable
         DisposeLoops();
     }
 
-    private bool HasEngineAudio => _engineSimulatorSound is not null;
+    private bool HasEngineAudio => _raceEngineSound is not null;
 
-    private bool HasHighRpmAudio => _engineSimulatorSound is not null;
+    private bool HasHighRpmAudio => _raceEngineSound is not null;
 
     private float CalculateTargetHighRpmBlend(VehicleState vehicle, float rpm)
     {
@@ -715,12 +740,12 @@ public sealed class VehicleAudioSystem : IDisposable
 
     private void DisposeLoops()
     {
-        _engineSimulatorSound?.Dispose();
+        _raceEngineSound?.Dispose();
 
         _tyreSpinLoop?.Dispose();
         _tyreChirpLoop?.Dispose();
         _controlLossScreechLoop?.Dispose();
-        _engineSimulatorSound = null;
+        _raceEngineSound = null;
         _tyreSpinLoop = null;
         _tyreChirpLoop = null;
         _controlLossScreechLoop = null;

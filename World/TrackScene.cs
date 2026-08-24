@@ -1,8 +1,8 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using RetroRacer.Rendering;
+using RType.Rendering;
 
-namespace RetroRacer.World;
+namespace RType.World;
 
 public sealed class TrackScene : ITrackSurfaceSampler, ITrackProgressSampler, IDisposable
 {

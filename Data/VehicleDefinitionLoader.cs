@@ -1,13 +1,13 @@
 using System.Text.Json;
 using Microsoft.Xna.Framework;
-using RetroRacer.Vehicle;
+using RType.Vehicle;
 
-namespace RetroRacer.Data;
+namespace RType.Data;
 
 public static class VehicleDefinitionLoader
 {
     private const float AirDensityKgM3 = 1.225f;
-    private const string DefaultEngineSimulatorProfilePath = "Data/EngineProfiles/honda_b18c5_vtec_engine_sim.json";
+    private const string DefaultEngineSimulatorProfilePath = "Data/Legacy/EngineProfiles/honda_b18c5_vtec_engine_sim.json";
     private const string DefaultEngineSimulatorMrScriptPath = "Assets/Sounds/EngineSim/HondaB18C5/assets/engines/honda_b18c5_vtec.mr";
     private const string DefaultEngineSimulatorImpulseResponsePath = "Assets/Sounds/EngineSim/HondaB18C5/es/sound-library/new/mild_exhaust.wav";
 
@@ -306,6 +306,8 @@ public static class VehicleDefinitionLoader
     {
         float vtecActivationRpm = ReadValueSingle(root, 5800f, "powertrain", "engine", "vtec", "activationRpm");
         float vtecTransitionWidthRpm = ReadValueSingle(root, 650f, "powertrain", "engine", "vtec", "transitionWidthRpm");
+        string engineAudioProfilePath = ReadString(root, string.Empty, "audio", "engineAudioProfilePath");
+        EngineAudioProfile? engineAudioProfile = LoadEngineAudioProfile(engineAudioProfilePath);
         bool engineSimulatorEnabled = ReadBoolean(root, false, "audio", "engineSimulator", "enabled");
         string engineSimulatorProfilePath = engineSimulatorProfileOverridePath ??
                                              ReadString(root, string.Empty, "audio", "engineSimulator", "profilePath");
@@ -328,6 +330,18 @@ public static class VehicleDefinitionLoader
         EngineSimMrProfile? mrProfile = EngineSimMrProfile.TryLoad(mrScriptPath);
         return new VehicleAudioParameters
         {
+            EngineLoopPath = ReadEngineAudioString(root, engineAudioProfile, string.Empty, "engineLoop"),
+            HighRpmLoopPath = ReadEngineAudioString(root, engineAudioProfile, string.Empty, "highRpmLoop"),
+            EngineSamples = ReadEngineAudioSamples(root, engineAudioProfile),
+            EngineAudioProfilePath = engineAudioProfile?.ResolvedPath ?? engineAudioProfilePath,
+            EngineAudioProfileId = engineAudioProfile?.Id ?? string.Empty,
+            EngineAudioSourceRecordingPath = engineAudioProfile?.SourceRecordingPath ?? string.Empty,
+            BaseSampleRpm = ReadEngineAudioValueSingle(root, engineAudioProfile, 3500f, "baseSampleRpm"),
+            MinimumPlaybackRatio = ReadEngineAudioValueSingle(root, engineAudioProfile, 0.32f, "minimumPlaybackRatio"),
+            MaximumPlaybackRatio = ReadEngineAudioValueSingle(root, engineAudioProfile, 3.3f, "maximumPlaybackRatio"),
+            EngineSampleCrossfadeWidthRpm = ReadEngineAudioValueSingle(root, engineAudioProfile, 24f, "engineSampleCrossfadeWidthRpm"),
+            EngineIdleBlendOutRpm = ReadEngineAudioValueSingle(root, engineAudioProfile, 1650f, "engineIdleBlendOutRpm"),
+            EngineSampleVolume = ReadEngineAudioValueSingle(root, engineAudioProfile, 0.72f, "engineSampleVolume"),
             TurboLoopPath = ReadString(root, string.Empty, "audio", "turbo", "loop"),
             EngineVolume = ReadValueSingle(root, 0.62f, "audio", "engineVolume"),
             IdleVolume = ReadValueSingle(root, 0.22f, "audio", "idleVolume"),
@@ -340,6 +354,18 @@ public static class VehicleDefinitionLoader
             HighRpmMinimumThrottle = ReadValueSingle(root, 0f, "audio", "highRpmMinimumThrottle"),
             HighRpmMinimumSpeedMetersPerSecond = ReadValueSingle(root, 0f, "audio", "highRpmMinimumSpeedMetersPerSecond"),
             HighRpmVolumeBoost = ReadValueSingle(root, 0.12f, "audio", "highRpmVolumeBoost"),
+            RTypeEngineEnabled = ReadBoolean(root, true, "audio", "rTypeEngine", "enabled"),
+            RTypeEngineBuildPath = ReadString(
+                root,
+                ReadString(root, "Data/VehicleBuilds/ek9_showroom_stock.json", "defaultBuildPath"),
+                "audio",
+                "rTypeEngine",
+                "buildPath"),
+            RTypeEngineProfilePath = ReadString(root, string.Empty, "audio", "rTypeEngine", "profilePath"),
+            RTypeEngineVolume = ReadValueSingle(root, 0.72f, "audio", "rTypeEngine", "volume"),
+            RaceAudioThrottleGamma = ReadEngineSimulatorValueSingle(root, engineSimulatorProfile, mrProfile?.ThrottleGamma ?? 2f, "throttleGamma"),
+            RaceAudioGearRatios = ReadEngineSimulatorFloatArray(root, engineSimulatorProfile, mrProfile?.TransmissionGearRatios.Length > 0 ? mrProfile.TransmissionGearRatios : [3.23f, 2.105f, 1.458f, 1.107f, 0.848f], "transmissionGearRatios"),
+            RaceAudioFinalDriveRatio = ReadEngineSimulatorValueSingle(root, engineSimulatorProfile, mrProfile?.VehicleDiffRatio ?? 3.55f, "vehicleDiffRatio"),
             EngineSimulatorEnabled = engineSimulatorEnabled,
             EngineSimulatorProfilePath = engineSimulatorProfile?.ResolvedPath ?? engineSimulatorProfilePath,
             EngineSimulatorProfileId = engineSimulatorProfile?.Id ?? string.Empty,
@@ -417,6 +443,100 @@ public static class VehicleDefinitionLoader
             TurboMinimumPlaybackRatio = ReadValueSingle(root, 0.55f, "audio", "turbo", "minimumPlaybackRatio"),
             TurboMaximumPlaybackRatio = ReadValueSingle(root, 2.6f, "audio", "turbo", "maximumPlaybackRatio")
         };
+    }
+
+    private static EngineAudioSampleParameters[] ReadEngineAudioSamples(JsonElement root, EngineAudioProfile? profile)
+    {
+        JsonElement samplesElement;
+        if (profile is not null)
+        {
+            samplesElement = profile.Samples;
+        }
+        else if (!TryGet(root, out samplesElement, "audio", "engineSamples"))
+        {
+            return [];
+        }
+
+        if (samplesElement.ValueKind != JsonValueKind.Array)
+        {
+            return [];
+        }
+
+        List<EngineAudioSampleParameters> samples = [];
+        foreach (JsonElement sampleElement in samplesElement.EnumerateArray())
+        {
+            string path = ReadString(sampleElement, string.Empty, "path");
+            float rpm = ReadSingle(sampleElement, 0f, "rpm");
+            if (string.IsNullOrWhiteSpace(path) || rpm <= 0f)
+            {
+                continue;
+            }
+
+            samples.Add(new EngineAudioSampleParameters(
+                path,
+                rpm,
+                ReadBoolean(sampleElement, false, "highRpm"),
+                ReadBoolean(sampleElement, false, "limiter"),
+                ReadSingle(sampleElement, 1f, "volume"),
+                ReadString(sampleElement, "normal", "role"),
+                ReadSingle(sampleElement, 0f, "loopStart"),
+                ReadSingle(sampleElement, 1f, "loopEnd")));
+        }
+
+        return [.. samples.OrderBy(sample => sample.Rpm)];
+    }
+
+    private static EngineAudioProfile? LoadEngineAudioProfile(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return null;
+        }
+
+        string? resolvedPath = ResolveOptionalDataPath(path);
+        if (resolvedPath is null)
+        {
+            throw new FileNotFoundException($"Engine audio profile JSON was not found: {path}", path);
+        }
+
+        using FileStream stream = File.OpenRead(resolvedPath);
+        using JsonDocument document = JsonDocument.Parse(stream, new JsonDocumentOptions
+        {
+            AllowTrailingCommas = true
+        });
+
+        JsonElement root = document.RootElement;
+        if (!TryGet(root, out JsonElement samplesElement, "samples"))
+        {
+            throw new InvalidDataException($"Engine audio profile must contain a samples array: {resolvedPath}");
+        }
+
+        return new EngineAudioProfile(
+            resolvedPath,
+            ReadString(root, Path.GetFileNameWithoutExtension(resolvedPath), "id"),
+            ReadString(root, string.Empty, "sourceRecordingPath"),
+            root.Clone(),
+            samplesElement.Clone());
+    }
+
+    private static string ReadEngineAudioString(JsonElement root, EngineAudioProfile? profile, string fallback, params string[] path)
+    {
+        string value = ReadString(root, fallback, EngineAudioPath(path));
+        return profile is null ? value : ReadString(profile.Root, value, path);
+    }
+
+    private static float ReadEngineAudioValueSingle(JsonElement root, EngineAudioProfile? profile, float fallback, params string[] path)
+    {
+        float value = ReadValueSingle(root, fallback, EngineAudioPath(path));
+        return profile is null ? value : ReadValueSingle(profile.Root, value, path);
+    }
+
+    private static string[] EngineAudioPath(string[] path)
+    {
+        string[] fullPath = new string[path.Length + 1];
+        fullPath[0] = "audio";
+        Array.Copy(path, 0, fullPath, 1, path.Length);
+        return fullPath;
     }
 
     private static EngineSimulatorAudioProfile? LoadEngineSimulatorAudioProfile(string path)
@@ -526,6 +646,13 @@ public static class VehicleDefinitionLoader
         string Id,
         string DisplayName,
         JsonElement EngineSimulator);
+
+    private sealed record EngineAudioProfile(
+        string ResolvedPath,
+        string Id,
+        string SourceRecordingPath,
+        JsonElement Root,
+        JsonElement Samples);
 
     private static string ResolveDataPath(string path)
     {

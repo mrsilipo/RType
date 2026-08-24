@@ -1,9 +1,9 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using RetroRacer.Core;
-using RetroRacer.World;
+using RType.Core;
+using RType.World;
 
-namespace RetroRacer.Ui;
+namespace RType.Ui;
 
 public sealed class MenuRenderer : IDisposable
 {
@@ -73,6 +73,7 @@ public sealed class MenuRenderer : IDisposable
     private static readonly string[] MainMenuItems =
     [
         "Arcade Mode",
+        "Engine Sim Room",
         "Career Mode",
         "Options",
         "Quit"

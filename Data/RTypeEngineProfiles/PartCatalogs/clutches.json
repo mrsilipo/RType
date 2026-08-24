@@ -1,0 +1,11 @@
+{
+  "catalog": "clutches",
+  "slot": "clutch",
+  "description": "Clutches are future powertrain data. They should control torque capacity, bite point, engagement curve, slip, launches, and shift interruption.",
+  "parts": [
+    { "id": "clutch_stock", "displayName": "Stock Clutch", "tier": "stock", "compatibility": ["honda_b_series"], "data": { "torqueCapacityNm": 230, "bitePoint": 0.56, "engagementSharpness": 0.90, "slipDamping": 1.00, "shiftKickIntensity": 0.75 } },
+    { "id": "clutch_street", "displayName": "Street Clutch", "tier": "street", "compatibility": ["honda_b_series"], "data": { "torqueCapacityNm": 310, "bitePoint": 0.52, "engagementSharpness": 1.10, "slipDamping": 0.92, "shiftKickIntensity": 0.90 } },
+    { "id": "clutch_club_sport", "displayName": "Club Sport Clutch", "tier": "clubSport", "compatibility": ["honda_b_series"], "data": { "torqueCapacityNm": 420, "bitePoint": 0.48, "engagementSharpness": 1.35, "slipDamping": 0.82, "shiftKickIntensity": 1.08 } },
+    { "id": "clutch_pro_racing", "displayName": "Pro Racing Clutch", "tier": "proRacing", "compatibility": ["honda_b_series"], "data": { "torqueCapacityNm": 560, "bitePoint": 0.42, "engagementSharpness": 1.70, "slipDamping": 0.68, "shiftKickIntensity": 1.25 } }
+  ]
+}

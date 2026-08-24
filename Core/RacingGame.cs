@@ -1,26 +1,27 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using RetroRacer.Audio;
-using RetroRacer.Camera;
-using RetroRacer.Data;
-using RetroRacer.Input;
-using RetroRacer.Rendering;
-using RetroRacer.Telemetry;
-using RetroRacer.Ui;
-using RetroRacer.Vehicle;
-using RetroRacer.World;
+using RType.Audio;
+using RType.Camera;
+using RType.Data;
+using RType.Input;
+using RType.Rendering;
+using RType.Telemetry;
+using RType.Ui;
+using RType.Vehicle;
+using RType.World;
 
-namespace RetroRacer.Core;
+namespace RType.Core;
 
 public sealed class RacingGame : Game
 {
     public const int InternalWidth = 1920;
     public const int InternalHeight = 1080;
     private const int TimeAttackLapCount = 3;
-    private const int MainMenuOptionCount = 4;
+    private const int MainMenuOptionCount = 5;
     private const int MainMenuArcadeIndex = 0;
-    private const int MainMenuQuitIndex = 3;
+    private const int MainMenuEngineRoomIndex = 1;
+    private const int MainMenuQuitIndex = 4;
     private const int ArcadeMenuOptionCount = 4;
     private const int ArcadeMenuSingleRaceIndex = 0;
     private const int ArcadeMenuTimeTrialIndex = 1;
@@ -33,8 +34,7 @@ public sealed class RacingGame : Game
         1f);
     private static readonly CarMenuOption[] CarOptions =
     [
-        new("EK9 REFERENCE", "Data/Vehicles/ek9_reference_2000.json"),
-        new("R33 GTR REF", "Data/Vehicles/r33_gtr_reference_1995.json")
+        new("EK9 SHOWROOM STOCK", "Data/VehicleBuilds/ek9_showroom_stock.json")
     ];
 
     private readonly GraphicsDeviceManager _graphics;
@@ -55,6 +55,7 @@ public sealed class RacingGame : Game
     private MenuRenderer? _menu;
     private MenuSoundSystem? _menuSounds;
     private VehicleAudioSystem? _vehicleAudio;
+    private RTypeEngineRoomScreen? _engineRoom;
     private RaceSession? _raceSession;
     private readonly RaceRunTelemetryLogger _telemetryLogger = new();
 
@@ -127,12 +128,14 @@ public sealed class RacingGame : Game
         _hud = new HudRenderer(GraphicsDevice);
         _menu = new MenuRenderer(GraphicsDevice);
         _menuSounds = new MenuSoundSystem();
-        _vehicleAudio = new VehicleAudioSystem(_launchOptions.MuteEngineSimulator);
+        _vehicleAudio = new VehicleAudioSystem();
+        _engineRoom = new RTypeEngineRoomScreen(GraphicsDevice);
     }
 
     protected override void UnloadContent()
     {
         _vehicleAudio?.Dispose();
+        _engineRoom?.Dispose();
         _menuSounds?.Dispose();
         _telemetryLogger.Dispose();
         _menu?.Dispose();
@@ -162,6 +165,9 @@ public sealed class RacingGame : Game
                 break;
             case GameFlowState.EventSelect:
                 UpdateEventMenu();
+                break;
+            case GameFlowState.EngineRoom:
+                UpdateEngineRoom(gameTime);
                 break;
             case GameFlowState.CarSelect:
                 UpdateCarSelect();
@@ -284,6 +290,9 @@ public sealed class RacingGame : Game
             case GameFlowState.EventSelect:
                 menu.DrawEvent(spriteBatch, _eventSelection);
                 break;
+            case GameFlowState.EngineRoom:
+                _engineRoom?.Draw(spriteBatch);
+                break;
             case GameFlowState.CarSelect:
                 menu.DrawCarSelect(
                     spriteBatch,
@@ -352,7 +361,14 @@ public sealed class RacingGame : Game
                 _eventSelection = 0;
                 _flowState = GameFlowState.EventSelect;
             }
-            else if (_mainSelection is 1 or 2)
+            else if (_mainSelection == MainMenuEngineRoomIndex)
+            {
+                _menuSounds?.PlayDecision();
+                _engineRoom?.Activate();
+                _vehicleAudio?.Stop();
+                _flowState = GameFlowState.EngineRoom;
+            }
+            else if (_mainSelection is 2 or 3)
             {
                 _menuSounds?.PlayNotAllowed();
             }
@@ -370,6 +386,23 @@ public sealed class RacingGame : Game
             }
 
             _menuSounds?.PlayCancel();
+        }
+    }
+
+    private void UpdateEngineRoom(GameTime gameTime)
+    {
+        if (_engineRoom is null)
+        {
+            _flowState = GameFlowState.MainMenu;
+            return;
+        }
+
+        _engineRoom.Update(gameTime);
+        if (_engineRoom.ExitRequested)
+        {
+            _menuSounds?.PlayCancel();
+            _engineRoom.ClearExitRequest();
+            _flowState = GameFlowState.MainMenu;
         }
     }
 
@@ -503,7 +536,7 @@ public sealed class RacingGame : Game
         bool reverse = _directionSelection == 1;
         _track = TrackScene.Create(GraphicsDevice, _textures, trackDefinition, reverse, _surfaceLibrary);
 
-        VehicleSimulationParameters parameters = VehicleDefinitionLoader.LoadSimulationParameters(CarOptions[_carSelection].VehiclePath);
+        VehicleSimulationParameters parameters = VehicleBuildDefinitionLoader.LoadSimulationParameters(CarOptions[_carSelection].BuildPath);
         _vehicle = new SimpleVehicleSimulator(_track, _track.StartPosition, _track.StartHeadingRadians, parameters, _simulationEngine);
         _vehicle.SetManualTransmission(_transmissionSelection == 1);
         RpmPresentationSmoother.Update(_vehicle.State, 0f);
@@ -546,10 +579,11 @@ public sealed class RacingGame : Game
             _raceSession = new RaceSession(_track, TimeAttackLapCount);
             _camera?.SetMode(CameraMode.InCar, _vehicle.State, reset: false);
             _telemetryLogger.Start(
-                CarOptions[_carSelection].VehiclePath,
+                CarOptions[_carSelection].BuildPath,
                 _vehicle.State,
                 _trackOptions[_trackSelection],
-                _directionSelection == 1);
+                _directionSelection == 1,
+                false);
         }
     }
 
@@ -855,7 +889,8 @@ public sealed class RacingGame : Game
     {
         for (int i = 0; i < CarOptions.Length; i++)
         {
-            if (PathsMatch(CarOptions[i].VehiclePath, vehicleDefinitionPath))
+            if (PathsMatch(CarOptions[i].BuildPath, vehicleDefinitionPath) ||
+                PathsMatch("Data/Vehicles/ek9_reference_2000.json", vehicleDefinitionPath))
             {
                 return i;
             }
@@ -891,6 +926,7 @@ public sealed class RacingGame : Game
     {
         MainMenu,
         EventSelect,
+        EngineRoom,
         CarSelect,
         TrackSelect,
         PreRace,
@@ -898,5 +934,5 @@ public sealed class RacingGame : Game
         Results
     }
 
-    private sealed record CarMenuOption(string Label, string VehiclePath);
+    private sealed record CarMenuOption(string Label, string BuildPath);
 }

@@ -11,7 +11,7 @@ using DrawingSizeF = System.Drawing.SizeF;
 using DrawingStringFormat = System.Drawing.StringFormat;
 using XnaColor = Microsoft.Xna.Framework.Color;
 
-namespace RetroRacer.Ui;
+namespace RType.Ui;
 
 public enum TachometerFontRole
 {

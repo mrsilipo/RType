@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "catalog": "tyres",
+  "slot": "tyres",
+  "parts": [
+    {
+      "id": "sports_hard_reference",
+      "displayName": "Sports Hard Reference Tyre",
+      "tier": "stock",
+      "compatibility": ["15_inch"],
+      "weightKg": 8.0,
+      "data": {
+        "widthMm": 195,
+        "aspectRatio": 55,
+        "rimDiameterIn": 15,
+        "loadedRadiusMeters": 0.292,
+        "rollingResistance": 0.013,
+        "frontPeakFriction": 1.24,
+        "rearPeakFriction": 1.18,
+        "lateralPeakSlipAngleDegrees": 9.0,
+        "longitudinalPeakSlipRatio": 0.13
+      },
+      "durability": {
+        "rating": 0.82,
+        "heatTolerance": 0.80,
+        "wearResistance": 0.88
+      }
+    },
+    {
+      "id": "sports_medium_reference",
+      "displayName": "Sports Medium Reference Tyre",
+      "tier": "street",
+      "compatibility": ["15_inch"],
+      "weightKg": 8.2,
+      "data": {
+        "widthMm": 195,
+        "aspectRatio": 55,
+        "rimDiameterIn": 15,
+        "loadedRadiusMeters": 0.292,
+        "rollingResistance": 0.014,
+        "frontPeakFriction": 1.32,
+        "rearPeakFriction": 1.27,
+        "lateralPeakSlipAngleDegrees": 8.6,
+        "longitudinalPeakSlipRatio": 0.12
+      },
+      "durability": {
+        "rating": 0.80,
+        "heatTolerance": 0.86,
+        "wearResistance": 0.78
+      }
+    },
+    {
+      "id": "sports_soft_reference",
+      "displayName": "Sports Soft Reference Tyre",
+      "tier": "clubSport",
+      "compatibility": ["15_inch"],
+      "weightKg": 8.4,
+      "data": {
+        "widthMm": 205,
+        "aspectRatio": 50,
+        "rimDiameterIn": 15,
+        "loadedRadiusMeters": 0.292,
+        "rollingResistance": 0.015,
+        "frontPeakFriction": 1.42,
+        "rearPeakFriction": 1.36,
+        "lateralPeakSlipAngleDegrees": 8.1,
+        "longitudinalPeakSlipRatio": 0.11
+      },
+      "durability": {
+        "rating": 0.76,
+        "heatTolerance": 0.91,
+        "wearResistance": 0.66
+      }
+    },
+    {
+      "id": "semi_slick_reference",
+      "displayName": "Semi-Slick Reference Tyre",
+      "tier": "proRacing",
+      "compatibility": ["15_inch"],
+      "weightKg": 8.8,
+      "data": {
+        "widthMm": 225,
+        "aspectRatio": 45,
+        "rimDiameterIn": 15,
+        "loadedRadiusMeters": 0.291,
+        "rollingResistance": 0.017,
+        "frontPeakFriction": 1.58,
+        "rearPeakFriction": 1.50,
+        "lateralPeakSlipAngleDegrees": 7.4,
+        "longitudinalPeakSlipRatio": 0.10
+      },
+      "durability": {
+        "rating": 0.72,
+        "heatTolerance": 0.95,
+        "wearResistance": 0.52
+      }
+    }
+  ]
+}

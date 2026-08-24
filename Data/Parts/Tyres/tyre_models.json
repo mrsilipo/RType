@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "catalog": "tyreModels",
+  "slot": "tyreModel",
+  "parts": [
+    {
+      "id": "sports_hard_ek9_front_model",
+      "displayName": "Sports Hard EK9 Front Tyre Model",
+      "tier": "stock",
+      "axle": "front",
+      "compatibility": ["sports_hard_reference"],
+      "data": {
+        "loadSensitivity": 0.12,
+        "lateralPeakSlipAngleDegrees": 9.4,
+        "lateralSlideSlipAngleDegrees": 20,
+        "lateralForceRiseShape": 3.5,
+        "slidingLateralFrictionMultiplier": 0.97,
+        "relaxationLengthMeters": 0.32,
+        "lateralScrubDragCoefficient": 0.16,
+        "idealCamberDegrees": -1.8,
+        "camberGripLossPerDegree": 0.023,
+        "minimumCamberGripMultiplier": 0.84,
+        "camberThrustStiffnessNPerRad": 1700,
+        "longitudinalPeakSlipRatio": 0.13,
+        "longitudinalForceRiseShape": 3.2,
+        "longitudinalSlideSlipRatio": 0.95,
+        "slidingFrictionMultiplier": 0.72
+      }
+    },
+    {
+      "id": "sports_hard_ek9_rear_model",
+      "displayName": "Sports Hard EK9 Rear Tyre Model",
+      "tier": "stock",
+      "axle": "rear",
+      "compatibility": ["sports_hard_reference"],
+      "data": {
+        "loadSensitivity": 0.12,
+        "lateralPeakSlipAngleDegrees": 8.2,
+        "lateralSlideSlipAngleDegrees": 19,
+        "lateralForceRiseShape": 3.0,
+        "slidingLateralFrictionMultiplier": 0.96,
+        "relaxationLengthMeters": 0.36,
+        "lateralScrubDragCoefficient": 0.18,
+        "idealCamberDegrees": -1.2,
+        "camberGripLossPerDegree": 0.021,
+        "minimumCamberGripMultiplier": 0.82,
+        "camberThrustStiffnessNPerRad": 1300,
+        "longitudinalPeakSlipRatio": 0.13,
+        "longitudinalForceRiseShape": 3.2,
+        "longitudinalSlideSlipRatio": 0.95,
+        "slidingFrictionMultiplier": 0.72
+      }
+    },
+    {
+      "id": "sports_medium_balanced_model",
+      "displayName": "Sports Medium Balanced Tyre Model",
+      "tier": "street",
+      "axle": "both",
+      "compatibility": ["sports_medium_reference"],
+      "data": {
+        "loadSensitivity": 0.115,
+        "lateralPeakSlipAngleDegrees": 8.4,
+        "lateralSlideSlipAngleDegrees": 18,
+        "lateralForceRiseShape": 3.4,
+        "slidingLateralFrictionMultiplier": 0.95,
+        "relaxationLengthMeters": 0.30,
+        "lateralScrubDragCoefficient": 0.17,
+        "idealCamberDegrees": -2.0,
+        "camberGripLossPerDegree": 0.022,
+        "minimumCamberGripMultiplier": 0.84,
+        "camberThrustStiffnessNPerRad": 1800,
+        "longitudinalPeakSlipRatio": 0.12,
+        "longitudinalForceRiseShape": 3.3,
+        "longitudinalSlideSlipRatio": 0.88,
+        "slidingFrictionMultiplier": 0.74
+      }
+    },
+    {
+      "id": "semi_slick_aggressive_model",
+      "displayName": "Semi-Slick Aggressive Tyre Model",
+      "tier": "proRacing",
+      "axle": "both",
+      "compatibility": ["semi_slick_reference"],
+      "data": {
+        "loadSensitivity": 0.10,
+        "lateralPeakSlipAngleDegrees": 7.2,
+        "lateralSlideSlipAngleDegrees": 16,
+        "lateralForceRiseShape": 3.8,
+        "slidingLateralFrictionMultiplier": 0.91,
+        "relaxationLengthMeters": 0.24,
+        "lateralScrubDragCoefficient": 0.21,
+        "idealCamberDegrees": -3.0,
+        "camberGripLossPerDegree": 0.020,
+        "minimumCamberGripMultiplier": 0.86,
+        "camberThrustStiffnessNPerRad": 2300,
+        "longitudinalPeakSlipRatio": 0.10,
+        "longitudinalForceRiseShape": 3.7,
+        "longitudinalSlideSlipRatio": 0.78,
+        "slidingFrictionMultiplier": 0.76
+      }
+    }
+  ]
+}

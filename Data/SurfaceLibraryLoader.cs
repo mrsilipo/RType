@@ -1,7 +1,7 @@
 using System.Text.Json;
-using RetroRacer.World;
+using RType.World;
 
-namespace RetroRacer.Data;
+namespace RType.Data;
 
 public static class SurfaceLibraryLoader
 {

@@ -1,4 +1,4 @@
-namespace RetroRacer.Audio;
+namespace RType.Audio;
 
 internal readonly record struct LoopWindow(int EndFrame, int CrossfadeFrames, float MatchError);
 

@@ -1,11 +1,11 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using RetroRacer.Data;
-using RetroRacer.Ui;
-using RetroRacer.World;
+using RType.Data;
+using RType.Ui;
+using RType.World;
 
-namespace RetroRacer.Core;
+namespace RType.Core;
 
 public sealed class TrackEditorGame : Game
 {

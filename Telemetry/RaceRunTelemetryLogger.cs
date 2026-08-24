@@ -1,10 +1,10 @@
 using System.Globalization;
 using System.Text;
 using Microsoft.Xna.Framework;
-using RetroRacer.Vehicle;
-using RetroRacer.World;
+using RType.Vehicle;
+using RType.World;
 
-namespace RetroRacer.Telemetry;
+namespace RType.Telemetry;
 
 public sealed class RaceRunTelemetryLogger : IDisposable
 {
@@ -25,7 +25,12 @@ public sealed class RaceRunTelemetryLogger : IDisposable
 
     public string? CurrentPath { get; private set; }
 
-    public void Start(string vehiclePath, VehicleState vehicle, TrackDefinition track, bool reverse)
+    public void Start(
+        string vehiclePath,
+        VehicleState vehicle,
+        TrackDefinition track,
+        bool reverse,
+        bool rtypeEnginePowerEnabled = false)
     {
         Stop();
 
@@ -43,6 +48,7 @@ public sealed class RaceRunTelemetryLogger : IDisposable
         _writer.WriteLine($"# track,{Escape(track.DisplayName)}");
         _writer.WriteLine($"# direction,{direction}");
         _writer.WriteLine($"# transmission,{transmission}");
+        _writer.WriteLine($"# rtypeEnginePower,{(rtypeEnginePowerEnabled ? 1 : 0)}");
         _writer.WriteLine("# sampleRateHz,60");
         _writer.WriteLine(string.Join(',',
         [
@@ -82,6 +88,23 @@ public sealed class RaceRunTelemetryLogger : IDisposable
             "front_brake_torque_nm",
             "rear_brake_torque_nm",
             "engine_brake_torque_nm",
+            "engine_power_unit_active",
+            "engine_power_unit_drive_torque_nm",
+            "engine_power_unit_engine_drive_torque_nm",
+            "engine_power_unit_raw_torque_nm",
+            "engine_power_unit_vtec_blend",
+            "engine_power_unit_vtec_kick",
+            "engine_power_unit_load",
+            "engine_power_unit_fuel_cut",
+            "engine_power_unit_crank_rpm",
+            "engine_power_unit_crank_phase_deg",
+            "engine_power_unit_transmission_rpm",
+            "engine_power_unit_clutch_torque_nm",
+            "engine_power_unit_crank_friction_nm",
+            "engine_power_unit_reference_drive_torque_nm",
+            "engine_power_unit_calibrated_drive_torque_nm",
+            "engine_power_unit_gas_authority",
+            "engine_power_unit_full_throttle_gas_torque_nm",
             "abs_active",
             "locked_wheels",
             "fl_surface",
@@ -212,6 +235,23 @@ public sealed class RaceRunTelemetryLogger : IDisposable
         Append(vehicle.FrontBrakeTorqueNm);
         Append(vehicle.RearBrakeTorqueNm);
         Append(vehicle.EngineBrakeTorqueNm);
+        Append(vehicle.EnginePowerUnitActive);
+        Append(vehicle.EnginePowerUnitDriveTorqueNm);
+        Append(vehicle.EnginePowerUnitEngineDriveTorqueNm);
+        Append(vehicle.EnginePowerUnitRawTorqueNm);
+        Append(vehicle.EnginePowerUnitVtecBlend);
+        Append(vehicle.EnginePowerUnitVtecKickIntensity);
+        Append(vehicle.EnginePowerUnitLoad);
+        Append(vehicle.EnginePowerUnitFuelCutBlend);
+        Append(vehicle.EnginePowerUnitCrankRpm);
+        Append(vehicle.EnginePowerUnitCrankPhaseDegrees);
+        Append(vehicle.EnginePowerUnitTransmissionRpm);
+        Append(vehicle.EnginePowerUnitClutchTorqueNm);
+        Append(vehicle.EnginePowerUnitCrankFrictionTorqueNm);
+        Append(vehicle.EnginePowerUnitReferenceDriveTorqueNm);
+        Append(vehicle.EnginePowerUnitCalibratedDriveTorqueNm);
+        Append(vehicle.EnginePowerUnitGasAuthority);
+        Append(vehicle.EnginePowerUnitFullThrottleGasTorqueNm);
         Append(vehicle.AbsActive);
         Append(vehicle.LockedWheelCount);
         Append(vehicle.FrontLeftSurfaceName);

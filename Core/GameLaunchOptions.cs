@@ -1,10 +1,9 @@
-namespace RetroRacer.Core;
+namespace RType.Core;
 
 public sealed record GameLaunchOptions(
     int? AutoExitMilliseconds,
     string VehicleDefinitionPath,
     bool StartInManualTransmission,
-    bool MuteEngineSimulator,
     string ControlSchemePath,
     string SurfaceDefinitionPath,
     string SimulationEngineDefinitionPath)
@@ -12,7 +11,7 @@ public sealed record GameLaunchOptions(
     public const string DefaultVehicleDefinitionPath = "Data/Vehicles/ek9_reference_2000.json";
     public const string DefaultControlSchemePath = "Data/Controls/racing_xbox360_default.json";
     public const string DefaultSurfaceDefinitionPath = "Data/Surfaces/default_surfaces.json";
-    public const string DefaultSimulationEngineDefinitionPath = "Data/gt1_engine.json";
+    public const string DefaultSimulationEngineDefinitionPath = "Data/Simulation/arcade_physics.json";
 
     public static GameLaunchOptions FromArgs(string[] args)
     {
@@ -22,7 +21,6 @@ public sealed record GameLaunchOptions(
         string surfaceDefinitionPath = DefaultSurfaceDefinitionPath;
         string simulationEngineDefinitionPath = DefaultSimulationEngineDefinitionPath;
         bool startInManualTransmission = false;
-        bool muteEngineSimulator = false;
 
         for (int i = 0; i < args.Length; i++)
         {
@@ -42,10 +40,6 @@ public sealed record GameLaunchOptions(
             else if (args[i].Equals("--manual-transmission", StringComparison.OrdinalIgnoreCase))
             {
                 startInManualTransmission = true;
-            }
-            else if (args[i].Equals("--mute-engine-sim", StringComparison.OrdinalIgnoreCase))
-            {
-                muteEngineSimulator = true;
             }
             else if (args[i].Equals("--controls", StringComparison.OrdinalIgnoreCase) &&
                      i + 1 < args.Length)
@@ -71,7 +65,6 @@ public sealed record GameLaunchOptions(
             autoExitMilliseconds,
             vehicleDefinitionPath,
             startInManualTransmission,
-            muteEngineSimulator,
             controlSchemePath,
             surfaceDefinitionPath,
             simulationEngineDefinitionPath);

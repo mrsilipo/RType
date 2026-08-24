@@ -1,0 +1,480 @@
+{
+  "catalog": "engineTunes",
+  "slot": "engineTune",
+  "description": "Engine tunes/calibrations. These run the selected hardware and are applied after block, head, and installed parts.",
+  "tunes": [
+    {
+      "id": "tune_b16b_factory",
+      "displayName": "B16B Factory ECU Tune",
+      "family": "honda_b_series",
+      "intendedEngines": ["engine_b16b"],
+      "tier": "stock",
+      "modifies": {
+        "engine": {
+          "idleRpm": 900,
+          "redlineRpm": 8400,
+          "limiterRpm": 8600,
+          "limiterResumeRpm": 8425,
+          "throttleGamma": 2.0
+        },
+        "vtec": {
+          "enabled": true,
+          "activationRpm": 5800,
+          "transitionWidthRpm": 350,
+          "timbreIntensity": 0.95
+        },
+        "ignition": {
+          "timingRpm": [0, 1000, 2000, 3000, 4000],
+          "timingDegrees": [-25, -25, -30, -30, -30],
+          "revLimitRpm": 8600,
+          "limiterDurationSeconds": 0.05
+        },
+        "combustion": {
+          "molecularAfr": 12.5,
+          "maxBurningEfficiency": 0.75,
+          "maxTurbulenceEffect": 2.5,
+          "maxDilutionEffect": 50.0,
+          "lowEfficiencyAttenuation": 0.6,
+          "fuelEnergyDensityMjPerKg": 48.1,
+          "fuelMolecularMassGrams": 100.0,
+          "chamberWallTemperatureKelvin": 363.15,
+          "chamberWallHeatRate": 0.055,
+          "idleFuelMoles": 0.00000002,
+          "wideOpenFuelMoles": 0.00000042
+        }
+      }
+    },
+    {
+      "id": "tune_b16a_factory",
+      "displayName": "B16A Factory ECU Tune",
+      "family": "honda_b_series",
+      "intendedEngines": ["engine_b16a"],
+      "tier": "stock",
+      "modifies": {
+        "engine": {
+          "idleRpm": 900,
+          "redlineRpm": 8200,
+          "limiterRpm": 8400,
+          "limiterResumeRpm": 8225,
+          "throttleGamma": 2.05
+        },
+        "vtec": {
+          "enabled": true,
+          "activationRpm": 5500,
+          "transitionWidthRpm": 390,
+          "timbreIntensity": 0.82
+        },
+        "ignition": {
+          "timingRpm": [0, 1000, 2000, 3000, 5000, 7600],
+          "timingDegrees": [-24, -25, -29, -30, -30, -28],
+          "revLimitRpm": 8400,
+          "limiterDurationSeconds": 0.052
+        },
+        "combustion": {
+          "molecularAfr": 12.6,
+          "maxBurningEfficiency": 0.73,
+          "maxTurbulenceEffect": 2.35,
+          "maxDilutionEffect": 50.0,
+          "lowEfficiencyAttenuation": 0.62,
+          "fuelEnergyDensityMjPerKg": 48.1,
+          "fuelMolecularMassGrams": 100.0,
+          "chamberWallTemperatureKelvin": 363.15,
+          "chamberWallHeatRate": 0.054,
+          "idleFuelMoles": 0.000000019,
+          "wideOpenFuelMoles": 0.00000040
+        }
+      }
+    },
+    {
+      "id": "tune_b18c_factory",
+      "displayName": "B18C Factory ECU Tune",
+      "family": "honda_b_series",
+      "intendedEngines": ["engine_b18c"],
+      "tier": "stock",
+      "modifies": {
+        "engine": {
+          "idleRpm": 900,
+          "redlineRpm": 8400,
+          "limiterRpm": 8600,
+          "limiterResumeRpm": 8425,
+          "throttleGamma": 1.95
+        },
+        "vtec": {
+          "enabled": true,
+          "activationRpm": 5800,
+          "transitionWidthRpm": 360,
+          "timbreIntensity": 0.92
+        },
+        "ignition": {
+          "timingRpm": [0, 1000, 2000, 3000, 5000, 7800],
+          "timingDegrees": [-24, -25, -29, -31, -31, -29],
+          "revLimitRpm": 8600,
+          "limiterDurationSeconds": 0.05
+        },
+        "combustion": {
+          "molecularAfr": 12.5,
+          "maxBurningEfficiency": 0.76,
+          "maxTurbulenceEffect": 2.5,
+          "maxDilutionEffect": 50.0,
+          "lowEfficiencyAttenuation": 0.6,
+          "fuelEnergyDensityMjPerKg": 48.1,
+          "fuelMolecularMassGrams": 100.0,
+          "chamberWallTemperatureKelvin": 363.15,
+          "chamberWallHeatRate": 0.056,
+          "idleFuelMoles": 0.000000022,
+          "wideOpenFuelMoles": 0.00000047
+        }
+      }
+    },
+    {
+      "id": "tune_b18a_factory",
+      "displayName": "B18A Factory ECU Tune",
+      "family": "honda_b_series",
+      "intendedEngines": ["engine_b18a"],
+      "tier": "stock",
+      "modifies": {
+        "engine": {
+          "idleRpm": 800,
+          "redlineRpm": 6500,
+          "limiterRpm": 7200,
+          "limiterResumeRpm": 6950,
+          "throttleGamma": 2.25
+        },
+        "vtec": {
+          "enabled": false,
+          "activationRpm": 0,
+          "transitionWidthRpm": 1,
+          "timbreIntensity": 0
+        },
+        "ignition": {
+          "timingRpm": [0, 1000, 2000, 3000, 5000, 6500],
+          "timingDegrees": [-22, -23, -27, -29, -28, -26],
+          "revLimitRpm": 7200,
+          "limiterDurationSeconds": 0.058
+        },
+        "combustion": {
+          "molecularAfr": 12.9,
+          "maxBurningEfficiency": 0.68,
+          "maxTurbulenceEffect": 2.15,
+          "maxDilutionEffect": 50.0,
+          "lowEfficiencyAttenuation": 0.68,
+          "fuelEnergyDensityMjPerKg": 48.1,
+          "fuelMolecularMassGrams": 100.0,
+          "chamberWallTemperatureKelvin": 358.15,
+          "chamberWallHeatRate": 0.052,
+          "idleFuelMoles": 0.000000020,
+          "wideOpenFuelMoles": 0.00000043
+        }
+      }
+    },
+    {
+      "id": "tune_b18b_factory",
+      "displayName": "B18B Factory ECU Tune",
+      "family": "honda_b_series",
+      "intendedEngines": ["engine_b18b"],
+      "tier": "stock",
+      "modifies": {
+        "engine": {
+          "idleRpm": 800,
+          "redlineRpm": 6800,
+          "limiterRpm": 7300,
+          "limiterResumeRpm": 7050,
+          "throttleGamma": 2.2
+        },
+        "vtec": {
+          "enabled": false,
+          "activationRpm": 0,
+          "transitionWidthRpm": 1,
+          "timbreIntensity": 0
+        },
+        "ignition": {
+          "timingRpm": [0, 1000, 2000, 3000, 5000, 6800],
+          "timingDegrees": [-22, -23, -27, -29, -29, -26],
+          "revLimitRpm": 7300,
+          "limiterDurationSeconds": 0.057
+        },
+        "combustion": {
+          "molecularAfr": 12.9,
+          "maxBurningEfficiency": 0.69,
+          "maxTurbulenceEffect": 2.18,
+          "maxDilutionEffect": 50.0,
+          "lowEfficiencyAttenuation": 0.67,
+          "fuelEnergyDensityMjPerKg": 48.1,
+          "fuelMolecularMassGrams": 100.0,
+          "chamberWallTemperatureKelvin": 358.15,
+          "chamberWallHeatRate": 0.052,
+          "idleFuelMoles": 0.000000020,
+          "wideOpenFuelMoles": 0.00000044
+        }
+      }
+    },
+    {
+      "id": "tune_d16y4_factory",
+      "displayName": "D16Y4 Factory ECU Tune",
+      "family": "honda_d_series",
+      "intendedEngines": ["engine_d16y4"],
+      "tier": "stock",
+      "modifies": {
+        "engine": {
+          "idleRpm": 750,
+          "redlineRpm": 6800,
+          "limiterRpm": 7200,
+          "limiterResumeRpm": 6950,
+          "throttleGamma": 2.3
+        },
+        "vtec": {
+          "enabled": false,
+          "activationRpm": 0,
+          "transitionWidthRpm": 1,
+          "timbreIntensity": 0
+        },
+        "ignition": {
+          "timingRpm": [0, 1000, 2000, 3000, 5000, 6600],
+          "timingDegrees": [-21, -22, -26, -28, -27, -25],
+          "revLimitRpm": 7200,
+          "limiterDurationSeconds": 0.06
+        },
+        "combustion": {
+          "molecularAfr": 13.0,
+          "maxBurningEfficiency": 0.66,
+          "maxTurbulenceEffect": 2.05,
+          "maxDilutionEffect": 50.0,
+          "lowEfficiencyAttenuation": 0.7,
+          "fuelEnergyDensityMjPerKg": 48.1,
+          "fuelMolecularMassGrams": 100.0,
+          "chamberWallTemperatureKelvin": 356.15,
+          "chamberWallHeatRate": 0.05,
+          "idleFuelMoles": 0.000000017,
+          "wideOpenFuelMoles": 0.00000036
+        }
+      }
+    },
+    {
+      "id": "tune_d16y8_factory",
+      "displayName": "D16Y8 Factory ECU Tune",
+      "family": "honda_d_series",
+      "intendedEngines": ["engine_d16y8"],
+      "tier": "stock",
+      "modifies": {
+        "engine": {
+          "idleRpm": 750,
+          "redlineRpm": 7200,
+          "limiterRpm": 7400,
+          "limiterResumeRpm": 7200,
+          "throttleGamma": 2.2
+        },
+        "vtec": {
+          "enabled": true,
+          "activationRpm": 5600,
+          "transitionWidthRpm": 420,
+          "timbreIntensity": 0.55
+        },
+        "ignition": {
+          "timingRpm": [0, 1000, 2000, 3000, 5000, 7000],
+          "timingDegrees": [-21, -22, -27, -29, -29, -27],
+          "revLimitRpm": 7400,
+          "limiterDurationSeconds": 0.056
+        },
+        "combustion": {
+          "molecularAfr": 12.8,
+          "maxBurningEfficiency": 0.69,
+          "maxTurbulenceEffect": 2.18,
+          "maxDilutionEffect": 50.0,
+          "lowEfficiencyAttenuation": 0.67,
+          "fuelEnergyDensityMjPerKg": 48.1,
+          "fuelMolecularMassGrams": 100.0,
+          "chamberWallTemperatureKelvin": 358.15,
+          "chamberWallHeatRate": 0.051,
+          "idleFuelMoles": 0.000000018,
+          "wideOpenFuelMoles": 0.00000038
+        }
+      }
+    },
+    {
+      "id": "tune_k20a_factory",
+      "displayName": "K20A Factory ECU Tune",
+      "family": "honda_k_series",
+      "intendedEngines": ["engine_k20a"],
+      "tier": "stock",
+      "modifies": {
+        "engine": {
+          "idleRpm": 850,
+          "redlineRpm": 8400,
+          "limiterRpm": 8600,
+          "limiterResumeRpm": 8425,
+          "throttleGamma": 1.9
+        },
+        "vtec": {
+          "enabled": true,
+          "activationRpm": 6000,
+          "transitionWidthRpm": 360,
+          "timbreIntensity": 0.9
+        },
+        "ignition": {
+          "timingRpm": [0, 1000, 2000, 3000, 5000, 8000],
+          "timingDegrees": [-23, -24, -29, -31, -32, -30],
+          "revLimitRpm": 8600,
+          "limiterDurationSeconds": 0.048
+        },
+        "combustion": {
+          "molecularAfr": 12.4,
+          "maxBurningEfficiency": 0.78,
+          "maxTurbulenceEffect": 2.65,
+          "maxDilutionEffect": 50.0,
+          "lowEfficiencyAttenuation": 0.58,
+          "fuelEnergyDensityMjPerKg": 48.1,
+          "fuelMolecularMassGrams": 100.0,
+          "chamberWallTemperatureKelvin": 365.15,
+          "chamberWallHeatRate": 0.057,
+          "idleFuelMoles": 0.000000024,
+          "wideOpenFuelMoles": 0.00000054
+        }
+      }
+    },
+    {
+      "id": "tune_k24a3_factory",
+      "displayName": "K24A3 Factory ECU Tune",
+      "family": "honda_k_series",
+      "intendedEngines": ["engine_k24a3"],
+      "tier": "stock",
+      "modifies": {
+        "engine": {
+          "idleRpm": 800,
+          "redlineRpm": 7600,
+          "limiterRpm": 7800,
+          "limiterResumeRpm": 7625,
+          "throttleGamma": 1.85
+        },
+        "vtec": {
+          "enabled": true,
+          "activationRpm": 6000,
+          "transitionWidthRpm": 420,
+          "timbreIntensity": 0.72
+        },
+        "ignition": {
+          "timingRpm": [0, 1000, 2000, 3000, 5000, 7200],
+          "timingDegrees": [-22, -24, -28, -30, -31, -28],
+          "revLimitRpm": 7800,
+          "limiterDurationSeconds": 0.052
+        },
+        "combustion": {
+          "molecularAfr": 12.5,
+          "maxBurningEfficiency": 0.76,
+          "maxTurbulenceEffect": 2.55,
+          "maxDilutionEffect": 50.0,
+          "lowEfficiencyAttenuation": 0.6,
+          "fuelEnergyDensityMjPerKg": 48.1,
+          "fuelMolecularMassGrams": 100.0,
+          "chamberWallTemperatureKelvin": 363.15,
+          "chamberWallHeatRate": 0.056,
+          "idleFuelMoles": 0.000000027,
+          "wideOpenFuelMoles": 0.00000062
+        }
+      }
+    },
+    {
+      "id": "tune_b16b_street_na",
+      "displayName": "B16B Street NA Tune",
+      "family": "honda_b_series",
+      "intendedEngines": ["engine_b16b", "engine_b16a"],
+      "tier": "street",
+      "modifies": {
+        "engine": {
+          "idleRpm": 925,
+          "redlineRpm": 8300,
+          "limiterRpm": 8500,
+          "limiterResumeRpm": 8325,
+          "throttleGamma": 1.85
+        },
+        "vtec": {
+          "enabled": true,
+          "activationRpm": 5600,
+          "transitionWidthRpm": 320,
+          "timbreIntensity": 1.05
+        },
+        "ignition": {
+          "timingRpm": [0, 1000, 2000, 3000, 5000, 7500],
+          "timingDegrees": [-22, -24, -28, -30, -31, -29],
+          "revLimitRpm": 8500,
+          "limiterDurationSeconds": 0.046
+        },
+        "combustion": {
+          "molecularAfr": 12.4,
+          "maxBurningEfficiency": 0.77,
+          "idleFuelMoles": 0.000000021,
+          "wideOpenFuelMoles": 0.00000045
+        }
+      }
+    },
+    {
+      "id": "tune_b16b_club_sport_na",
+      "displayName": "B16B Club Sport NA Tune",
+      "family": "honda_b_series",
+      "intendedEngines": ["engine_b16b", "engine_b16a", "engine_b18c"],
+      "tier": "clubSport",
+      "modifies": {
+        "engine": {
+          "idleRpm": 1000,
+          "redlineRpm": 8600,
+          "limiterRpm": 8800,
+          "limiterResumeRpm": 8600,
+          "throttleGamma": 1.7
+        },
+        "vtec": {
+          "enabled": true,
+          "activationRpm": 6000,
+          "transitionWidthRpm": 260,
+          "timbreIntensity": 1.18
+        },
+        "ignition": {
+          "timingRpm": [0, 1000, 2000, 3000, 5000, 8000],
+          "timingDegrees": [-20, -23, -28, -31, -32, -30],
+          "revLimitRpm": 8800,
+          "limiterDurationSeconds": 0.042
+        },
+        "combustion": {
+          "molecularAfr": 12.2,
+          "maxBurningEfficiency": 0.79,
+          "maxTurbulenceEffect": 2.75,
+          "idleFuelMoles": 0.000000022,
+          "wideOpenFuelMoles": 0.00000049
+        }
+      }
+    },
+    {
+      "id": "tune_b16b_pro_racing_na",
+      "displayName": "B16B Pro Racing NA Tune",
+      "family": "honda_b_series",
+      "intendedEngines": ["engine_b16b", "engine_b16a", "engine_b18c"],
+      "tier": "proRacing",
+      "modifies": {
+        "engine": {
+          "idleRpm": 1100,
+          "redlineRpm": 9000,
+          "limiterRpm": 9250,
+          "limiterResumeRpm": 9000,
+          "throttleGamma": 1.55
+        },
+        "vtec": {
+          "enabled": true,
+          "activationRpm": 6500,
+          "transitionWidthRpm": 220,
+          "timbreIntensity": 1.32
+        },
+        "ignition": {
+          "timingRpm": [0, 1000, 2000, 3000, 5000, 8500, 9200],
+          "timingDegrees": [-18, -22, -28, -32, -33, -31, -29],
+          "revLimitRpm": 9250,
+          "limiterDurationSeconds": 0.038
+        },
+        "combustion": {
+          "molecularAfr": 12.0,
+          "maxBurningEfficiency": 0.82,
+          "maxTurbulenceEffect": 3.0,
+          "idleFuelMoles": 0.000000024,
+          "wideOpenFuelMoles": 0.00000054
+        }
+      }
+    }
+  ]
+}

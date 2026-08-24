@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework;
 
-namespace RetroRacer.World;
+namespace RType.World;
 
 public readonly record struct TrackBoundaryHit(
     Vector2 Point,

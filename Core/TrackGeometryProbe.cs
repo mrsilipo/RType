@@ -1,7 +1,7 @@
-using RetroRacer.Data;
-using RetroRacer.World;
+using RType.Data;
+using RType.World;
 
-namespace RetroRacer.Core;
+namespace RType.Core;
 
 public static class TrackGeometryProbe
 {

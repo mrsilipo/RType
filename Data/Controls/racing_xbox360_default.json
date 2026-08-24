@@ -63,43 +63,37 @@
     },
     "actions": {
       "accelerate": {
-        "buttons": [
-          "A"
+        "triggers": [
+          "RightTrigger"
         ]
       },
       "brake": {
-        "buttons": [
-          "X"
-        ]
-      },
-      "handbrake": {
-        "buttons": [
-          "B"
-        ]
-      },
-      "reverse": {
-        "buttons": [
-          "Y"
-        ]
-      },
-      "lookBehind": {
-        "buttons": [
-          "LeftShoulder"
-        ]
-      },
-      "toggleView": {
-        "buttons": [
-          "RightShoulder"
-        ]
-      },
-      "shiftDown": {
         "triggers": [
           "LeftTrigger"
         ]
       },
+      "handbrake": {
+        "buttons": [
+          "Y"
+        ]
+      },
+      "reverse": {
+        "buttons": []
+      },
+      "lookBehind": {
+        "buttons": []
+      },
+      "toggleView": {
+        "buttons": []
+      },
+      "shiftDown": {
+        "buttons": [
+          "LeftShoulder"
+        ]
+      },
       "shiftUp": {
-        "triggers": [
-          "RightTrigger"
+        "buttons": [
+          "RightShoulder"
         ]
       },
       "pause": {

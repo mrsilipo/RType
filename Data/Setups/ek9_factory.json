@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "id": "ek9_factory_setup",
   "vehicle": "Data/Vehicles/ek9_reference_2000.json",
+  "build": "Data/VehicleBuilds/ek9_showroom_stock.json",
   "role": "factory_reference_setup",
   "upgrades": {
     "engine": {

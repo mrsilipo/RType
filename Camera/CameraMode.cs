@@ -1,4 +1,4 @@
-namespace RetroRacer.Camera;
+namespace RType.Camera;
 
 public enum CameraMode
 {

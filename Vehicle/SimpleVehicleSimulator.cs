@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework;
-using RetroRacer.World;
+using RType.World;
 
-namespace RetroRacer.Vehicle;
+namespace RType.Vehicle;
 
 public sealed class SimpleVehicleSimulator : IVehicleSimulator
 {
@@ -36,6 +36,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
     private bool _revLimiterCutting;
     private float _revLimiterPhaseSeconds;
     private float _revLimiterChatterPhaseSeconds;
+    private float _idleCrankPhaseDegrees;
     private float _filteredSteerInput;
     private float _filteredBrakeInput;
     private float _dynamicBodyPitchRadians;
@@ -54,11 +55,22 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         float startHeadingRadians,
         VehicleSimulationParameters parameters,
         SimulationEngineParameters? engineParameters = null)
+        : this(surfaceSampler, startPosition, startHeadingRadians, parameters, engineParameters, null)
+    {
+    }
+
+    internal SimpleVehicleSimulator(
+        ITrackSurfaceSampler surfaceSampler,
+        Vector3 startPosition,
+        float startHeadingRadians,
+        VehicleSimulationParameters parameters,
+        SimulationEngineParameters? engineParameters,
+        IEnginePowerUnit? enginePowerUnit = null)
     {
         _surfaceSampler = surfaceSampler;
         _parameters = parameters;
         _engineParameters = engineParameters ?? new SimulationEngineParameters();
-        _enginePowerUnit = EnginePowerUnitFactory.Create(parameters);
+        _enginePowerUnit = enginePowerUnit ?? EnginePowerUnitFactory.Create(parameters);
         _wheels = CreateWheels(parameters);
         State = new VehicleState
         {
@@ -438,6 +450,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         State.EngineBrakeTorqueNm = DoesTorqueOpposeTravel(totalDriveTorque, forwardSpeed)
             ? MathF.Abs(totalDriveTorque)
             : 0f;
+        ApplyIdleCrankCycleBounce(input, dt);
         PublishEnginePowerState();
         State.FrontBrakeTorqueNm = brakeTorques[(int)WheelCorner.FrontLeft] + brakeTorques[(int)WheelCorner.FrontRight];
         State.RearBrakeTorqueNm = brakeTorques[(int)WheelCorner.RearLeft] + brakeTorques[(int)WheelCorner.RearRight];
@@ -539,6 +552,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         State.DriveForce = 0f;
         State.BrakeForce = 0f;
         State.EngineBrakeTorqueNm = 0f;
+        ApplyIdleCrankCycleBounce(input, dt);
         PublishEnginePowerState();
         State.MechanicalOverRevActive = false;
         State.MechanicalOverRevRpm = 0f;
@@ -2050,20 +2064,24 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
     {
         EnginePowerUnitState enginePower = _enginePowerUnit.State;
         bool simActive = enginePower.Enabled && enginePower.UsesEngineSimulator;
-        State.EngineSimulatorPowerActive = simActive;
-        State.EngineSimulatorDriveTorqueNm = simActive ? enginePower.DriveTorqueNm : 0f;
-        State.EngineSimulatorEngineDriveTorqueNm = simActive ? enginePower.EngineDriveTorqueNm : 0f;
-        State.EngineSimulatorRawTorqueNm = simActive ? enginePower.RawIndicatedTorqueNm : 0f;
-        State.EngineSimulatorVtecBlend = simActive ? enginePower.VtecBlend : 0f;
-        State.EngineSimulatorVtecKickIntensity = simActive ? enginePower.VtecKickIntensity : 0f;
-        State.EngineSimulatorLoad = simActive ? enginePower.Load : 0f;
-        State.EngineSimulatorFuelCutBlend = simActive ? enginePower.FuelCutBlend : 0f;
-        State.EngineSimulatorCrankRpm = simActive ? enginePower.CrankRpm : 0f;
-        State.EngineSimulatorCrankPhaseDegrees = simActive ? enginePower.CrankPhaseDegrees : 0f;
-        State.EngineSimulatorAfterfireBlend = simActive ? enginePower.AfterfireBlend : 0f;
-        State.EngineSimulatorTransmissionRpm = simActive ? enginePower.TransmissionRpm : 0f;
-        State.EngineSimulatorClutchTorqueNm = simActive ? enginePower.ClutchTorqueNm : 0f;
-        State.EngineSimulatorCrankFrictionTorqueNm = simActive ? enginePower.CrankFrictionTorqueNm : 0f;
+        State.EnginePowerUnitActive = simActive;
+        State.EnginePowerUnitDriveTorqueNm = simActive ? enginePower.DriveTorqueNm : 0f;
+        State.EnginePowerUnitEngineDriveTorqueNm = simActive ? enginePower.EngineDriveTorqueNm : 0f;
+        State.EnginePowerUnitRawTorqueNm = simActive ? enginePower.RawIndicatedTorqueNm : 0f;
+        State.EnginePowerUnitVtecBlend = simActive ? enginePower.VtecBlend : 0f;
+        State.EnginePowerUnitVtecKickIntensity = simActive ? enginePower.VtecKickIntensity : 0f;
+        State.EnginePowerUnitLoad = simActive ? enginePower.Load : 0f;
+        State.EnginePowerUnitFuelCutBlend = simActive ? enginePower.FuelCutBlend : 0f;
+        State.EnginePowerUnitCrankRpm = simActive ? enginePower.CrankRpm : 0f;
+        State.EnginePowerUnitCrankPhaseDegrees = simActive ? enginePower.CrankPhaseDegrees : 0f;
+        State.EnginePowerUnitAfterfireBlend = simActive ? enginePower.AfterfireBlend : 0f;
+        State.EnginePowerUnitTransmissionRpm = simActive ? enginePower.TransmissionRpm : 0f;
+        State.EnginePowerUnitClutchTorqueNm = simActive ? enginePower.ClutchTorqueNm : 0f;
+        State.EnginePowerUnitCrankFrictionTorqueNm = simActive ? enginePower.CrankFrictionTorqueNm : 0f;
+        State.EnginePowerUnitReferenceDriveTorqueNm = simActive ? enginePower.ReferenceDriveTorqueNm : 0f;
+        State.EnginePowerUnitCalibratedDriveTorqueNm = simActive ? enginePower.CalibratedDriveTorqueNm : 0f;
+        State.EnginePowerUnitGasAuthority = simActive ? enginePower.GasAuthority : 0f;
+        State.EnginePowerUnitFullThrottleGasTorqueNm = simActive ? enginePower.FullThrottleGasTorqueNm : 0f;
     }
 
     private void ApplyEnginePowerCrankState(EnginePowerUnitState enginePower, bool allowMechanicalOverRev = false, float dt = 0f)
@@ -2134,7 +2152,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             return;
         }
 
-        // Keep combustion, limiter, VTEC and Engine Sim telemetry continuous while the clutch is open.
+        // Keep combustion, limiter, VTEC and engine power-unit telemetry continuous while the clutch is open.
         _ = AdvanceEnginePower(
             MathF.Max(500f, State.Rpm),
             throttle,
@@ -2680,6 +2698,30 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             RequestShift(1, _parameters.AutomaticShiftTimeSeconds, forwardSpeed, input.Throttle);
         }
 
+        if (_manualTransmission && State.Gear < 0)
+        {
+            if (input.ShiftUpRequested)
+            {
+                RequestShift(1, _parameters.ManualShiftTimeSeconds, forwardSpeed, input.Throttle);
+            }
+
+            return;
+        }
+
+        if (_manualTransmission && State.Gear == 0)
+        {
+            if (input.ShiftUpRequested)
+            {
+                RequestShift(1, _parameters.ManualShiftTimeSeconds, forwardSpeed, input.Throttle);
+            }
+            else if (input.ShiftDownRequested && reverseAllowed)
+            {
+                RequestShift(-1, _parameters.ManualShiftTimeSeconds, forwardSpeed, input.Throttle);
+            }
+
+            return;
+        }
+
         if (State.Gear < 0 || State.Gear == 0)
         {
             return;
@@ -2694,6 +2736,10 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             else if (input.ShiftDownRequested && State.Gear > 1)
             {
                 RequestShift(State.Gear - 1, _parameters.ManualShiftTimeSeconds, forwardSpeed, input.Throttle);
+            }
+            else if (input.ShiftDownRequested && State.Gear == 1 && reverseAllowed)
+            {
+                RequestShift(-1, _parameters.ManualShiftTimeSeconds, forwardSpeed, input.Throttle);
             }
 
             return;
@@ -3191,7 +3237,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
                 State.Rpm)
             : 0f;
         float proximity = MathF.Max(throttleProximity, mechanicalLimiterStress);
-        float chatterHz = MathHelper.Lerp(8.5f, 12.5f, proximity);
+        const float chatterHz = 1f / 0.10f;
         _revLimiterChatterPhaseSeconds += MathF.Max(0f, dt) * chatterHz;
         if (_revLimiterChatterPhaseSeconds > 1000f)
         {
@@ -3210,6 +3256,51 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             proximity * cutWeight * (0.38f + impulse * 0.62f),
             0f,
             1f);
+    }
+
+    private void ApplyIdleCrankCycleBounce(VehicleInput input, float dt)
+    {
+        float pedal = MathF.Max(input.Throttle, input.Reverse);
+        bool idleEligible =
+            pedal <= 0.015f &&
+            input.Brake <= 0.015f &&
+            input.Handbrake <= 0.015f &&
+            MathF.Abs(State.SignedForwardSpeed) <= 0.35f &&
+            !State.RevLimiterActive &&
+            !State.MechanicalOverRevActive &&
+            _shiftTimerSeconds <= 0f &&
+            State.Rpm <= 1030f;
+        if (!idleEligible)
+        {
+            return;
+        }
+
+        _idleCrankPhaseDegrees += MathF.Max(0f, State.Rpm) / 60f * 360f * MathF.Max(0f, dt);
+        _idleCrankPhaseDegrees %= 720f;
+        float targetIdleRpm = CalculateIdleCycleTargetRpm(_idleCrankPhaseDegrees);
+        float blend = MathHelper.Clamp(1f - MathF.Exp(-10f * MathF.Max(0f, dt)), 0f, 1f);
+        State.Rpm = MathHelper.Lerp(State.Rpm, targetIdleRpm, blend);
+    }
+
+    private static float CalculateIdleCycleTargetRpm(float crankPhaseDegrees)
+    {
+        float phase = crankPhaseDegrees % 720f;
+        if (phase < 0f)
+        {
+            phase += 720f;
+        }
+
+        if (phase < 270f)
+        {
+            return MathHelper.Lerp(900f, 950f, SmoothStep(0f, 1f, phase / 270f));
+        }
+
+        if (phase < 540f)
+        {
+            return MathHelper.Lerp(950f, 900f, SmoothStep(0f, 1f, (phase - 270f) / 270f));
+        }
+
+        return 900f;
     }
 
     private float GetCurrentRpmCeiling()

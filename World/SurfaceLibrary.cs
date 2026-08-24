@@ -1,4 +1,4 @@
-namespace RetroRacer.World;
+namespace RType.World;
 
 public sealed class SurfaceLibrary
 {

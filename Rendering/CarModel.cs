@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace RetroRacer.Rendering;
+namespace RType.Rendering;
 
 public sealed class CarModel : IDisposable
 {
@@ -47,10 +47,38 @@ public sealed class CarModel : IDisposable
     {
         return
         [
-            MeshFactory.CreateBox(graphicsDevice, new Vector3(0f, 0.48f, 0f), new Vector3(1.70f, 0.56f, 4.25f), textures.CarRed, Vector3.One, "placeholder body"),
-            MeshFactory.CreateBox(graphicsDevice, new Vector3(0f, 0.91f, -0.34f), new Vector3(1.14f, 0.56f, 1.32f), textures.CarGlass, new Vector3(0.78f, 0.9f, 1.0f), "placeholder cabin"),
-            MeshFactory.CreateBox(graphicsDevice, new Vector3(0f, 0.57f, 2.22f), new Vector3(1.38f, 0.24f, 0.22f), textures.White, new Vector3(1.0f, 0.92f, 0.70f), "placeholder headlights"),
-            MeshFactory.CreateBox(graphicsDevice, new Vector3(0f, 0.62f, -2.22f), new Vector3(1.48f, 0.26f, 0.20f), textures.CarRed, new Vector3(0.65f, 0.12f, 0.12f), "placeholder rear panel"),
+            MeshFactory.CreateBox(
+                graphicsDevice,
+                new Vector3(0f, 0.48f, 0f),
+                new Vector3(1.70f, 0.56f, 4.25f),
+                textures.CarRed,
+                Vector3.One,
+                "placeholder body",
+                VehicleMaterial.CreateDefault(VehicleMaterialCategory.Paint, new Vector3(0.82f, 0.035f, 0.025f))),
+            MeshFactory.CreateBox(
+                graphicsDevice,
+                new Vector3(0f, 0.91f, -0.34f),
+                new Vector3(1.14f, 0.56f, 1.32f),
+                textures.CarGlass,
+                new Vector3(0.78f, 0.9f, 1.0f),
+                "placeholder cabin",
+                VehicleMaterial.CreateDefault(VehicleMaterialCategory.Glass)),
+            MeshFactory.CreateBox(
+                graphicsDevice,
+                new Vector3(0f, 0.57f, 2.22f),
+                new Vector3(1.38f, 0.24f, 0.22f),
+                textures.White,
+                new Vector3(1.0f, 0.92f, 0.70f),
+                "placeholder headlights",
+                VehicleMaterial.CreateDefault(VehicleMaterialCategory.HeadlightLens)),
+            MeshFactory.CreateBox(
+                graphicsDevice,
+                new Vector3(0f, 0.62f, -2.22f),
+                new Vector3(1.48f, 0.26f, 0.20f),
+                textures.CarRed,
+                new Vector3(0.65f, 0.12f, 0.12f),
+                "placeholder rear panel",
+                VehicleMaterial.CreateDefault(VehicleMaterialCategory.TaillightLens)),
             MeshFactory.CreateCarWheelSet(graphicsDevice, textures.Tire)
         ];
     }

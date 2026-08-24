@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace RetroRacer.Ui;
+namespace RType.Ui;
 
 public sealed class PixelFont
 {

@@ -20,3 +20,16 @@ Telemetry/RaceRuns/*
 !Telemetry/RaceRuns/.gitignore
 
 *.nupkg
+
+# Large source/reference assets that are not runtime content.
+Assets/Tracks/3DTrackBuilderAssets/
+Assets/Tracks/AssetoCorsaDownloads/
+Assets/Tracks/KN5_Exporter_FBX/
+Assets/Models/Ek9_Sukimoto/
+Assets/Models/Joe'sEK9/*.blend*
+Assets/Models/Joe'sEK9/Blueprints/
+Assets/Models/Joe'sEK9/*_OLD.*
+Assets/Music/Racing/
+ReferenceSource/
+Audio/RTypeEngine/
+Tools/

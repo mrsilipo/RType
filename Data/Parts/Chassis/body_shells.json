@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "catalog": "bodyShells",
+  "slot": "bodyShell",
+  "parts": [
+    {
+      "id": "stock_ek9_body_shell",
+      "displayName": "Stock EK9 Body Shell",
+      "tier": "stock",
+      "compatibility": ["ek9"],
+      "weightKg": 730.0,
+      "data": {
+        "chassisCode": "EK9",
+        "bodyType": "hatchback",
+        "wheelbaseMeters": 2.62,
+        "frontTrackMeters": 1.48,
+        "rearTrackMeters": 1.48,
+        "lengthMeters": 4.185,
+        "widthMeters": 1.695,
+        "heightMeters": 1.36,
+        "torsionalRigidityNmPerDeg": 11000,
+        "baseCurbMassKg": 1060.0,
+        "frontWeightDistribution": 0.62,
+        "cgHeightMeters": 0.48
+      },
+      "durability": {
+        "rating": 0.86,
+        "fatigueResistance": 0.84,
+        "crashResistance": 0.78
+      }
+    },
+    {
+      "id": "street_reinforced_ek9_body_shell",
+      "displayName": "Street Reinforced EK9 Body Shell",
+      "tier": "street",
+      "compatibility": ["ek9"],
+      "weightKg": 748.0,
+      "data": {
+        "torsionalRigidityNmPerDeg": 14500,
+        "cgHeightDeltaMeters": -0.005
+      },
+      "durability": {
+        "rating": 0.91,
+        "fatigueResistance": 0.90,
+        "crashResistance": 0.84
+      }
+    },
+    {
+      "id": "club_sport_seam_welded_ek9_body_shell",
+      "displayName": "Club Sport Welded EK9 Body Shell",
+      "tier": "clubSport",
+      "compatibility": ["ek9"],
+      "weightKg": 724.0,
+      "data": {
+        "torsionalRigidityNmPerDeg": 18500,
+        "cgHeightDeltaMeters": -0.018
+      },
+      "durability": {
+        "rating": 0.94,
+        "fatigueResistance": 0.93,
+        "crashResistance": 0.88
+      }
+    },
+    {
+      "id": "pro_racing_lightweight_ek9_body_shell",
+      "displayName": "Pro Racing Lightweight EK9 Body Shell",
+      "tier": "proRacing",
+      "compatibility": ["ek9"],
+      "weightKg": 680.0,
+      "data": {
+        "torsionalRigidityNmPerDeg": 23500,
+        "cgHeightDeltaMeters": -0.032
+      },
+      "durability": {
+        "rating": 0.88,
+        "fatigueResistance": 0.96,
+        "crashResistance": 0.76
+      }
+    }
+  ]
+}

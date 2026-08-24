@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace RetroRacer.Input;
+namespace RType.Input;
 
 public static class ControlSchemeLoader
 {

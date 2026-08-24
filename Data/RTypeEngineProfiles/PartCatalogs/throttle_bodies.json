@@ -1,0 +1,11 @@
+{
+  "catalog": "throttleBodies",
+  "slot": "throttleBody",
+  "description": "Throttle bodies should affect flow limit and manifold response. Current runtime maps this through throttle gamma and manifold pressure limits until a typed throttle-body model lands.",
+  "parts": [
+    { "id": "throttle_stock", "displayName": "Stock Throttle Body", "tier": "stock", "compatibility": ["honda_b_series"], "data": { "diameterMm": 60, "areaSquareMillimeters": 2827 }, "modifies": { "engine": { "throttleGamma": 2.0 }, "intake": { "maxManifoldPressureAtmospheres": 0.98 } } },
+    { "id": "throttle_street", "displayName": "Street Enlarged Throttle Body", "tier": "street", "compatibility": ["honda_b_series"], "data": { "diameterMm": 64, "areaSquareMillimeters": 3217 }, "modifies": { "engine": { "throttleGamma": 1.85 }, "intake": { "maxManifoldPressureAtmospheres": 1.00 } } },
+    { "id": "throttle_club_sport", "displayName": "Club Sport Throttle Body", "tier": "clubSport", "compatibility": ["honda_b_series"], "data": { "diameterMm": 68, "areaSquareMillimeters": 3632 }, "modifies": { "engine": { "throttleGamma": 1.7 }, "intake": { "maxManifoldPressureAtmospheres": 1.02 } } },
+    { "id": "throttle_pro_racing", "displayName": "Pro Racing Throttle Body", "tier": "proRacing", "compatibility": ["honda_b_series"], "data": { "diameterMm": 72, "areaSquareMillimeters": 4072 }, "modifies": { "engine": { "throttleGamma": 1.55 }, "intake": { "maxManifoldPressureAtmospheres": 1.04 } } }
+  ]
+}

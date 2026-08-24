@@ -1,8 +1,8 @@
 using Microsoft.Xna.Framework;
-using RetroRacer.Vehicle;
-using RetroRacer.World;
+using RType.Vehicle;
+using RType.World;
 
-namespace RetroRacer.Core;
+namespace RType.Core;
 
 public sealed class RaceSession
 {

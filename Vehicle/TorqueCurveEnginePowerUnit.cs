@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework;
 
-namespace RetroRacer.Vehicle;
+namespace RType.Vehicle;
 
 internal sealed class TorqueCurveEnginePowerUnit : IEnginePowerUnit
 {
@@ -52,7 +52,9 @@ internal sealed class TorqueCurveEnginePowerUnit : IEnginePowerUnit
             CalculateTransmissionRpm(request),
             0f,
             brakeTorque,
-            MathHelper.Clamp(request.Limiter, 0f, 1f));
+            MathHelper.Clamp(request.Limiter, 0f, 1f),
+            ReferenceDriveTorqueNm: driveTorque,
+            CalibratedDriveTorqueNm: driveTorque);
         return State;
     }
 

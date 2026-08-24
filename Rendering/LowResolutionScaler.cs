@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework;
 
-namespace RetroRacer.Rendering;
+namespace RType.Rendering;
 
 public static class LowResolutionScaler
 {

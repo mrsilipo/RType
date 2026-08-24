@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework;
 
-namespace RetroRacer.Vehicle;
+namespace RType.Vehicle;
 
 public sealed class VehicleState
 {
@@ -96,33 +96,63 @@ public sealed class VehicleState
 
     public float EngineBrakeTorqueNm { get; set; }
 
-    public bool EngineSimulatorPowerActive { get; set; }
+    public bool EnginePowerUnitActive { get; set; }
 
-    public float EngineSimulatorDriveTorqueNm { get; set; }
+    public float EnginePowerUnitDriveTorqueNm { get; set; }
 
-    public float EngineSimulatorEngineDriveTorqueNm { get; set; }
+    public float EnginePowerUnitEngineDriveTorqueNm { get; set; }
 
-    public float EngineSimulatorRawTorqueNm { get; set; }
+    public float EnginePowerUnitRawTorqueNm { get; set; }
 
-    public float EngineSimulatorVtecBlend { get; set; }
+    public float EnginePowerUnitVtecBlend { get; set; }
 
-    public float EngineSimulatorVtecKickIntensity { get; set; }
+    public float EnginePowerUnitVtecKickIntensity { get; set; }
 
-    public float EngineSimulatorLoad { get; set; }
+    public float EnginePowerUnitLoad { get; set; }
 
-    public float EngineSimulatorFuelCutBlend { get; set; }
+    public float EnginePowerUnitFuelCutBlend { get; set; }
 
-    public float EngineSimulatorCrankRpm { get; set; }
+    public float EnginePowerUnitCrankRpm { get; set; }
 
-    public float EngineSimulatorCrankPhaseDegrees { get; set; }
+    public float EnginePowerUnitCrankPhaseDegrees { get; set; }
 
-    public float EngineSimulatorAfterfireBlend { get; set; }
+    public float EnginePowerUnitAfterfireBlend { get; set; }
 
-    public float EngineSimulatorTransmissionRpm { get; set; }
+    public float EnginePowerUnitTransmissionRpm { get; set; }
 
-    public float EngineSimulatorClutchTorqueNm { get; set; }
+    public float EnginePowerUnitClutchTorqueNm { get; set; }
 
-    public float EngineSimulatorCrankFrictionTorqueNm { get; set; }
+    public float EnginePowerUnitCrankFrictionTorqueNm { get; set; }
+
+    public float EnginePowerUnitReferenceDriveTorqueNm { get; set; }
+
+    public float EnginePowerUnitCalibratedDriveTorqueNm { get; set; }
+
+    public float EnginePowerUnitGasAuthority { get; set; }
+
+    public float EnginePowerUnitFullThrottleGasTorqueNm { get; set; }
+
+    public bool RTypeEngineActive { get; set; }
+
+    public string RTypeEngineProfileId { get; set; } = string.Empty;
+
+    public float RTypeEngineRpm { get; set; }
+
+    public float RTypeEngineCrankPhaseDegrees { get; set; }
+
+    public float RTypeEngineVtecBlend { get; set; }
+
+    public bool RTypeEngineLimiterCut { get; set; }
+
+    public float RTypeEngineRevLimitTimerSeconds { get; set; }
+
+    public int RTypeEngineLastIgnitedCylinder { get; set; } = -1;
+
+    public float RTypeEngineThrottle { get; set; }
+
+    public float RTypeEngineOutputPeak { get; set; }
+
+    public float RTypeEngineOutputRms { get; set; }
 
     public bool AbsActive { get; set; }
 

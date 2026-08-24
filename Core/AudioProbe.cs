@@ -1,8 +1,8 @@
-using RetroRacer.Audio;
-using RetroRacer.Data;
-using RetroRacer.Vehicle;
+using RType.Audio;
+using RType.Data;
+using RType.Vehicle;
 
-namespace RetroRacer.Core;
+namespace RType.Core;
 
 public static class AudioProbe
 {
@@ -16,7 +16,6 @@ public static class AudioProbe
     public static void Run()
     {
         ProbeVehicle("Data/Vehicles/ek9_reference_2000.json");
-        ProbeVehicle("Data/Vehicles/r33_gtr_reference_1995.json");
         ProbeLoop("Generic tyres", "wheelspin", "Assets/Sounds/Generic/TyreScreech_001.wav");
         ProbeLoopSlice("Generic tyres", "wheelspin-sustain-loop", "Assets/Sounds/Generic/TyreScreech_001.wav", TyreSpinLoopStartRatio, TyreSpinLoopEndRatio);
         ProbeLoopSlice("Generic tyres", "wheelspin-chirp-loop", "Assets/Sounds/Generic/TyreScreech_001.wav", TyreChirpLoopStartRatio, TyreChirpLoopEndRatio);
@@ -27,13 +26,42 @@ public static class AudioProbe
     private static void ProbeVehicle(string vehiclePath)
     {
         VehicleSimulationParameters parameters = VehicleDefinitionLoader.LoadSimulationParameters(vehiclePath);
-        Console.WriteLine(
-            $"{parameters.DisplayName} gas-flow engine sim: enabled {parameters.Audio.EngineSimulatorEnabled}, volume {parameters.Audio.EngineSimulatorVolume:0.00}, mr {FormatMrPath(parameters.Audio.EngineSimulatorMrScriptPath)}, sim {parameters.Audio.EngineSimulatorSimulationFrequencyHz:0} Hz, order {string.Join("-", parameters.Audio.EngineSimulatorFiringOrder)}, route {string.Join("/", parameters.Audio.EngineSimulatorCylinderExhaust)}, exhaust {string.Join("/", parameters.Audio.EngineSimulatorExhaustVolumes.Select(v => v.ToString("0.00")))}, ir taps {parameters.Audio.EngineSimulatorImpulseResponseTaps}, dsp scale/gain {parameters.Audio.EngineSimulatorDspPressureScale:0}/{parameters.Audio.EngineSimulatorDspOutputGain:0.00}, timing {string.Join("/", parameters.Audio.EngineSimulatorIgnitionTimingDegrees.Select(v => v.ToString("0")))}, cam {parameters.Audio.EngineSimulatorLowIntakeDurationDegrees:0}/{parameters.Audio.EngineSimulatorLowIntakeLiftMillimeters:0.0}->{parameters.Audio.EngineSimulatorVtecIntakeDurationDegrees:0}/{parameters.Audio.EngineSimulatorVtecIntakeLiftMillimeters:0.0}, jitter {parameters.Audio.EngineSimulatorJitter:0.000}, noise {parameters.Audio.EngineSimulatorNoise:0.000}, gains {parameters.Audio.EngineSimulatorOverrunGain:0.00}/{parameters.Audio.EngineSimulatorShockGain:0.00}/{parameters.Audio.EngineSimulatorLimiterGain:0.00}");
+        Console.WriteLine($"{parameters.DisplayName} active engine audio: race sample recipe, redline {parameters.RedlineRpm:0} rpm, VTEC {parameters.VtecActivationRpm:0} rpm, limiter sample crossfade final 50 rpm");
+        ProbeRaceEngineAudio(parameters);
     }
 
-    private static string FormatMrPath(string path)
+    private static void ProbeRaceEngineAudio(VehicleSimulationParameters parameters)
     {
-        return string.IsNullOrWhiteSpace(path) ? "none" : Path.GetFileName(path);
+        VehicleAudioParameters audio = parameters.Audio;
+        Console.WriteLine(
+            $"{parameters.DisplayName} race sample engine: profile {audio.EngineAudioProfileId}, samples {audio.EngineSamples.Length}, engineVolume {audio.EngineVolume:0.00}, sampleVolume {audio.EngineSampleVolume:0.00}");
+        for (int i = 0; i < audio.EngineSamples.Length; i++)
+        {
+            EngineAudioSampleParameters sample = audio.EngineSamples[i];
+            bool fullLoop = sample.LoopStartRatio <= 0f && sample.LoopEndRatio >= 1f;
+            float ratioAt3500 = 3500f / MathF.Max(1f, sample.Rpm);
+            float neutralVolumeAt3500 = audio.EngineVolume * audio.EngineSampleVolume * sample.Volume;
+            Console.WriteLine(
+                $"  sample {i}: {Path.GetFileName(sample.Path)}, role {sample.Role}, rpm {sample.Rpm:0}, ratio@3500 {ratioAt3500:0.000}, fullLoop {fullLoop}, neutralVol@3500 {neutralVolumeAt3500:0.000}");
+            if (fullLoop)
+            {
+                ProbeFullLoop(parameters.DisplayName, $"engine-sample-{i}", sample.Path);
+            }
+            else
+            {
+                ProbeLoopSlice(parameters.DisplayName, $"engine-sample-{i}", sample.Path, sample.LoopStartRatio, sample.LoopEndRatio);
+            }
+        }
+    }
+
+    private static void ProbeFullLoop(string vehicleName, string role, string path)
+    {
+        WavLoopSource source = WavLoopSource.Load(ResolveAssetPath(path));
+        float seam = CalculateSeamDiscontinuity(source);
+        float rms = CalculateRmsLevel(source, source.FrameCount);
+        AudioReferenceComparison comparison = CompareDirectPcmReference(source);
+        Console.WriteLine(
+            $"{vehicleName} {role}: {path}, GAME FULL LOOP, {source.SampleRate} Hz, {source.ChannelCount} channel, {source.FrameCount} frames, rms {rms:0.00000}, seam {seam:0.00000}, crossfade 0.0 ms, trim 0.0 ms, direct3500 maxDiff {comparison.MaximumDifference}, mismatches {comparison.MismatchedSamples}");
     }
 
     private static void ProbeLoop(string vehicleName, string role, string path)
@@ -100,6 +128,26 @@ public static class AudioProbe
         return (float)Math.Sqrt(sumSquares / sampleCount);
     }
 
+    private static AudioReferenceComparison CompareDirectPcmReference(WavLoopSource source)
+    {
+        int sampleCount = Math.Min(source.PcmSamples.Length, source.SampleRate * source.ChannelCount);
+        int maxDifference = 0;
+        int mismatchedSamples = 0;
+        for (int i = 0; i < sampleCount; i++)
+        {
+            short reference = source.PcmSamples[i];
+            short gameDirect = source.PcmSamples[i];
+            int difference = Math.Abs(reference - gameDirect);
+            if (difference > 0)
+            {
+                mismatchedSamples++;
+                maxDifference = Math.Max(maxDifference, difference);
+            }
+        }
+
+        return new AudioReferenceComparison(maxDifference, mismatchedSamples);
+    }
+
     private static string ResolveAssetPath(string path)
     {
         if (Path.IsPathRooted(path) && File.Exists(path))
@@ -123,4 +171,6 @@ public static class AudioProbe
 
         throw new FileNotFoundException($"Audio asset was not found: {path}", path);
     }
+
+    private readonly record struct AudioReferenceComparison(int MaximumDifference, int MismatchedSamples);
 }

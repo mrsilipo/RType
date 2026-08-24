@@ -1,6 +1,6 @@
-using RetroRacer.Vehicle;
+using RType.Vehicle;
 
-namespace RetroRacer.Input;
+namespace RType.Input;
 
 public readonly struct RacingControls
 {

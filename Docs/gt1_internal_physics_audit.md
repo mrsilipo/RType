@@ -12,7 +12,7 @@ Vehicle definitions in `Data/Vehicles/*.json` should stay specific to a car:
 - wheel and tyre dimensions/compound values
 - per-car prototype tuning that describes the vehicle response
 
-`Data/gt1_engine.json` should stay global to the simulation feel:
+`Data/Simulation/arcade_physics.json` should stay global to the simulation feel:
 
 - fixed-step timing, frame catch-up and safety limits
 - digital throttle/brake assist behavior
@@ -20,7 +20,7 @@ Vehicle definitions in `Data/Vehicles/*.json` should stay specific to a car:
 - stability and counter-steer assistance
 - generic RPM response helpers
 
-Upgrade definitions in `Data/Upgrades/*.json` should describe upgrade effects only. They should not duplicate base vehicle facts unless they are explicit overrides.
+Legacy upgrade definitions in `Data/Legacy/Upgrades/*.json` should describe upgrade effects only. They should not duplicate base vehicle facts unless they are explicit overrides.
 
 Setup files in `Data/Setups/*.json` should be driver/tuning choices layered on top of the base vehicle. They should not become another source of truth for factory dimensions or engine hardware.
 
@@ -53,5 +53,5 @@ The remaining launch controller protection is now a narrow clutch-band guard wit
 - Move vehicle-specific prototype tuning under clearer names where possible. `simulation.currentPrototype` currently mixes real car response values with game-feel calibration values.
 - Promote wall/contact tuning into a named collision block in the schema if we keep expanding crash behavior.
 - Add a lightweight physics probe for wall recovery similar to `LaunchProbe` and `HandlingProbe`, so tuning can print contact count, impact speed, tangent speed, yaw and progress.
-- Keep `Data/gt1_engine.json` for global controller/assist behavior only; do not let car-specific rev limiter, cam profile, clutch or tyre facts drift into it.
+- Keep `Data/Simulation/arcade_physics.json` for global controller/assist behavior only; do not let car-specific rev limiter, cam profile, clutch or tyre facts drift into it.
 - Continue replacing launch clutch protection with measured crank, clutch and tyre states from the Engine Sim driveline.

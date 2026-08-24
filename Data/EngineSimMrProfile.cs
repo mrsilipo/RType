@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
 
-namespace RetroRacer.Data;
+namespace RType.Data;
 
 internal sealed record EngineSimMrProfile(
     string ResolvedScriptPath,

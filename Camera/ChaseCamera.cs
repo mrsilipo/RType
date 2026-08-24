@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework;
-using RetroRacer.Vehicle;
+using RType.Vehicle;
 
-namespace RetroRacer.Camera;
+namespace RType.Camera;
 
 public sealed class ChaseCamera
 {

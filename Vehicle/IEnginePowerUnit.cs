@@ -1,4 +1,4 @@
-namespace RetroRacer.Vehicle;
+namespace RType.Vehicle;
 
 internal interface IEnginePowerUnit
 {
@@ -61,12 +61,20 @@ internal readonly record struct EnginePowerUnitState(
     float CrankFrictionTorqueNm,
     float FuelCutBlend,
     float CrankPhaseDegrees = 0f,
-    float AfterfireBlend = 0f)
+    float AfterfireBlend = 0f,
+    float ReferenceDriveTorqueNm = 0f,
+    float CalibratedDriveTorqueNm = 0f,
+    float GasAuthority = 0f,
+    float FullThrottleGasTorqueNm = 0f)
 {
     public static EnginePowerUnitState Disabled => new(
         false,
         false,
         false,
+        0f,
+        0f,
+        0f,
+        0f,
         0f,
         0f,
         0f,
@@ -89,13 +97,8 @@ internal static class EnginePowerUnitFactory
 {
     public static IEnginePowerUnit Create(VehicleSimulationParameters parameters)
     {
-        if (parameters.EngineSimulatorDrivesPhysics &&
-            parameters.Audio.EngineSimulatorEnabled &&
-            parameters.Audio.EngineSimulatorCylinderCount > 0)
-        {
-            return new EngineSimPowerUnit(parameters);
-        }
-
+        // Live driving stays on the established torque curve model. The race
+        // audio layer now owns engine sound separately from power delivery.
         return new TorqueCurveEnginePowerUnit(parameters);
     }
 }

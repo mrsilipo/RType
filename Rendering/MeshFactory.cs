@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace RetroRacer.Rendering;
+namespace RType.Rendering;
 
 public static class MeshFactory
 {
@@ -432,11 +432,18 @@ public static class MeshFactory
         return builder.Build(graphicsDevice, name, texture, diffuseColor);
     }
 
-    public static StaticMesh CreateBox(GraphicsDevice graphicsDevice, Vector3 center, Vector3 size, Texture2D texture, Vector3 diffuseColor, string name)
+    public static StaticMesh CreateBox(
+        GraphicsDevice graphicsDevice,
+        Vector3 center,
+        Vector3 size,
+        Texture2D texture,
+        Vector3 diffuseColor,
+        string name,
+        VehicleMaterial? vehicleMaterial = null)
     {
         MeshBuilder builder = new();
         builder.AddBox(center, size);
-        return builder.Build(graphicsDevice, name, texture, diffuseColor);
+        return builder.Build(graphicsDevice, name, texture, diffuseColor, vehicleMaterial: vehicleMaterial);
     }
 
     public static StaticMesh CreateCarWheelSet(GraphicsDevice graphicsDevice, Texture2D texture)
@@ -446,7 +453,13 @@ public static class MeshFactory
         builder.AddBox(new Vector3(0.82f, 0.28f, 1.34f), new Vector3(0.24f, 0.54f, 0.60f));
         builder.AddBox(new Vector3(-0.82f, 0.28f, -1.40f), new Vector3(0.24f, 0.54f, 0.60f));
         builder.AddBox(new Vector3(0.82f, 0.28f, -1.40f), new Vector3(0.24f, 0.54f, 0.60f));
-        return builder.Build(graphicsDevice, "placeholder wheels", texture, Vector3.One, isWheelMesh: true);
+        return builder.Build(
+            graphicsDevice,
+            "placeholder wheels",
+            texture,
+            Vector3.One,
+            isWheelMesh: true,
+            vehicleMaterial: VehicleMaterial.CreateDefault(VehicleMaterialCategory.TyreRubber));
     }
 
     public static StaticMesh CreateUnitGroundQuad(GraphicsDevice graphicsDevice, Texture2D texture, string name)

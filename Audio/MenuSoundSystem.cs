@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework.Audio;
 
-namespace RetroRacer.Audio;
+namespace RType.Audio;
 
 public sealed class MenuSoundSystem : IDisposable
 {

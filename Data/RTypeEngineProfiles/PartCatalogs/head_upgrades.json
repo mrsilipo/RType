@@ -1,0 +1,83 @@
+{
+  "catalog": "headUpgrades",
+  "slot": "headUpgrade",
+  "description": "Head construction upgrades. These affect mass, durability, heat tolerance, and high-RPM reliability while preserving the selected head layout.",
+  "parts": [
+    {
+      "id": "head_upgrade_stock_cast",
+      "displayName": "Factory Cast Aluminum Head",
+      "tier": "stock",
+      "compatibility": ["honda_b_series", "honda_d_series", "honda_k_series"],
+      "weightDeltaKg": 0.0,
+      "durability": {
+        "rating": 0.84,
+        "heatTolerance": 0.82,
+        "fatigueResistance": 0.84,
+        "safePowerMultiplier": 1.0,
+        "repairCostMultiplier": 1.0
+      },
+      "data": {
+        "construction": "factory_cast_aluminum",
+        "waterJacketReinforcement": "factory",
+        "camJournalStrength": "factory"
+      }
+    },
+    {
+      "id": "head_upgrade_reinforced_cast",
+      "displayName": "Reinforced Cast Aluminum Head",
+      "tier": "street",
+      "compatibility": ["honda_b_series", "honda_d_series", "honda_k_series"],
+      "weightDeltaKg": 0.8,
+      "durability": {
+        "rating": 0.88,
+        "heatTolerance": 0.86,
+        "fatigueResistance": 0.87,
+        "safePowerMultiplier": 1.12,
+        "repairCostMultiplier": 1.18
+      },
+      "data": {
+        "construction": "reinforced_cast_aluminum",
+        "waterJacketReinforcement": "moderate",
+        "camJournalStrength": "uprated"
+      }
+    },
+    {
+      "id": "head_upgrade_race_cast",
+      "displayName": "Race Cast Aluminum Head",
+      "tier": "clubSport",
+      "compatibility": ["honda_b_series", "honda_d_series", "honda_k_series"],
+      "weightDeltaKg": 1.1,
+      "durability": {
+        "rating": 0.93,
+        "heatTolerance": 0.91,
+        "fatigueResistance": 0.92,
+        "safePowerMultiplier": 1.30,
+        "repairCostMultiplier": 1.48
+      },
+      "data": {
+        "construction": "race_cast_aluminum",
+        "waterJacketReinforcement": "heavy",
+        "camJournalStrength": "race"
+      }
+    },
+    {
+      "id": "head_upgrade_billet_aluminum",
+      "displayName": "Billet Aluminum Racing Head",
+      "tier": "proRacing",
+      "compatibility": ["honda_b_series", "honda_d_series", "honda_k_series"],
+      "weightDeltaKg": 0.6,
+      "durability": {
+        "rating": 0.98,
+        "heatTolerance": 0.96,
+        "fatigueResistance": 0.98,
+        "safePowerMultiplier": 1.55,
+        "repairCostMultiplier": 2.05
+      },
+      "data": {
+        "construction": "billet_aluminum",
+        "waterJacketReinforcement": "integrated_race",
+        "camJournalStrength": "billet_race"
+      }
+    }
+  ]
+}

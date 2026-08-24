@@ -3,7 +3,7 @@ using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace RetroRacer.Rendering;
+namespace RType.Rendering;
 
 internal static class FbxCarModelLoader
 {
@@ -79,7 +79,8 @@ internal static class FbxCarModelLoader
                     mesh.Alpha,
                     mesh.SpecularColor,
                     mesh.SpecularPower,
-                    mesh.EmissiveColor));
+                    mesh.EmissiveColor,
+                    mesh.VehicleMaterial));
             }
 
             return meshes;
@@ -572,7 +573,8 @@ internal static class FbxCarModelLoader
                 accumulator.SpecularPower,
                 accumulator.EmissiveColor,
                 accumulator.TexturePath,
-                false));
+                accumulator.VehicleMaterial,
+                IsWheelComponentName(accumulator.Name)));
         }
 
         return meshes;
@@ -608,13 +610,14 @@ internal static class FbxCarModelLoader
         }
 
         string materialName = material?.Name ?? string.Empty;
-        ImportedMaterialKind materialKind = ResolveMaterialKind(model.Name, geometryName, materialName);
         string combinedName = CombineMaterialNames(model.Name, geometryName, materialName);
-        Vector3 diffuseColor = ResolveMaterialDiffuse(materialKind, material, combinedName);
-        float alpha = ResolveMaterialAlpha(materialKind, material, combinedName);
-        Vector3 specularColor = ResolveMaterialSpecular(materialKind, material, combinedName);
-        float specularPower = ResolveMaterialSpecularPower(materialKind, material, combinedName);
-        Vector3 emissiveColor = ResolveMaterialEmissive(materialKind, material, diffuseColor);
+        VehicleMaterial vehicleMaterial = ResolveVehicleMaterial(
+            combinedName,
+            material?.DiffuseColor,
+            material?.Opacity,
+            material?.EmissiveColor,
+            null);
+        ImportedMaterialKind materialKind = ToImportedMaterialKind(vehicleMaterial.Category);
         string name = string.IsNullOrWhiteSpace(materialName)
             ? $"fbx {model.Name}"
             : $"fbx {model.Name} {materialName}";
@@ -622,11 +625,12 @@ internal static class FbxCarModelLoader
         accumulator = new ImportedMeshAccumulator(
             name,
             materialKind,
-            diffuseColor,
-            alpha,
-            specularColor,
-            specularPower,
-            emissiveColor,
+            vehicleMaterial.ToBasicEffectDiffuseColor(),
+            vehicleMaterial.Opacity,
+            vehicleMaterial.ToBasicEffectSpecularColor(),
+            vehicleMaterial.ToBasicEffectSpecularPower(),
+            vehicleMaterial.ToBasicEffectEmissiveColor(),
+            vehicleMaterial,
             material?.TexturePath);
         accumulators[materialSlot] = accumulator;
         return accumulator;
@@ -843,195 +847,284 @@ internal static class FbxCarModelLoader
         return $"{size.X:0.###}x{size.Y:0.###}x{size.Z:0.###}m";
     }
 
-    private static ImportedMaterialKind ResolveMaterialKind(
-        string modelName,
-        string geometryName,
-        string materialName)
-    {
-        string combinedName = CombineMaterialNames(modelName, geometryName, materialName);
-        if (ContainsAny(combinedName, "tyre", "tire", "rubber"))
-        {
-            return ImportedMaterialKind.Tire;
-        }
-
-        if (ContainsAny(combinedName, "trim", "kenar", "mirror"))
-        {
-            return ImportedMaterialKind.Body;
-        }
-
-        if (ContainsAny(combinedName, "glass", "window", "windscreen", "windshield", "lens"))
-        {
-            return ImportedMaterialKind.Glass;
-        }
-
-        if (ContainsAny(combinedName, "light", "lamp", "headlight", "taillight", "brake"))
-        {
-            return ImportedMaterialKind.Light;
-        }
-
-        if (ContainsAny(combinedName, "interior", "interiror", "seat", "dash", "steering"))
-        {
-            return ImportedMaterialKind.Interior;
-        }
-
-        return ImportedMaterialKind.Body;
-    }
-
     private static string CombineMaterialNames(params string[] names)
     {
         return string.Join(' ', names);
     }
 
-    private static Vector3 ResolveMaterialDiffuse(
-        ImportedMaterialKind materialKind,
-        FbxMaterial? material,
-        string combinedName)
+    private static VehicleMaterial ResolveVehicleMaterial(
+        string combinedName,
+        Vector3? exportedDiffuseColor,
+        float? exportedOpacity,
+        Vector3? exportedEmissiveColor,
+        ImportedMaterialKind? legacyMaterialKind)
     {
-        Vector3 exported = material?.DiffuseColor ?? DefaultMaterialDiffuse(materialKind);
-        if (materialKind == ImportedMaterialKind.Glass && IsNearBlack(exported))
+        VehicleMaterialCategory category = ResolveVehicleMaterialCategory(combinedName, legacyMaterialKind);
+        Vector3? baseColor = ResolveVehicleMaterialBaseColor(category, combinedName, exportedDiffuseColor);
+        VehicleMaterial material = VehicleMaterial.CreateDefault(category, baseColor);
+
+        if (exportedOpacity is float opacity && opacity < 0.995f)
         {
-            if (ContainsAny(combinedName, "far", "headlight", "lightlens", "lens"))
+            material = material with { Opacity = MathHelper.Clamp(opacity, 0f, 1f) };
+        }
+
+        if (exportedEmissiveColor is Vector3 emissiveColor && emissiveColor.LengthSquared() > 0.0001f)
+        {
+            float strength = MathHelper.Clamp(
+                MathF.Max(emissiveColor.X, MathF.Max(emissiveColor.Y, emissiveColor.Z)),
+                material.EmissiveStrength,
+                1f);
+            material = material with
             {
-                return new Vector3(0.64f, 0.70f, 0.72f);
-            }
-
-            return new Vector3(0.10f, 0.16f, 0.19f);
+                EmissiveColor = VehicleMaterial.ClampColor(emissiveColor / MathF.Max(strength, 0.001f)),
+                EmissiveStrength = strength
+            };
         }
 
-        if (materialKind == ImportedMaterialKind.Light && IsNearBlack(exported))
+        if (category == VehicleMaterialCategory.EmissiveLight)
         {
-            return DefaultMaterialDiffuse(materialKind);
+            material = ConfigureEmissiveLightMaterial(material, combinedName);
         }
 
-        if (materialKind == ImportedMaterialKind.Tire && IsNearBlack(exported))
-        {
-            return DefaultMaterialDiffuse(materialKind);
-        }
-
-        return exported;
+        return material;
     }
 
-    private static Vector3 DefaultMaterialDiffuse(ImportedMaterialKind materialKind)
+    private static VehicleMaterialCategory ResolveVehicleMaterialCategory(
+        string combinedName,
+        ImportedMaterialKind? legacyMaterialKind)
     {
-        return materialKind switch
+        string normalizedName = NormalizeMaterialName(combinedName);
+        if (IsWheelTyreName(normalizedName))
         {
-            ImportedMaterialKind.Tire => new Vector3(0.02f, 0.02f, 0.018f),
-            ImportedMaterialKind.Glass => new Vector3(0.18f, 0.30f, 0.36f),
-            ImportedMaterialKind.Light => new Vector3(1.0f, 0.92f, 0.70f),
-            ImportedMaterialKind.Interior => new Vector3(0.025f, 0.025f, 0.028f),
-            _ => new Vector3(0.82f, 0.035f, 0.025f)
+            return VehicleMaterialCategory.TyreRubber;
+        }
+
+        if (IsWheelRimName(normalizedName))
+        {
+            return VehicleMaterialCategory.WheelPaintOrMetal;
+        }
+
+        if (ContainsAny(normalizedName, "brembo", "brake", "caliper", "disc", "rotor"))
+        {
+            return VehicleMaterialCategory.Brake;
+        }
+
+        if (ContainsAny(normalizedName, "exhaust", "egz", "muffler", "tailpipe"))
+        {
+            return VehicleMaterialCategory.ExhaustMetal;
+        }
+
+        if (ContainsAny(normalizedName, "farkrom", "farref", "reflector", "chrome", "krom"))
+        {
+            return VehicleMaterialCategory.ExhaustMetal;
+        }
+
+        if (ContainsAny(normalizedName, "interior", "interiror", "seat", "dash", "steering"))
+        {
+            return VehicleMaterialCategory.Interior;
+        }
+
+        if (ContainsAny(normalizedName, "lightlenses geri", "reverse lens", "clear tail"))
+        {
+            return VehicleMaterialCategory.ClearTailLens;
+        }
+
+        if (ContainsAny(normalizedName, "tailstop", "taillight", "tail light", "rear light", "lightlenses tail"))
+        {
+            return VehicleMaterialCategory.TaillightLens;
+        }
+
+        if (ContainsAny(normalizedName, "lightlenses", "headlight lens", "headlight", "far", "sinyal", "indicator lens"))
+        {
+            return VehicleMaterialCategory.HeadlightLens;
+        }
+
+        if (ContainsAny(normalizedName, "lights 09"))
+        {
+            return VehicleMaterialCategory.BlackPlastic;
+        }
+
+        if (ContainsAny(normalizedName, "rearlights", "rear lights", "lights", "bulb", "emitter"))
+        {
+            return VehicleMaterialCategory.EmissiveLight;
+        }
+
+        if (ContainsAny(normalizedName, "windowtrim", "window trim", "trim", "kenar", "mirror", "plate", "arma"))
+        {
+            return VehicleMaterialCategory.Trim;
+        }
+
+        if (ContainsAny(normalizedName, "glass", "window", "windows", "windscreen", "windshield"))
+        {
+            return VehicleMaterialCategory.Glass;
+        }
+
+        if (ContainsAny(normalizedName, "shell inner", "inner", "black plastic", "plastic", "grille", "grill"))
+        {
+            return VehicleMaterialCategory.BlackPlastic;
+        }
+
+        return legacyMaterialKind switch
+        {
+            ImportedMaterialKind.Glass => VehicleMaterialCategory.Glass,
+            ImportedMaterialKind.Tire => VehicleMaterialCategory.TyreRubber,
+            ImportedMaterialKind.Light => VehicleMaterialCategory.EmissiveLight,
+            ImportedMaterialKind.Interior => VehicleMaterialCategory.Interior,
+            _ => VehicleMaterialCategory.Paint
         };
     }
 
-    private static float ResolveMaterialAlpha(
-        ImportedMaterialKind materialKind,
-        FbxMaterial? material,
-        string combinedName)
+    private static Vector3? ResolveVehicleMaterialBaseColor(
+        VehicleMaterialCategory category,
+        string combinedName,
+        Vector3? exportedDiffuseColor)
     {
-        if (material is not null && material.Opacity < 0.995f)
+        string normalizedName = NormalizeMaterialName(combinedName);
+        if (category == VehicleMaterialCategory.HeadlightLens &&
+            ContainsAny(normalizedName, "sinyal", "indicator"))
         {
-            return material.Opacity;
+            return new Vector3(0.95f, 0.46f, 0.03f);
         }
 
-        return materialKind switch
+        if (category == VehicleMaterialCategory.Paint &&
+            IsOrangeBiasedYellowPaint(exportedDiffuseColor))
         {
-            ImportedMaterialKind.Glass when ContainsAny(combinedName, "far", "headlight", "lightlens", "lens") => 0.58f,
-            ImportedMaterialKind.Glass => 0.62f,
-            _ => 1f
+            return HondaPaintColors.SunlightYellow.BaseColor;
+        }
+
+        if (category == VehicleMaterialCategory.ClearTailLens &&
+            ContainsAny(normalizedName, "geri", "reverse"))
+        {
+            return VehicleMaterial.CreateDefault(category).BaseColor;
+        }
+
+        if (exportedDiffuseColor is not Vector3 exported || IsNearBlack(exported))
+        {
+            return null;
+        }
+
+        return category switch
+        {
+            VehicleMaterialCategory.TyreRubber => null,
+            VehicleMaterialCategory.BlackPlastic => null,
+            VehicleMaterialCategory.HeadlightLens => VehicleMaterial.CreateDefault(category).BaseColor,
+            VehicleMaterialCategory.TaillightLens => VehicleMaterial.CreateDefault(category).BaseColor,
+            VehicleMaterialCategory.ClearTailLens => VehicleMaterial.CreateDefault(category).BaseColor,
+            VehicleMaterialCategory.ExhaustMetal when ContainsAny(normalizedName, "farkrom", "farref", "reflector", "chrome", "krom") => new Vector3(0.92f, 0.90f, 0.86f),
+            VehicleMaterialCategory.Interior when ContainsAny(normalizedName, "seat") => exported,
+            VehicleMaterialCategory.Interior => null,
+            _ => exported
         };
     }
 
-    private static Vector3 ResolveMaterialSpecular(
-        ImportedMaterialKind materialKind,
-        FbxMaterial? material,
-        string combinedName)
+    private static VehicleMaterial ConfigureEmissiveLightMaterial(VehicleMaterial material, string combinedName)
     {
-        Vector3 exported = material?.SpecularColor ?? Vector3.Zero;
-        if (!IsNearBlack(exported))
+        string normalizedName = NormalizeMaterialName(combinedName);
+        if (ContainsAny(normalizedName, "rear", "tail", "brake", "stop"))
         {
-            return exported;
+            return material with
+            {
+                BaseColor = new Vector3(0.78f, 0.03f, 0.02f),
+                EmissiveColor = new Vector3(1.0f, 0.04f, 0.02f),
+                EmissiveStrength = MathF.Max(material.EmissiveStrength, 0.34f)
+            };
         }
 
-        if (ContainsAny(combinedName, "shell", "body", "bumper", "bonnet", "hood", "door", "sidearmred", "armakr"))
+        if (ContainsAny(normalizedName, "geri", "reverse"))
         {
-            return new Vector3(0.34f, 0.30f, 0.25f);
+            return material with
+            {
+                BaseColor = new Vector3(0.86f, 0.84f, 0.76f),
+                EmissiveColor = new Vector3(0.92f, 0.88f, 0.72f),
+                EmissiveStrength = MathF.Max(material.EmissiveStrength, 0.22f)
+            };
         }
 
-        if (ContainsAny(combinedName, "rim", "krom", "chrome", "exhaust", "egz"))
+        return material with
         {
-            return new Vector3(0.42f, 0.42f, 0.40f);
-        }
-
-        return DefaultMaterialSpecular(materialKind);
-    }
-
-    private static Vector3 DefaultMaterialSpecular(ImportedMaterialKind materialKind)
-    {
-        return materialKind switch
-        {
-            ImportedMaterialKind.Glass => new Vector3(0.72f, 0.78f, 0.82f),
-            ImportedMaterialKind.Light => new Vector3(0.32f, 0.28f, 0.18f),
-            ImportedMaterialKind.Tire => new Vector3(0.02f, 0.02f, 0.02f),
-            ImportedMaterialKind.Interior => new Vector3(0.03f, 0.03f, 0.03f),
-            _ => new Vector3(0.18f, 0.16f, 0.14f)
+            BaseColor = new Vector3(1.0f, 0.88f, 0.58f),
+            EmissiveColor = new Vector3(1.0f, 0.86f, 0.52f),
+            EmissiveStrength = MathF.Max(material.EmissiveStrength, 0.30f)
         };
     }
 
-    private static float ResolveMaterialSpecularPower(
-        ImportedMaterialKind materialKind,
-        FbxMaterial? material,
-        string combinedName)
+    private static ImportedMaterialKind ToImportedMaterialKind(VehicleMaterialCategory category)
     {
-        float exported = material?.SpecularPower ?? 0f;
-        if (exported > 1.5f)
+        return category switch
         {
-            return exported;
-        }
-
-        if (ContainsAny(combinedName, "shell", "body", "bumper", "bonnet", "hood", "door", "sidearmred", "armakr"))
-        {
-            return 72f;
-        }
-
-        if (ContainsAny(combinedName, "rim", "krom", "chrome", "exhaust", "egz"))
-        {
-            return 96f;
-        }
-
-        return DefaultSpecularPower(materialKind);
-    }
-
-    private static float DefaultSpecularPower(ImportedMaterialKind materialKind)
-    {
-        return materialKind switch
-        {
-            ImportedMaterialKind.Glass => 96f,
-            ImportedMaterialKind.Light => 36f,
-            ImportedMaterialKind.Tire => 8f,
-            ImportedMaterialKind.Interior => 10f,
-            _ => 28f
+            VehicleMaterialCategory.Glass => ImportedMaterialKind.Glass,
+            VehicleMaterialCategory.TyreRubber => ImportedMaterialKind.Tire,
+            VehicleMaterialCategory.HeadlightLens => ImportedMaterialKind.Glass,
+            VehicleMaterialCategory.TaillightLens => ImportedMaterialKind.Glass,
+            VehicleMaterialCategory.ClearTailLens => ImportedMaterialKind.Glass,
+            VehicleMaterialCategory.EmissiveLight => ImportedMaterialKind.Light,
+            VehicleMaterialCategory.Interior => ImportedMaterialKind.Interior,
+            _ => ImportedMaterialKind.Body
         };
     }
 
-    private static Vector3 ResolveMaterialEmissive(
-        ImportedMaterialKind materialKind,
-        FbxMaterial? material,
-        Vector3 diffuseColor)
+    private static bool IsWheelComponentName(string combinedName)
     {
-        Vector3 exported = material?.EmissiveColor ?? Vector3.Zero;
-        if (exported.LengthSquared() > 0.0001f)
+        string normalizedName = NormalizeMaterialName(combinedName);
+        return IsWheelRimName(normalizedName) || IsWheelTyreName(normalizedName);
+    }
+
+    private static bool IsWheelRimName(string normalizedName)
+    {
+        if (ContainsAny(normalizedName, "steering"))
         {
-            return exported;
+            return false;
         }
 
-        return materialKind == ImportedMaterialKind.Light
-            ? Vector3.Min(diffuseColor * 0.18f, Vector3.One)
-            : Vector3.Zero;
+        return ContainsAny(
+            normalizedName,
+            "fr rim", "rf rim", "front right rim",
+            "lf rim", "fl rim", "front left rim",
+            "lr rim", "rl rim", "rear left rim",
+            "rr rim", "rear right rim");
+    }
+
+    private static bool IsWheelTyreName(string normalizedName)
+    {
+        if (ContainsAny(normalizedName, "steering"))
+        {
+            return false;
+        }
+
+        return ContainsAny(
+            normalizedName,
+            "fr tyre", "fr tire", "rf tyre", "rf tire", "front right tyre", "front right tire",
+            "lf tyre", "lf tire", "fl tyre", "fl tire", "front left tyre", "front left tire",
+            "lr tyre", "lr tire", "rl tyre", "rl tire", "rear left tyre", "rear left tire",
+            "rr tyre", "rr tire", "rear right tyre", "rear right tire");
+    }
+
+    private static string NormalizeMaterialName(string name)
+    {
+        return name
+            .Replace('_', ' ')
+            .Replace('-', ' ')
+            .Replace('.', ' ')
+            .ToLowerInvariant();
     }
 
     private static bool IsNearBlack(Vector3 color)
     {
         return color.X * 0.2126f + color.Y * 0.7152f + color.Z * 0.0722f < 0.035f;
+    }
+
+    private static bool IsOrangeBiasedYellowPaint(Vector3? color)
+    {
+        if (color is not Vector3 value)
+        {
+            return false;
+        }
+
+        return value.X >= 0.62f &&
+               value.Y >= 0.28f &&
+               value.Y <= 0.66f &&
+               value.Z <= 0.12f &&
+               value.X - value.Y >= 0.24f;
     }
 
     private static (Texture2D Texture, Vector3 DiffuseColor) ResolveMaterial(
@@ -1045,6 +1138,16 @@ internal static class FbxCarModelLoader
             TryLoadTexture(graphicsDevice, modelDirectory, mesh.TexturePath, loadedTextures, out Texture2D? texture))
         {
             return (texture!, Vector3.One);
+        }
+
+        if (mesh.VehicleMaterial.Category == VehicleMaterialCategory.TaillightLens)
+        {
+            return (textures.TaillightRedLens, Vector3.One);
+        }
+
+        if (mesh.VehicleMaterial.Category == VehicleMaterialCategory.ClearTailLens)
+        {
+            return (textures.TaillightClearLens, Vector3.One);
         }
 
         return (textures.White, mesh.DiffuseColor);
@@ -1208,6 +1311,12 @@ internal static class FbxCarModelLoader
                     indices[i] = reader.ReadInt32();
                 }
 
+                VehicleMaterial vehicleMaterial = ResolveVehicleMaterial(
+                    name,
+                    diffuseColor,
+                    alpha,
+                    emissiveColor,
+                    legacyMaterialKind: materialKind);
                 meshes.Add(new ImportedMesh(
                     name,
                     vertices,
@@ -1219,7 +1328,8 @@ internal static class FbxCarModelLoader
                     specularPower,
                     emissiveColor,
                     texturePath,
-                    isWheelMesh));
+                    vehicleMaterial,
+                    isWheelMesh || IsWheelComponentName(name)));
             }
 
             return true;
@@ -1348,6 +1458,7 @@ internal static class FbxCarModelLoader
             Vector3 specularColor,
             float specularPower,
             Vector3 emissiveColor,
+            VehicleMaterial vehicleMaterial,
             string? texturePath)
         {
             Name = name;
@@ -1357,6 +1468,7 @@ internal static class FbxCarModelLoader
             SpecularColor = specularColor;
             SpecularPower = specularPower;
             EmissiveColor = emissiveColor;
+            VehicleMaterial = vehicleMaterial;
             TexturePath = texturePath;
         }
 
@@ -1373,6 +1485,8 @@ internal static class FbxCarModelLoader
         public float SpecularPower { get; }
 
         public Vector3 EmissiveColor { get; }
+
+        public VehicleMaterial VehicleMaterial { get; }
 
         public string? TexturePath { get; }
 
@@ -1392,6 +1506,7 @@ internal static class FbxCarModelLoader
         float SpecularPower,
         Vector3 EmissiveColor,
         string? TexturePath,
+        VehicleMaterial VehicleMaterial,
         bool IsWheelMesh);
 
     private enum ImportedMaterialKind

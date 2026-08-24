@@ -1,8 +1,8 @@
 using Microsoft.Xna.Framework;
-using RetroRacer.Camera;
-using RetroRacer.Vehicle;
+using RType.Camera;
+using RType.Vehicle;
 
-namespace RetroRacer.Audio;
+namespace RType.Audio;
 
 internal readonly record struct EngineAudioFrame(
     float Rpm,
@@ -22,8 +22,13 @@ internal readonly record struct EngineAudioFrame(
     float PauseScale,
     CameraMode CameraMode,
     int Gear,
+    float GearRatio,
+    float FinalDriveRatio,
+    float ClutchEngagement,
     bool IsShifting,
     float SpeedMetersPerSecond,
+    float DrivenWheelSpeedMetersPerSecond,
+    float VehicleSpeedMetersPerSecond,
     float EngineDriveTorqueNm,
     float DriveForceN,
     float EngineBrakeTorqueNm,
@@ -32,26 +37,10 @@ internal readonly record struct EngineAudioFrame(
     float CrankFrictionTorqueNm,
     float TransmissionRpm,
     float Backfire,
-    float CrankPhaseDegrees)
+    float CrankPhaseDegrees,
+    float DeltaSeconds)
 {
     public bool Audible => DriveVolume > 0.001f && PauseScale > 0f;
-
-    public EngineSimulatorSynthesisTarget ToSynthesisTarget() => new(
-        MathHelper.Clamp(Rpm, 450f, MathF.Max(450f, RedlineRpm * 1.12f)),
-        Throttle,
-        MathHelper.Clamp(Load + Overrun * 0.22f, 0f, 1f),
-        VtecBlend,
-        Limiter,
-        Overrun,
-        Shock,
-        IntakeDrive,
-        ThrottleTransient,
-        DrivelineDrive,
-        SpeedMetersPerSecond,
-        Gear,
-        TransmissionRpm,
-        Backfire,
-        CrankPhaseDegrees);
 
     public static EngineAudioFrame FromVehicleState(
         VehicleAudioParameters parameters,
@@ -61,22 +50,23 @@ internal readonly record struct EngineAudioFrame(
         float driveVolume,
         CameraMode cameraMode,
         bool paused,
-        float throttleTransient)
+        float throttleTransient,
+        float deltaSeconds)
     {
         float pauseScale = paused ? 0f : 1f;
         float redlineRpm = MathF.Max(450f, vehicle.RedlineRpm);
         float throttle = MathHelper.Clamp(MathF.Max(vehicle.Throttle, vehicle.EffectiveThrottle), 0f, 1f);
-        float shapedThrottle = MathF.Pow(throttle, MathF.Max(0.1f, parameters.EngineSimulatorThrottleGamma));
+        float shapedThrottle = MathF.Pow(throttle, MathF.Max(0.1f, parameters.RaceAudioThrottleGamma));
         float overrun = CalculateOverrun(throttle, rpm, redlineRpm, vehicle.SpeedMetersPerSecond);
-        float vtecKick = MathHelper.Clamp(vehicle.EngineSimulatorVtecKickIntensity, 0f, 1f);
+        float vtecKick = MathHelper.Clamp(vehicle.EnginePowerUnitVtecKickIntensity, 0f, 1f);
         float vtecBlend = MathHelper.Clamp(
-            MathF.Max(highRpmBlend, vehicle.EngineSimulatorVtecBlend) + vtecKick * 0.32f,
+            MathF.Max(highRpmBlend, vehicle.EnginePowerUnitVtecBlend) + vtecKick * 0.32f,
             0f,
             1f);
         float load = CalculateLoad(vehicle, shapedThrottle, overrun, vtecKick);
         float limiter = MathHelper.Clamp(
             MathF.Max(
-                MathF.Max(vehicle.RevLimiterBounceIntensity, vehicle.EngineSimulatorFuelCutBlend),
+                MathF.Max(vehicle.RevLimiterBounceIntensity, vehicle.EnginePowerUnitFuelCutBlend),
                 vehicle.RevLimiterActive ? 0.55f : 0f),
             0f,
             1f);
@@ -87,8 +77,8 @@ internal readonly record struct EngineAudioFrame(
             0f,
             1f);
         float clampedTransient = MathHelper.Clamp(throttleTransient, 0f, 1f);
-        float backfire = vehicle.EngineSimulatorPowerActive
-            ? MathHelper.Clamp(vehicle.EngineSimulatorAfterfireBlend, 0f, 1f)
+        float backfire = vehicle.EnginePowerUnitActive
+            ? MathHelper.Clamp(vehicle.EnginePowerUnitAfterfireBlend, 0f, 1f)
             : MathHelper.Clamp(
                 overrun * MathF.Max(
                     MathF.Max(clampedTransient * 0.72f, limiter * 0.78f),
@@ -97,6 +87,7 @@ internal readonly record struct EngineAudioFrame(
                 1f);
         float intakeDrive = CalculateIntakeDrive(shapedThrottle, load, vtecBlend, overrun, clampedTransient);
         float drivelineDrive = CalculateDrivelineDrive(vehicle, throttle);
+        float gearRatio = ResolveGearRatio(parameters, vehicle.Gear);
 
         return new EngineAudioFrame(
             MathHelper.Clamp(rpm, 450f, redlineRpm * 1.12f),
@@ -116,17 +107,41 @@ internal readonly record struct EngineAudioFrame(
             pauseScale,
             cameraMode,
             vehicle.Gear,
+            gearRatio,
+            parameters.RaceAudioFinalDriveRatio,
+            vehicle.Gear == 0 ? 0f : 1f,
             vehicle.IsShifting,
             vehicle.SpeedMetersPerSecond,
-            vehicle.EngineSimulatorEngineDriveTorqueNm,
+            vehicle.SpeedMetersPerSecond,
+            vehicle.SpeedMetersPerSecond,
+            vehicle.EnginePowerUnitEngineDriveTorqueNm,
             vehicle.DriveForce,
             vehicle.EngineBrakeTorqueNm,
             vehicle.ClutchSlipRpm,
-            vehicle.EngineSimulatorClutchTorqueNm,
-            vehicle.EngineSimulatorCrankFrictionTorqueNm,
-            vehicle.EngineSimulatorTransmissionRpm,
+            vehicle.EnginePowerUnitClutchTorqueNm,
+            vehicle.EnginePowerUnitCrankFrictionTorqueNm,
+            vehicle.EnginePowerUnitTransmissionRpm,
             backfire,
-            vehicle.EngineSimulatorCrankPhaseDegrees);
+            vehicle.EnginePowerUnitCrankPhaseDegrees,
+            MathHelper.Clamp(deltaSeconds, 0f, 0.1f));
+    }
+
+    private static float ResolveGearRatio(VehicleAudioParameters parameters, int gear)
+    {
+        if (gear == 0)
+        {
+            return 0f;
+        }
+
+        if (gear < 0)
+        {
+            return 0f;
+        }
+
+        return parameters.RaceAudioGearRatios.Length == 0
+            ? 0f
+            : parameters.RaceAudioGearRatios[
+                Math.Clamp(gear, 1, parameters.RaceAudioGearRatios.Length) - 1];
     }
 
     private static float CalculateLoad(VehicleState vehicle, float shapedThrottle, float overrun, float vtecKick)
@@ -135,9 +150,9 @@ internal readonly record struct EngineAudioFrame(
             0.14f + shapedThrottle * 0.82f + vehicle.ShiftKickIntensity * 0.16f + vtecKick * 0.12f - overrun * 0.10f,
             0f,
             1f);
-        if (vehicle.EngineSimulatorPowerActive && vehicle.EngineSimulatorLoad > 0f)
+        if (vehicle.EnginePowerUnitActive && vehicle.EnginePowerUnitLoad > 0f)
         {
-            load = MathHelper.Lerp(load, MathHelper.Clamp(vehicle.EngineSimulatorLoad, 0f, 1f), 0.72f);
+            load = MathHelper.Lerp(load, MathHelper.Clamp(vehicle.EnginePowerUnitLoad, 0f, 1f), 0.72f);
         }
 
         return load;
@@ -167,7 +182,7 @@ internal readonly record struct EngineAudioFrame(
     private static float CalculateDrivelineDrive(VehicleState vehicle, float throttle)
     {
         float clutchSlip = SmoothStep(180f, 2800f, MathF.Abs(vehicle.ClutchSlipRpm));
-        float clutchLoad = SmoothStep(20f, 220f, MathF.Abs(vehicle.EngineSimulatorClutchTorqueNm));
+        float clutchLoad = SmoothStep(20f, 220f, MathF.Abs(vehicle.EnginePowerUnitClutchTorqueNm));
         float shiftShock = MathF.Max(vehicle.ShiftKickIntensity, vehicle.PowertrainShockIntensity);
         float gearSpeed = vehicle.Gear == 0 ? 0f : SmoothStep(8f, 48f, MathF.Abs(vehicle.SpeedMetersPerSecond));
         float throttleGate = SmoothStep(0.08f, 0.56f, throttle);

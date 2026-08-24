@@ -1,6 +1,6 @@
-using RetroRacer.Vehicle;
+using RType.Vehicle;
 
-namespace RetroRacer.Ui;
+namespace RType.Ui;
 
 public readonly record struct TachometerHudState(
     float Rpm,

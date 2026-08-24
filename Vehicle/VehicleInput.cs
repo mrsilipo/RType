@@ -1,4 +1,4 @@
-namespace RetroRacer.Vehicle;
+namespace RType.Vehicle;
 
 public readonly struct VehicleInput
 {

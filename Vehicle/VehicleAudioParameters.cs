@@ -1,7 +1,41 @@
-namespace RetroRacer.Vehicle;
+namespace RType.Vehicle;
+
+public sealed record EngineAudioSampleParameters(
+    string Path,
+    float Rpm,
+    bool HighRpm = false,
+    bool Limiter = false,
+    float Volume = 1f,
+    string Role = "normal",
+    float LoopStartRatio = 0f,
+    float LoopEndRatio = 1f);
 
 public sealed class VehicleAudioParameters
 {
+    public string EngineLoopPath { get; init; } = string.Empty;
+
+    public string HighRpmLoopPath { get; init; } = string.Empty;
+
+    public EngineAudioSampleParameters[] EngineSamples { get; init; } = [];
+
+    public string EngineAudioProfilePath { get; init; } = string.Empty;
+
+    public string EngineAudioProfileId { get; init; } = string.Empty;
+
+    public string EngineAudioSourceRecordingPath { get; init; } = string.Empty;
+
+    public float BaseSampleRpm { get; init; } = 3500f;
+
+    public float MinimumPlaybackRatio { get; init; } = 0.32f;
+
+    public float MaximumPlaybackRatio { get; init; } = 3.3f;
+
+    public float EngineSampleCrossfadeWidthRpm { get; init; } = 24f;
+
+    public float EngineIdleBlendOutRpm { get; init; } = 1650f;
+
+    public float EngineSampleVolume { get; init; } = 0.72f;
+
     public string TurboLoopPath { get; init; } = string.Empty;
 
     public float EngineVolume { get; init; } = 0.62f;
@@ -25,6 +59,20 @@ public sealed class VehicleAudioParameters
     public float HighRpmMinimumSpeedMetersPerSecond { get; init; }
 
     public float HighRpmVolumeBoost { get; init; } = 0.12f;
+
+    public bool RTypeEngineEnabled { get; init; } = true;
+
+    public string RTypeEngineBuildPath { get; init; } = "Data/VehicleBuilds/ek9_showroom_stock.json";
+
+    public string RTypeEngineProfilePath { get; init; } = string.Empty;
+
+    public float RTypeEngineVolume { get; init; } = 0.72f;
+
+    public float RaceAudioThrottleGamma { get; init; } = 2f;
+
+    public float[] RaceAudioGearRatios { get; init; } = [3.23f, 2.105f, 1.458f, 1.107f, 0.848f];
+
+    public float RaceAudioFinalDriveRatio { get; init; } = 3.55f;
 
     public bool EngineSimulatorEnabled { get; init; }
 

@@ -1,4 +1,4 @@
-namespace RetroRacer.Ui;
+namespace RType.Ui;
 
 public static class UiLayout
 {

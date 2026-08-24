@@ -1,11 +1,17 @@
-namespace RetroRacer.Audio;
+namespace RType.Audio;
 
 internal static class AudioDiagnostics
 {
     private static readonly object Sync = new();
     private static bool _announced;
+    private static readonly bool ConsoleEnabled =
+        string.Equals(Environment.GetEnvironmentVariable("RTYPE_AUDIO_DIAGNOSTICS_CONSOLE"), "1", StringComparison.OrdinalIgnoreCase);
+    private static readonly bool VerboseEnabled =
+        string.Equals(Environment.GetEnvironmentVariable("RTYPE_AUDIO_DIAGNOSTICS_VERBOSE"), "1", StringComparison.OrdinalIgnoreCase);
 
     public static string LogFilePath { get; } = Path.Combine(AppContext.BaseDirectory, "Logs", "audio-diagnostics.log");
+
+    public static bool Verbose => VerboseEnabled;
 
     public static void Log(string category, string message)
     {
@@ -24,7 +30,10 @@ internal static class AudioDiagnostics
                 File.AppendAllText(LogFilePath, line);
             }
 
-            Console.WriteLine($"Audio diagnostic [{category}]: {message}");
+            if (ConsoleEnabled)
+            {
+                Console.WriteLine($"Audio diagnostic [{category}]: {message}");
+            }
         }
         catch
         {

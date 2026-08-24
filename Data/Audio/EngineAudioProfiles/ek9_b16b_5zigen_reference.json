@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "id": "ek9_b16b_5zigen_reference",
+  "displayName": "Honda Civic Type R EK9 B16B 5Zigen Reference",
+  "engineFamily": "honda_b_series_vtec",
+  "engineId": "engine_b16b",
+  "sourceRecordingPath": "Assets/Sounds/Honda/JDM EK9 CIVIC TYPE-R B16B VTEC Exhaust sound  5ZIGEN MIRACLE FIER BALL  ASMR 4K.mp3",
+  "notes": [
+    "Playable engine tone uses idle_0900 as a quiet 10% non-limiter bed, normal_3500 below VTEC, vtec_6200 above VTEC, and limiter_8200 as the dedicated limiter loop.",
+    "All source WAVs have been manually edited to loop cleanly and should be used as full-file loops.",
+    "VTEC handoff is controlled by the vehicle VTEC blend, not by midpoint sample RPM.",
+    "Limiter crossfades over the final 50 RPM into limiter_8200 at 80% volume while retaining vtec_6200 at 100% volume at redline; tach bounce remains visual and does not pitch-modulate the samples."
+  ],
+  "engineLoop": "Assets/Sounds/Honda/normal_3500.wav",
+  "highRpmLoop": "Assets/Sounds/Honda/vtec_6200.wav",
+  "baseSampleRpm": {
+    "value": 3500
+  },
+  "minimumPlaybackRatio": {
+    "value": 0.24
+  },
+  "maximumPlaybackRatio": {
+    "value": 2.45
+  },
+  "engineSampleCrossfadeWidthRpm": {
+    "value": 1
+  },
+  "engineIdleBlendOutRpm": {
+    "value": 1650
+  },
+  "engineSampleVolume": {
+    "value": 1.0
+  },
+  "samples": [
+    {
+      "role": "idle",
+      "path": "Assets/Sounds/Honda/idle_0900.wav",
+      "rpm": 900,
+      "loopStart": 0.0,
+      "loopEnd": 1.0,
+      "volume": 0.1
+    },
+    {
+      "role": "normal",
+      "path": "Assets/Sounds/Honda/normal_3500.wav",
+      "rpm": 3500,
+      "loopStart": 0.0,
+      "loopEnd": 1.0,
+      "volume": 1.0
+    },
+    {
+      "role": "vtec",
+      "path": "Assets/Sounds/Honda/vtec_6200.wav",
+      "rpm": 6200,
+      "highRpm": true,
+      "loopStart": 0.0,
+      "loopEnd": 1.0,
+      "volume": 1.0
+    },
+    {
+      "role": "limiter",
+      "path": "Assets/Sounds/Honda/limiter_8200.wav",
+      "rpm": 8200,
+      "highRpm": true,
+      "limiter": true,
+      "loopStart": 0.0,
+      "loopEnd": 1.0,
+      "volume": 1.0
+    }
+  ]
+}

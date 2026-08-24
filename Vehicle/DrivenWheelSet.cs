@@ -1,4 +1,4 @@
-namespace RetroRacer.Vehicle;
+namespace RType.Vehicle;
 
 public readonly record struct DrivenWheelSet(bool FrontLeft, bool FrontRight, bool RearLeft, bool RearRight)
 {

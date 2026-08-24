@@ -1,3 +1,3 @@
-namespace RetroRacer.Vehicle;
+namespace RType.Vehicle;
 
 public readonly record struct TorqueCurvePoint(float Rpm, float TorqueNm);

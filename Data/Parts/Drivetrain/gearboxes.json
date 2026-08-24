@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "catalog": "gearboxes",
+  "slot": "gearbox",
+  "parts": [
+    {
+      "id": "stock_ek9_5_speed",
+      "displayName": "Stock EK9 5-Speed Manual",
+      "tier": "stock",
+      "compatibility": ["honda_b_series", "ff_transverse"],
+      "weightKg": 45.0,
+      "data": {
+        "type": "manual",
+        "reverseRatio": -3.153,
+        "forwardRatios": [3.230, 2.105, 1.458, 1.107, 0.848],
+        "efficiency": 0.94,
+        "manualShiftTimeSeconds": 0.28,
+        "automaticShiftTimeSeconds": 0.18,
+        "downshiftOverRevToleranceRpm": 220,
+        "downshiftMechanicalOverRevLimitRpm": 9800,
+        "downshiftOverRevBrakeMultiplier": 2.55,
+        "downshiftOverRevShockSeconds": 0.42
+      },
+      "durability": {
+        "rating": 0.86,
+        "heatTolerance": 0.82,
+        "fatigueResistance": 0.84,
+        "safeTorqueMultiplier": 1.00
+      }
+    },
+    {
+      "id": "street_close_ratio_5_speed",
+      "displayName": "Street Close-Ratio 5-Speed",
+      "tier": "street",
+      "compatibility": ["honda_b_series", "ff_transverse"],
+      "weightKg": 45.8,
+      "data": {
+        "forwardRatios": [3.307, 2.130, 1.517, 1.147, 0.921],
+        "efficiency": 0.945,
+        "manualShiftTimeSeconds": 0.25
+      },
+      "durability": {
+        "rating": 0.90,
+        "heatTolerance": 0.86,
+        "fatigueResistance": 0.88,
+        "safeTorqueMultiplier": 1.18
+      }
+    },
+    {
+      "id": "club_sport_close_ratio_5_speed",
+      "displayName": "Club Sport Close-Ratio 5-Speed",
+      "tier": "clubSport",
+      "compatibility": ["honda_b_series", "ff_transverse"],
+      "weightKg": 46.5,
+      "data": {
+        "forwardRatios": [3.462, 2.250, 1.650, 1.296, 1.033],
+        "efficiency": 0.955,
+        "manualShiftTimeSeconds": 0.21
+      },
+      "durability": {
+        "rating": 0.93,
+        "heatTolerance": 0.91,
+        "fatigueResistance": 0.92,
+        "safeTorqueMultiplier": 1.42
+      }
+    },
+    {
+      "id": "pro_racing_dogbox_6_speed",
+      "displayName": "Pro Racing 6-Speed Dogbox",
+      "tier": "proRacing",
+      "compatibility": ["honda_b_series", "ff_transverse"],
+      "weightKg": 43.2,
+      "data": {
+        "forwardRatios": [3.000, 2.313, 1.857, 1.550, 1.318, 1.130],
+        "efficiency": 0.965,
+        "manualShiftTimeSeconds": 0.13
+      },
+      "durability": {
+        "rating": 0.95,
+        "heatTolerance": 0.96,
+        "fatigueResistance": 0.94,
+        "safeTorqueMultiplier": 1.80
+      }
+    }
+  ]
+}

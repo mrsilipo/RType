@@ -1,0 +1,83 @@
+{
+  "catalog": "blockUpgrades",
+  "slot": "blockUpgrade",
+  "description": "Block construction upgrades. These modify strength, safe power, durability, and engine mass while keeping the chosen block family/geometry.",
+  "parts": [
+    {
+      "id": "block_upgrade_stock_cast",
+      "displayName": "Factory Cast Aluminum Block",
+      "tier": "stock",
+      "compatibility": ["honda_b_series", "honda_d_series", "honda_k_series"],
+      "weightDeltaKg": 0.0,
+      "durability": {
+        "rating": 0.84,
+        "heatTolerance": 0.82,
+        "fatigueResistance": 0.84,
+        "safePowerMultiplier": 1.0,
+        "repairCostMultiplier": 1.0
+      },
+      "data": {
+        "construction": "factory_cast_aluminum",
+        "sleeves": "factory",
+        "deckReinforcement": "factory"
+      }
+    },
+    {
+      "id": "block_upgrade_reinforced_cast",
+      "displayName": "Reinforced Cast Aluminum Block",
+      "tier": "street",
+      "compatibility": ["honda_b_series", "honda_d_series", "honda_k_series"],
+      "weightDeltaKg": 1.8,
+      "durability": {
+        "rating": 0.89,
+        "heatTolerance": 0.86,
+        "fatigueResistance": 0.88,
+        "safePowerMultiplier": 1.18,
+        "repairCostMultiplier": 1.22
+      },
+      "data": {
+        "construction": "reinforced_cast_aluminum",
+        "sleeves": "uprated",
+        "deckReinforcement": "moderate"
+      }
+    },
+    {
+      "id": "block_upgrade_sleeved_closed_deck",
+      "displayName": "Sleeved Closed-Deck Block",
+      "tier": "clubSport",
+      "compatibility": ["honda_b_series", "honda_d_series", "honda_k_series"],
+      "weightDeltaKg": 3.6,
+      "durability": {
+        "rating": 0.94,
+        "heatTolerance": 0.91,
+        "fatigueResistance": 0.93,
+        "safePowerMultiplier": 1.42,
+        "repairCostMultiplier": 1.55
+      },
+      "data": {
+        "construction": "sleeved_closed_deck_aluminum",
+        "sleeves": "ductile_iron",
+        "deckReinforcement": "heavy"
+      }
+    },
+    {
+      "id": "block_upgrade_billet_aluminum",
+      "displayName": "Billet Aluminum Racing Block",
+      "tier": "proRacing",
+      "compatibility": ["honda_b_series", "honda_d_series", "honda_k_series"],
+      "weightDeltaKg": 2.4,
+      "durability": {
+        "rating": 0.99,
+        "heatTolerance": 0.96,
+        "fatigueResistance": 0.99,
+        "safePowerMultiplier": 1.75,
+        "repairCostMultiplier": 2.25
+      },
+      "data": {
+        "construction": "billet_aluminum",
+        "sleeves": "replaceable_race_sleeves",
+        "deckReinforcement": "integrated_closed_deck"
+      }
+    }
+  ]
+}

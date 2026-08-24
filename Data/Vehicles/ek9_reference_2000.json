@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "id": "ek9_reference_2000",
   "role": "internal_reference_calibration",
+  "defaultBuildPath": "Data/VehicleBuilds/ek9_showroom_stock.json",
   "identity": {
     "gameDisplayName": "Reference FF 1.6 Hatch",
     "internalReference": {
@@ -164,16 +165,16 @@
           "value": 8250
         },
         "fuelCutSeconds": {
-          "value": 0.075
+          "value": 0.34
         },
         "restoreSeconds": {
-          "value": 0.045
+          "value": 0.41
         },
         "cutTorqueMultiplier": {
           "value": 0.06
         },
         "bounceRpm": {
-          "value": 130
+          "value": 1000
         }
       },
       "peakPower": {
@@ -198,33 +199,9 @@
       "rotationalInertiaKgM2": {
         "value": 0.18
       },
-      "engineSimulator": {
-        "drivesPhysics": true,
-        "fullDriveline": true,
-        "simulationFrequencyHz": {
-          "value": 1000
-        },
-        "fluidSimulationSteps": {
-          "value": 2
-        },
-        "torqueScale": {
-          "value": 1
-        },
-        "torqueBlend": {
-          "value": 1
-        },
-        "engineBrakeScale": {
-          "value": 1.85
-        },
-        "engineBrakeBlend": {
-          "value": 1
-        },
-        "maxTorqueNm": {
-          "value": 220
-        },
-        "maxEngineBrakeTorqueNm": {
-          "value": 140
-        }
+      "rTypeEngine": {
+        "buildPath": "Data/VehicleBuilds/ek9_showroom_stock.json",
+        "drivesVehicle": false
       },
       "torqueCurveNm": [
         {
@@ -804,29 +781,9 @@
     }
   },
   "audio": {
-    "engineLoop": "",
-    "highRpmLoop": "",
-    "engineSamples": [],
-    "baseSampleRpm": {
-      "value": 3500
-    },
-    "minimumPlaybackRatio": {
-      "value": 0.32
-    },
-    "maximumPlaybackRatio": {
-      "value": 3.3
-    },
-    "engineSampleCrossfadeWidthRpm": {
-      "value": 24
-    },
-    "engineIdleBlendOutRpm": {
-      "value": 1650
-    },
-    "engineSampleVolume": {
-      "value": 0
-    },
+    "engineAudioProfilePath": "Data/Audio/EngineAudioProfiles/ek9_b16b_5zigen_reference.json",
     "engineVolume": {
-      "value": 0.64
+      "value": 1.0
     },
     "idleVolume": {
       "value": 0
@@ -844,10 +801,10 @@
       "value": 0
     },
     "highRpmBlendInRpm": {
-      "value": 5800
+      "value": 5550
     },
     "highRpmBlendWidthRpm": {
-      "value": 30
+      "value": 250
     },
     "highRpmMinimumThrottle": {
       "value": 0.3
@@ -858,11 +815,18 @@
     "highRpmVolumeBoost": {
       "value": 0
     },
-    "engineSimulator": {
-      "enabled": true,
-      "profilePath": "Data/EngineProfiles/honda_b16b_ek9_engine_sim.json",
+    "rTypeEngine": {
+      "enabled": false,
+      "buildPath": "Data/VehicleBuilds/ek9_showroom_stock.json",
       "volume": {
         "value": 0.72
+      }
+    },
+    "engineSimulator": {
+      "enabled": false,
+      "profilePath": "",
+      "volume": {
+        "value": 0
       }
     },
     "turbo": {

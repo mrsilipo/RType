@@ -1,0 +1,11 @@
+{
+  "catalog": "intakes",
+  "slot": "intake",
+  "description": "Intake systems affect plenum volume, runner cross section, runner flow, and manifold pressure.",
+  "parts": [
+    { "id": "intake_stock", "displayName": "Stock Intake", "tier": "stock", "compatibility": ["honda_b_series"], "modifies": { "intake": { "plenumVolumeLiters": 1.325, "plenumCrossSectionSquareCentimeters": 20.0, "runnerLengthInches": 7.0, "runnerFlowConstant": 0.007962658, "runnerVelocityDecay": 0.5, "minManifoldPressureAtmospheres": 0.34, "maxManifoldPressureAtmospheres": 0.98, "minValveThrottleFlow": 0.25, "inputFlowConstant": 0.025480505, "idleFlowConstant": 0.0, "idleThrottlePlatePosition": 0.9989 } } },
+    { "id": "intake_street", "displayName": "Street Intake", "tier": "street", "compatibility": ["honda_b_series"], "modifies": { "intake": { "plenumVolumeLiters": 1.45, "plenumCrossSectionSquareCentimeters": 22.0, "runnerLengthInches": 7.8, "runnerFlowConstant": 0.009555189, "runnerVelocityDecay": 0.52, "minManifoldPressureAtmospheres": 0.33, "maxManifoldPressureAtmospheres": 1.0, "minValveThrottleFlow": 0.27, "inputFlowConstant": 0.028665568, "idleFlowConstant": 0.0, "idleThrottlePlatePosition": 0.9989 } } },
+    { "id": "intake_club_sport", "displayName": "Club Sport Intake", "tier": "clubSport", "compatibility": ["honda_b_series"], "modifies": { "intake": { "plenumVolumeLiters": 1.65, "plenumCrossSectionSquareCentimeters": 25.0, "runnerLengthInches": 6.5, "runnerFlowConstant": 0.011147721, "runnerVelocityDecay": 0.48, "minManifoldPressureAtmospheres": 0.32, "maxManifoldPressureAtmospheres": 1.02, "minValveThrottleFlow": 0.30, "inputFlowConstant": 0.031850631, "idleFlowConstant": 0.0, "idleThrottlePlatePosition": 0.9989 } } },
+    { "id": "intake_pro_racing", "displayName": "Pro Racing Intake", "tier": "proRacing", "compatibility": ["honda_b_series"], "modifies": { "intake": { "plenumVolumeLiters": 1.9, "plenumCrossSectionSquareCentimeters": 30.0, "runnerLengthInches": 5.2, "runnerFlowConstant": 0.012740253, "runnerVelocityDecay": 0.42, "minManifoldPressureAtmospheres": 0.31, "maxManifoldPressureAtmospheres": 1.05, "minValveThrottleFlow": 0.34, "inputFlowConstant": 0.038220758, "idleFlowConstant": 0.0, "idleThrottlePlatePosition": 0.9989 } } }
+  ]
+}

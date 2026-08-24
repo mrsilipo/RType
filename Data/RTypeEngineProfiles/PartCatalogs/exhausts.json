@@ -1,0 +1,11 @@
+{
+  "catalog": "exhausts",
+  "slot": "exhaust",
+  "description": "Exhaust systems affect outlet flow, volume, damping, backpressure, and acoustic color.",
+  "parts": [
+    { "id": "exhaust_stock", "displayName": "Stock Exhaust", "tier": "stock", "compatibility": ["honda_b_series"], "modifies": { "exhaust": { "volumeLiters": 100.0, "outletFlowConstant": 0.031850631, "runnerVelocityDecay": 1.0, "collectorVelocityDecay": 1.0, "resonance": 0.42 }, "audio": { "impulseResponseVolume": 0.01, "impulseResponseTaps": 512 } } },
+    { "id": "exhaust_street", "displayName": "Street Exhaust", "tier": "street", "compatibility": ["honda_b_series"], "modifies": { "exhaust": { "volumeLiters": 86.0, "outletFlowConstant": 0.038220758, "runnerVelocityDecay": 0.9, "collectorVelocityDecay": 0.92, "resonance": 0.48 }, "audio": { "impulseResponseVolume": 0.012, "impulseResponseTaps": 512 } } },
+    { "id": "exhaust_club_sport", "displayName": "Club Sport Exhaust", "tier": "clubSport", "compatibility": ["honda_b_series"], "modifies": { "exhaust": { "volumeLiters": 72.0, "outletFlowConstant": 0.044590884, "runnerVelocityDecay": 0.82, "collectorVelocityDecay": 0.86, "resonance": 0.56 }, "audio": { "impulseResponseVolume": 0.014, "impulseResponseTaps": 768 } } },
+    { "id": "exhaust_pro_racing", "displayName": "Pro Racing Exhaust", "tier": "proRacing", "compatibility": ["honda_b_series"], "modifies": { "exhaust": { "volumeLiters": 54.0, "outletFlowConstant": 0.057331137, "runnerVelocityDecay": 0.75, "collectorVelocityDecay": 0.8, "resonance": 0.68 }, "audio": { "impulseResponseVolume": 0.016, "impulseResponseTaps": 1024 } } }
+  ]
+}

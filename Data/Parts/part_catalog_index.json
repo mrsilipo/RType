@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "catalogs": [
+    { "slot": "bodyShell", "path": "Data/Parts/Chassis/body_shells.json" },
+    { "slot": "gearbox", "path": "Data/Parts/Drivetrain/gearboxes.json" },
+    { "slot": "finalDrive", "path": "Data/Parts/Drivetrain/final_drives.json" },
+    { "slot": "differential", "path": "Data/Parts/Drivetrain/differentials.json" },
+    { "slot": "suspension", "path": "Data/Parts/Suspension/suspension_sets.json" },
+    { "slot": "alignment", "path": "Data/Parts/Suspension/alignments.json" },
+    { "slot": "brakes", "path": "Data/Parts/Brakes/brakes.json" },
+    { "slot": "brakeSystem", "path": "Data/Parts/Brakes/brake_systems.json" },
+    { "slot": "wheels", "path": "Data/Parts/Wheels/wheels.json" },
+    { "slot": "tyres", "path": "Data/Parts/Tyres/tyres.json" },
+    { "slot": "tyreModel", "path": "Data/Parts/Tyres/tyre_models.json" },
+    { "slot": "aeroPackage", "path": "Data/Parts/Aero/aero_packages.json" }
+  ]
+}

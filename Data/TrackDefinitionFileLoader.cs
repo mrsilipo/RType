@@ -1,8 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using RetroRacer.World;
+using RType.World;
 
-namespace RetroRacer.Data;
+namespace RType.Data;
 
 public static class TrackDefinitionFileLoader
 {

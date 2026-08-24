@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "catalogs": [
+    { "slot": "steeringSetup", "path": "Data/Tunes/Chassis/steering_setups.json" },
+    { "slot": "handlingSetup", "path": "Data/Tunes/Chassis/handling_setups.json" }
+  ]
+}

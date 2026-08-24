@@ -4,6 +4,16 @@ Date: 2026-08-20
 
 Scope: compare the in-game EK9 engine audio path with the bundled Engine Sim 0.1.14a Honda VTEC MR file and the public Engine Sim core implementation.
 
+## 2026-08-21 Supersession Note
+
+The previous recommendation to add a native C++ Engine Sim bridge is superseded. The current agreed direction is documented in `Docs/sim_engine_in_rtype_living_notes.md`: Engine Sim is a source reference only, and RType should reproduce the relevant engine-simulation methods in owned C# code.
+
+## 2026-08-25 Runtime Supersession Note
+
+The managed real-time Sim Engine/RType procedural audio experiment is no longer active in the game build. Live race audio and the Engine Room now use the sample-based race engine recipe documented in `Docs/sim_engine_in_rtype_living_notes.md`.
+
+The old procedural files and probes remain on disk for reference/history, but they are excluded from `RType.csproj` and their command-line entry points have been removed from `Program.cs`.
+
 ## 2026-08-21 Integration Pass
 
 The live Engine Sim audio path now receives one explicit `EngineAudioFrame` per game update. That frame is built from the same vehicle state used by physics and carries RPM, redline, throttle, load, VTEC blend/kick, limiter, overrun, shock, clutch slip, engine braking, speed, gear, and camera context.
@@ -12,7 +22,7 @@ The synth target now also includes continuous layer drives for intake, throttle 
 
 ## 2026-08-21 Engine Profile Pipeline
 
-Engine Sim audio data is no longer embedded directly in the EK9 vehicle definition. `Data/Vehicles/ek9_reference_2000.json` now points to `Data/EngineProfiles/honda_b18c5_vtec_engine_sim.json`, and the loader now has two clear data paths:
+Historical note: this older pass moved the shared Engine Sim approximation data out of the EK9 vehicle definition. Those old profile files now live under `Data/Legacy/EngineProfiles/`, and live gameplay uses the RType-owned path instead.
 
 1. MR-owned engine structure such as cylinder count, firing order, cam geometry, timing, crank, clutch, and transmission data comes from the active MR script first, then falls back to vehicle/profile/default values if needed.
 2. Runtime knobs such as simulation rate, fluid-step budget, DSP gain, overrun/shock/limiter gains, VTEC intensity, and mix volume merge as vehicle-specific override, shared engine profile default, then MR-derived value or code fallback.
@@ -49,7 +59,7 @@ A live Debug run showed the engine audio was not using the Honda profile at all:
 - `fluid steps 8`
 - repeated `engine-sim-buffer-low` events with pending buffers at `0` or `1`
 
-That was the bad configuration causing the very choppy engine audio. The current Debug build now copies `Data/EngineProfiles/honda_b18c5_vtec_engine_sim.json` and confirms the runtime path uses the Honda MR, `512` impulse-response taps, `pressure scale 1`, and `fluid steps 1`.
+That was the bad configuration causing the very choppy engine audio. The old comparison profile now lives at `Data/Legacy/EngineProfiles/honda_b18c5_vtec_engine_sim.json`.
 
 Guardrails added:
 
@@ -193,7 +203,7 @@ The remaining issue was the live stream policy. It discarded already-generated b
 
 Validation after this change:
 
-- `dotnet build RetroRacer.csproj`: passed
+- `dotnet build RType.csproj`: passed
 - `--engine-sim-stream-stress`: `0` low-buffer events, `0` emergency recovery events, worst fill `9.66 ms`
 - `--audio-diagnostics-smoke`: no low-buffer or emergency recovery events, worst fill `7.77 ms`
 - `--performance-probe`: live `20000 Hz / 1` fluid-step synth measured about `2.04x` realtime; profile `20000 Hz / 2` remains about `1.12x` realtime offline
@@ -212,7 +222,7 @@ The stream now targets `2` steady pending buffers, keeps startup at `3`, reduces
 
 Validation after this change:
 
-- `dotnet build RetroRacer.csproj`: passed
+- `dotnet build RType.csproj`: passed
 - `--engine-sim-stream-stress`: `0` low-buffer events, `0` emergency recovery events, worst fill `7.66 ms`, worst estimated audible age `48.30 ms`
 - `--audio-diagnostics-smoke`: no low-buffer or emergency recovery events, worst fill `11.57 ms`, worst estimated audible age `50.99 ms`
 
@@ -227,7 +237,7 @@ Changed files:
 - `Vehicle/SimpleVehicleSimulator.cs`
 - `Vehicle/VehicleAudioParameters.cs`
 - `Data/VehicleDefinitionLoader.cs`
-- `Data/EngineProfiles/honda_b18c5_vtec_engine_sim.json`
+- `Data/Legacy/EngineProfiles/honda_b18c5_vtec_engine_sim.json`
 - `Data/Vehicles/ek9_reference_2000.json`
 - `Core/AudioProbe.cs`
 - `Core/EngineSimProfileProbe.cs`
@@ -298,7 +308,7 @@ The game is already using the important Honda MR data:
 1. Drive-test the new stream and confirm whether `engine-sim-buffer-low` stops appearing during real gameplay.
 2. Use the timing telemetry during real gameplay to confirm whether the remaining perceived lag matches the reported estimated audible age.
 3. Continue optimizing the synth toward live `2+` fluid substeps at the Honda MR `20000` Hz rate; `2` is useful offline but not stable enough during real gameplay yet.
-4. Add a native C++ Engine Sim bridge once CMake/build tooling is available, then feed game RPM/load from the real `PistonEngineSimulator`/constraint system instead of the managed approximation.
+4. Continue porting the relevant Engine Sim methods into RType-owned C# code. Do not add a native C++ bridge or sidecar runtime.
 5. Drive-test the hybrid IR tail for tone and CPU stability during actual gameplay; fall back to `512` taps or a coarser tail only if live gameplay reports buffer pressure.
 6. Revisit the idle jitter/noise scaling after stream underruns are gone.
 7. Continue the physics integration by replacing remaining launch/clutch heuristics with data from the coupled crank, clutch, and wheel-speed solver.

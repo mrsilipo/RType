@@ -1,10 +1,10 @@
-using RetroRacer.Audio;
-using RetroRacer.Camera;
-using RetroRacer.Data;
-using RetroRacer.Vehicle;
+using RType.Audio;
+using RType.Camera;
+using RType.Data;
+using RType.Vehicle;
 using Microsoft.Xna.Framework;
 
-namespace RetroRacer.Core;
+namespace RType.Core;
 
 public static class AudioDiagnosticsSmoke
 {
