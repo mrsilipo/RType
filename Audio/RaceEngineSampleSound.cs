@@ -7,10 +7,12 @@ namespace RType.Audio;
 internal sealed class RaceEngineSampleSound : IDisposable
 {
     private const float SilentLoopVolume = 0.0001f;
+    private const float HighestReferenceRedlineRpm = 12000f;
+    private const float SlowestLimiterBounceSeconds = 1.00f;
+    private const float FastestLimiterBounceSeconds = 0.25f;
 
     private readonly VehicleAudioParameters _parameters;
     private readonly SampleLoop[] _loops;
-    private readonly SampleLoop? _limiterLoop;
     private float _smoothedRpm;
     private float _previousVtecBlend;
     private float _vtecSurge;
@@ -47,7 +49,8 @@ internal sealed class RaceEngineSampleSound : IDisposable
                 new LoopingPitchedSound(source, $"race engine {Path.GetFileName(sample.Path)}", preserveFullLoop));
             if (sample.Limiter)
             {
-                _limiterLoop = loop;
+                AudioDiagnostics.Log("race-engine-limiter-sample-ignored", $"{sample.Path} at {sample.Rpm:0} rpm");
+                loop.Sound.Dispose();
             }
             else
             {
@@ -62,14 +65,14 @@ internal sealed class RaceEngineSampleSound : IDisposable
         }
 
         _loops = [.. loops.OrderBy(loop => loop.Sample.Rpm)];
-        if (_loops.Length == 0 && _limiterLoop is null)
+        if (_loops.Length == 0)
         {
             throw new InvalidOperationException("Race engine audio has no valid samples.");
         }
 
         AudioDiagnostics.Log(
             "race-engine-audio",
-            $"profile {_parameters.EngineAudioProfileId}, sample loops {_loops.Length}, limiter {(_limiterLoop is null ? "none" : Path.GetFileName(_limiterLoop.Sample.Path))}, volume {_parameters.EngineSampleVolume:0.00}");
+            $"profile {_parameters.EngineAudioProfileId}, sample loops {_loops.Length}, limiter vtec/high-rpm bounce, volume {_parameters.EngineSampleVolume:0.00}");
     }
 
     public RaceEngineAudioState State { get; private set; }
@@ -88,22 +91,14 @@ internal sealed class RaceEngineSampleSound : IDisposable
         bool wasLimiterAudioActive = IsLimiterAudioActive;
         UpdateLimiterBouncePhase(frame);
         bool limiterJustReleased = wasLimiterAudioActive && !IsLimiterAudioActive;
-        float limiterBlend = _limiterLoop is not null ? _limiterAudioBlend : 0f;
+        float limiterBlend = _limiterAudioBlend;
         float baseVolume = CalculateBaseVolume(frame, rpm);
-        float limiterVolume = baseVolume * limiterBlend * 0.80f;
 
-        float normalScale = _limiterLoop is not null
-            ? 1f
-            : 1f - MathHelper.Clamp(limiterVolume / MathF.Max(0.001f, baseVolume), 0f, 0.72f);
+        float normalScale = 1f;
         UpdateVtecSurge(frame);
         normalScale *= 1f + _vtecSurge * 0.14f;
-        if (limiterJustReleased)
-        {
-            StopLimiterLoop();
-        }
 
         UpdateSampleLoops(frame, rpm, baseVolume * normalScale, limiterJustReleased, limiterBlend);
-        UpdateLimiterLoop(frame, rpm, limiterVolume);
 
         State = default(RaceEngineAudioState) with
         {
@@ -129,7 +124,6 @@ internal sealed class RaceEngineSampleSound : IDisposable
             loop.Sound.Stop();
         }
 
-        _limiterLoop?.Sound.Stop();
         _smoothedRpm = 0f;
         _limiterBouncePhase = 0f;
         _limiterAudioHoldSeconds = 0f;
@@ -145,8 +139,6 @@ internal sealed class RaceEngineSampleSound : IDisposable
         {
             loop.Sound.Dispose();
         }
-
-        _limiterLoop?.Sound.Dispose();
     }
 
     private void TryAddFallbackLoop(List<SampleLoop> loops, string path, float rpm, bool highRpm)
@@ -165,20 +157,6 @@ internal sealed class RaceEngineSampleSound : IDisposable
         if (_loops.Length == 0)
         {
             return;
-        }
-
-        if (IsLimiterAudioDominant && _limiterLoop is not null)
-        {
-            foreach (SampleLoop loop in _loops)
-            {
-                if (IsRole(loop.Sample.Role, "vtec"))
-                {
-                    continue;
-                }
-
-                loop.SmoothedVolume = 0f;
-                loop.Sound.Stop();
-            }
         }
 
         Span<float> weights = stackalloc float[_loops.Length];
@@ -224,36 +202,30 @@ internal sealed class RaceEngineSampleSound : IDisposable
             totalWeight = 1f;
         }
 
+        int limiterLoopIndex = IsLimiterAudioActive ? ResolveLimiterBounceLoopIndex() : -1;
         for (int i = 0; i < _loops.Length; i++)
         {
             SampleLoop loop = _loops[i];
             float normalized = weights[i] / totalWeight;
-            if (limiterBlend > 0f)
+            if (limiterLoopIndex >= 0)
             {
-                normalized = IsRole(loop.Sample.Role, "vtec")
-                    ? MathHelper.Lerp(normalized, 1f, limiterBlend)
-                    : normalized * (1f - limiterBlend);
+                normalized = i == limiterLoopIndex ? 1f : 0f;
             }
 
-            float idleAmount = CalculateIdleAmount(frame, rpm);
-            bool rawLimiterRedline = IsLimiterAudioActive && (IsRole(loop.Sample.Role, "redline") || IsRole(loop.Sample.Role, "limiter"));
+            float effectiveRpm = i == limiterLoopIndex ? CalculateLimiterBounceRpm(frame.RedlineRpm) : rpm;
             float ratio = MathHelper.Clamp(
-                rpm / MathF.Max(1f, loop.Sample.Rpm),
+                effectiveRpm / MathF.Max(1f, loop.Sample.Rpm),
                 _parameters.MinimumPlaybackRatio,
                 _parameters.MaximumPlaybackRatio);
             float vtecBlend = MathHelper.Clamp(frame.VtecBlend, 0f, 1f);
             float sampleVtecEffect = loop.Sample.HighRpm ? vtecBlend : 0f;
-            float acousticLift = rawLimiterRedline
-                ? 1f
-                : 1f + SmoothStep(0.18f, 1f, sampleVtecEffect) * 0.010f + (loop.Sample.HighRpm ? _vtecSurge * 0.006f : 0f);
-            float limiterWobble = 1f;
-            ratio = MathHelper.Clamp(ratio * acousticLift * limiterWobble, _parameters.MinimumPlaybackRatio, _parameters.MaximumPlaybackRatio);
-            float resonance = rawLimiterRedline ? 0f : loop.Sample.HighRpm ? CalculateVtecResonance(frame, _vtecSurge) : 0f;
-            float saturation = rawLimiterRedline ? 0f : loop.Sample.HighRpm ? CalculateVtecSaturation(frame, _vtecSurge) : 0f;
-            float hardCut = rawLimiterRedline ? 0f : CalculateHardCut(frame);
+            float acousticLift = 1f + SmoothStep(0.18f, 1f, sampleVtecEffect) * 0.010f + (loop.Sample.HighRpm ? _vtecSurge * 0.006f : 0f);
+            ratio = MathHelper.Clamp(ratio * acousticLift, _parameters.MinimumPlaybackRatio, _parameters.MaximumPlaybackRatio);
+            float resonance = loop.Sample.HighRpm ? CalculateVtecResonance(frame, _vtecSurge) : 0f;
+            float saturation = loop.Sample.HighRpm ? CalculateVtecSaturation(frame, _vtecSurge) : 0f;
+            float hardCut = CalculateHardCut(frame);
             float sampleGain = MathHelper.Clamp(loop.Sample.Volume, 0f, 2f);
-            float limiterVolume = 1f;
-            float targetVolume = baseVolume * normalized * sampleGain * limiterVolume;
+            float targetVolume = baseVolume * normalized * sampleGain;
             loop.SmoothedVolume = snapVolume || IsSingleContinuousSample() || (vtecSampleSet && IsLimiterAudioActive)
                 ? targetVolume
                 : SmoothVolume(loop.SmoothedVolume, targetVolume, targetVolume > loop.SmoothedVolume ? 22f : 16f);
@@ -308,91 +280,13 @@ internal sealed class RaceEngineSampleSound : IDisposable
         _previousVtecBlend = vtecBlend;
     }
 
-    private void UpdateLimiterLoop(EngineAudioFrame frame, float rpm, float volume)
-    {
-        if (_limiterLoop is null)
-        {
-            return;
-        }
-
-        if (!IsLimiterAudioActive || volume <= 0.0001f)
-        {
-            StopLimiterLoop();
-            return;
-        }
-
-        float ratio = IsLimiterAudioActive
-            ? CalculateLimiterPlaybackRatio()
-            : MathHelper.Clamp(
-                rpm / MathF.Max(1f, _limiterLoop.Sample.Rpm),
-                _parameters.MinimumPlaybackRatio,
-                _parameters.MaximumPlaybackRatio);
-        float targetVolume = volume * MathHelper.Clamp(_limiterLoop.Sample.Volume, 0f, 2f);
-        _limiterLoop.SmoothedVolume = targetVolume;
-        _limiterLoop.Sound.Update(ratio, MathF.Max(SilentLoopVolume, _limiterLoop.SmoothedVolume));
-    }
-
-    private float CalculateLimiterPlaybackRatio()
-    {
-        if (_limiterLoop is null)
-        {
-            return 1f;
-        }
-
-        float targetRpm = 8200f;
-        return MathHelper.Clamp(
-            targetRpm / MathF.Max(1f, _limiterLoop.Sample.Rpm),
-            _parameters.MinimumPlaybackRatio,
-            _parameters.MaximumPlaybackRatio);
-    }
-
-    private void StopLimiterLoop()
-    {
-        if (_limiterLoop is null)
-        {
-            return;
-        }
-
-        _limiterLoop.SmoothedVolume = 0f;
-        _limiterLoop.Sound.Stop();
-    }
-
-    private float GetLimiterAudioRpm(float fallbackRedlineRpm)
-    {
-        if (_limiterLoop is not null)
-        {
-            return _limiterLoop.Sample.Rpm;
-        }
-
-        for (int i = _loops.Length - 1; i >= 0; i--)
-        {
-            SampleLoop loop = _loops[i];
-            if (loop.Sample.HighRpm && IsRole(loop.Sample.Role, "redline"))
-            {
-                return loop.Sample.Rpm;
-            }
-        }
-
-        for (int i = _loops.Length - 1; i >= 0; i--)
-        {
-            SampleLoop loop = _loops[i];
-            if (loop.Sample.HighRpm)
-            {
-                return loop.Sample.Rpm;
-            }
-        }
-
-        return fallbackRedlineRpm;
-    }
-
     private void UpdateLimiterBouncePhase(EngineAudioFrame frame)
     {
-        const float bounceSeconds = 0.25f;
-        const float limiterCrossfadeRpm = 50f;
         float dt = MathHelper.Clamp(frame.DeltaSeconds, 0f, 0.1f);
-        float limiterRpm = frame.RedlineRpm;
-        _limiterAudioBlend = SmoothStep(limiterRpm - limiterCrossfadeRpm, limiterRpm, frame.Rpm);
-        bool limiterSignal = _limiterAudioBlend > 0.001f;
+        float bounceSeconds = CalculateLimiterBounceSeconds(frame.RedlineRpm);
+        bool limiterSignal = frame.RedlineRpm > 0f &&
+                             (frame.Rpm >= frame.RedlineRpm - 1f || frame.Limiter > 0.5f);
+        _limiterAudioBlend = limiterSignal ? 1f : 0f;
 
         if (!limiterSignal)
         {
@@ -404,6 +298,41 @@ internal sealed class RaceEngineSampleSound : IDisposable
         _limiterAudioHoldSeconds = bounceSeconds;
         _limiterBouncePhase += dt / bounceSeconds;
         _limiterBouncePhase -= MathF.Floor(_limiterBouncePhase);
+    }
+
+    private float CalculateLimiterBounceRpm(float redlineRpm)
+    {
+        float redline = MathF.Max(450f, redlineRpm);
+        float depth = redline * 0.08f;
+        float wave = 0.5f - 0.5f * MathF.Cos(_limiterBouncePhase * MathF.Tau);
+        return MathHelper.Clamp(redline - depth * wave, 450f, redline);
+    }
+
+    private static float CalculateLimiterBounceSeconds(float redlineRpm)
+    {
+        float t = MathHelper.Clamp((redlineRpm - 4500f) / (HighestReferenceRedlineRpm - 4500f), 0f, 1f);
+        return MathHelper.Lerp(SlowestLimiterBounceSeconds, FastestLimiterBounceSeconds, t);
+    }
+
+    private int ResolveLimiterBounceLoopIndex()
+    {
+        for (int i = _loops.Length - 1; i >= 0; i--)
+        {
+            if (IsRole(_loops[i].Sample.Role, "vtec"))
+            {
+                return i;
+            }
+        }
+
+        for (int i = _loops.Length - 1; i >= 0; i--)
+        {
+            if (_loops[i].Sample.HighRpm)
+            {
+                return i;
+            }
+        }
+
+        return _loops.Length - 1;
     }
 
     private void CalculateAdjacentSampleWeights(float rpm, Span<float> weights)
@@ -519,20 +448,8 @@ internal sealed class RaceEngineSampleSound : IDisposable
             return;
         }
 
-        if (highCount == 1)
-        {
-            weights[highIndices[0]] = vtec;
-            return;
-        }
-
-        int redlineIndex = highIndices[highCount - 1];
-        int vtecIndex = highIndices[0];
-        float redlineSampleRpm = _loops[redlineIndex].Sample.Rpm;
-        float redlineBlend = SmoothStep(redlineSampleRpm - 350f, redlineSampleRpm + 120f, frame.Rpm);
-        weights[vtecIndex] = vtec * (1f - redlineBlend);
-        weights[redlineIndex] = vtec * redlineBlend;
-
-        for (int i = 1; i < highCount - 1; i++)
+        weights[highIndices[0]] = vtec;
+        for (int i = 1; i < highCount; i++)
         {
             weights[highIndices[i]] = 0f;
         }
@@ -622,12 +539,10 @@ internal sealed class RaceEngineSampleSound : IDisposable
 
     private bool IsSingleContinuousSample()
     {
-        return _loops.Length == 1 && _limiterLoop is null;
+        return _loops.Length == 1;
     }
 
     private bool IsLimiterAudioActive => _limiterAudioHoldSeconds > 0f;
-
-    private bool IsLimiterAudioDominant => _limiterAudioBlend >= 0.999f;
 
     private bool IsVtecSampleSet()
     {

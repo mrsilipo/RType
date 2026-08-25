@@ -29,6 +29,7 @@
     <None Remove="Assets\Sounds\engine-sim-v0.1.14a\**\*" />
     <None Remove="Assets\Sounds\EngineSim\**\*" />
     <None Remove="Assets\Sounds\Honda\HondaB18c5_Uncut.wav" />
+    <None Remove="Assets\Sounds\Honda\limiter_8200.wav" />
     <None Remove="Assets\Sounds\Nissan\**\*" />
     <None Remove="Assets\Music\Racing\**\*" />
     <None Remove="ReferenceSource\**\*" />

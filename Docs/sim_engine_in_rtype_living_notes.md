@@ -12,7 +12,7 @@ The active game direction is now a race-ready sample engine:
 
 - use real or offline-generated engine loops
 - pitch samples from their recorded source RPM
-- use one dominant normal sample, one VTEC sample, a quiet additive idle bed, and a dedicated limiter sample
+- use one dominant normal sample, one VTEC sample, and a quiet additive idle bed
 - keep the sound driven by race state: RPM, redline, throttle, load, VTEC blend, limiter state, gear, overrun, and shift shock
 - use the same sample engine in both the race track and Engine Room
 - keep Engine Sim/Andre source only as reference/offline sample-generation guidance, not as runtime code
@@ -28,14 +28,13 @@ Samples:
 - `Assets/Sounds/Honda/idle_0900.wav`
 - `Assets/Sounds/Honda/normal_3500.wav`
 - `Assets/Sounds/Honda/vtec_6200.wav`
-- `Assets/Sounds/Honda/limiter_8200.wav`
 
 Current mix:
 
 - `idle_0900.wav`: additive bed across the rev range at 10%, not doubled at idle, not used under limiter
 - `normal_3500.wav`: main non-VTEC engine loop, 1:1 pitch at 3500 RPM
 - `vtec_6200.wav`: main VTEC loop above the VTEC blend range
-- `limiter_8200.wav`: dedicated limiter loop only at redline, mixed over VTEC at 80%
+- limiter: no dedicated limiter loop; actual redline forces the VTEC/high-RPM sample and bounces pitch/needle by 8% of redline
 - limiter engages from actual RPM/redline, not visual tach bounce
 - limiter audio crossfades over the final 50 RPM before redline
 - visual tach/readout bounce is presentation only

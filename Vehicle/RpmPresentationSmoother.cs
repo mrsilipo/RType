@@ -169,7 +169,7 @@ public static class RpmPresentationSmoother
         }
 
         float pulse = SmoothStep(0.02f, 0.90f, bounce);
-        float visualDrop = MathHelper.Lerp(220f, 1000f, pulse);
+        float visualDrop = MathF.Max(80f, state.RedlineRpm * 0.08f) * pulse;
         float bouncedRpm = state.RedlineRpm - visualDrop;
         return MathF.Min(projectedRpm, MathF.Max(300f, bouncedRpm));
     }

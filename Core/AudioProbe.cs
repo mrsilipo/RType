@@ -26,7 +26,7 @@ public static class AudioProbe
     private static void ProbeVehicle(string vehiclePath)
     {
         VehicleSimulationParameters parameters = VehicleDefinitionLoader.LoadSimulationParameters(vehiclePath);
-        Console.WriteLine($"{parameters.DisplayName} active engine audio: race sample recipe, redline {parameters.RedlineRpm:0} rpm, VTEC {parameters.VtecActivationRpm:0} rpm, limiter sample crossfade final 50 rpm");
+        Console.WriteLine($"{parameters.DisplayName} active engine audio: race sample recipe, redline {parameters.RedlineRpm:0} rpm, VTEC {parameters.VtecActivationRpm:0} rpm, limiter uses VTEC/high-RPM bounce with no dedicated limiter sample");
         ProbeRaceEngineAudio(parameters);
     }
 

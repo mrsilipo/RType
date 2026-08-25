@@ -35,6 +35,7 @@ public static class VehicleDefinitionLoader
         float rearLiftCoefficient = ReadValueSingle(root, 0.03f, "aero", "rearLiftCoefficient");
         TyreAxleParameters frontTyres = ReadTyres(root, "front");
         TyreAxleParameters rearTyres = ReadTyres(root, "rear");
+        float redlineRpm = ReadValueSingle(root, 6800f, "powertrain", "engine", "revLimiterRpm");
 
         return new VehicleSimulationParameters
         {
@@ -54,12 +55,12 @@ public static class VehicleDefinitionLoader
             DrivetrainEfficiency = ReadValueSingle(root, 0.82f, "simulation", "currentPrototype", "drivetrainEfficiency"),
             ClosedThrottleEngineBrakeTorqueNm = ReadValueSingle(root, 32f, "simulation", "currentPrototype", "closedThrottleEngineBrakeTorqueNm"),
             IdleRpm = ReadValueSingle(root, 900f, "powertrain", "engine", "idleRpm"),
-            RedlineRpm = ReadValueSingle(root, 6800f, "powertrain", "engine", "revLimiterRpm"),
+            RedlineRpm = redlineRpm,
             RevLimiterResumeRpm = ReadValueSingle(root, 6620f, "powertrain", "engine", "revLimiter", "resumeRpm"),
             RevLimiterFuelCutSeconds = ReadValueSingle(root, 0.08f, "powertrain", "engine", "revLimiter", "fuelCutSeconds"),
             RevLimiterRestoreSeconds = ReadValueSingle(root, 0.05f, "powertrain", "engine", "revLimiter", "restoreSeconds"),
             RevLimiterCutTorqueMultiplier = ReadValueSingle(root, 0.08f, "powertrain", "engine", "revLimiter", "cutTorqueMultiplier"),
-            RevLimiterBounceRpm = ReadValueSingle(root, 140f, "powertrain", "engine", "revLimiter", "bounceRpm"),
+            RevLimiterBounceRpm = CalculateRevLimiterBounceRpm(redlineRpm),
             EngineRotationalInertiaKgM2 = ReadValueSingle(root, 0.22f, "powertrain", "engine", "rotationalInertiaKgM2"),
             VtecEnabled = ReadBoolean(root, false, "powertrain", "engine", "vtec", "enabled"),
             VtecActivationRpm = ReadValueSingle(root, 5800f, "powertrain", "engine", "vtec", "activationRpm"),
@@ -138,6 +139,11 @@ public static class VehicleDefinitionLoader
             TorqueCurve = torqueCurve.Length == 0 ? new VehicleSimulationParameters().TorqueCurve : torqueCurve,
             EngineBrakeTorqueCurve = engineBrakeTorqueCurve.Length == 0 ? new VehicleSimulationParameters().EngineBrakeTorqueCurve : engineBrakeTorqueCurve
         };
+    }
+
+    private static float CalculateRevLimiterBounceRpm(float redlineRpm)
+    {
+        return MathF.Max(80f, MathF.Max(450f, redlineRpm) * 0.08f);
     }
 
     private static ArcadeHandlingParameters ReadArcadeHandling(JsonElement root)

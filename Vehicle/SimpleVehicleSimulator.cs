@@ -3237,7 +3237,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
                 State.Rpm)
             : 0f;
         float proximity = MathF.Max(throttleProximity, mechanicalLimiterStress);
-        const float chatterHz = 1f / 0.10f;
+        float chatterHz = 1f / CalculateRevLimiterBounceSeconds(_parameters.RedlineRpm);
         _revLimiterChatterPhaseSeconds += MathF.Max(0f, dt) * chatterHz;
         if (_revLimiterChatterPhaseSeconds > 1000f)
         {
@@ -3256,6 +3256,16 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             proximity * cutWeight * (0.38f + impulse * 0.62f),
             0f,
             1f);
+    }
+
+    private static float CalculateRevLimiterBounceSeconds(float redlineRpm)
+    {
+        const float highestReferenceRedlineRpm = 12000f;
+        const float slowestBounceSeconds = 1.00f;
+        const float fastestBounceSeconds = 0.25f;
+
+        float t = MathHelper.Clamp((redlineRpm - 4500f) / (highestReferenceRedlineRpm - 4500f), 0f, 1f);
+        return MathHelper.Lerp(slowestBounceSeconds, fastestBounceSeconds, t);
     }
 
     private void ApplyIdleCrankCycleBounce(VehicleInput input, float dt)

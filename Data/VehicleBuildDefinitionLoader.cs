@@ -273,7 +273,7 @@ internal static class VehicleBuildDefinitionLoader
             RevLimiterFuelCutSeconds = reference.RevLimiterFuelCutSeconds,
             RevLimiterRestoreSeconds = reference.RevLimiterRestoreSeconds,
             RevLimiterCutTorqueMultiplier = reference.RevLimiterCutTorqueMultiplier,
-            RevLimiterBounceRpm = reference.RevLimiterBounceRpm,
+            RevLimiterBounceRpm = CalculateRevLimiterBounceRpm(build.Engine.LimiterRpm),
             EngineRotationalInertiaKgM2 = build.Engine.RotationalInertiaKgM2,
             VtecEnabled = build.Engine.VtecEnabled,
             VtecActivationRpm = build.Engine.VtecActivationRpm,
@@ -352,6 +352,11 @@ internal static class VehicleBuildDefinitionLoader
             TorqueCurve = reference.TorqueCurve,
             EngineBrakeTorqueCurve = reference.EngineBrakeTorqueCurve
         };
+    }
+
+    private static float CalculateRevLimiterBounceRpm(float redlineRpm)
+    {
+        return MathF.Max(80f, MathF.Max(450f, redlineRpm) * 0.08f);
     }
 
     private static BrakeSystemParameters MergeBrakes(BrakeSystemParameters reference, ResolvedBrakeBuild build)
