@@ -107,6 +107,7 @@ internal static class VehicleBuildDefinitionLoader
                 DifferentialId = ReadString(differential, string.Empty, "id"),
                 DifferentialType = ReadString(differential, string.Empty, "data", "type"),
                 DifferentialTorqueBiasRatio = RequirePositive(differential, "data", "torqueBiasRatio"),
+                DifferentialPreloadTorqueNm = ReadSingle(differential, 0f, "data", "preloadNm"),
                 TransmissionEfficiency = RequireRange(gearbox, 0.1f, 1f, "data", "efficiency"),
                 ManualShiftTimeSeconds = RequirePositive(gearbox, "data", "manualShiftTimeSeconds"),
                 AutomaticShiftTimeSeconds = RequirePositive(gearbox, "data", "automaticShiftTimeSeconds"),
@@ -339,6 +340,7 @@ internal static class VehicleBuildDefinitionLoader
             FrontSuspensionGeometry = MergeSuspensionGeometry(reference.FrontSuspensionGeometry, build.Suspension, true),
             RearSuspensionGeometry = MergeSuspensionGeometry(reference.RearSuspensionGeometry, build.Suspension, false),
             DifferentialTorqueBiasRatio = build.Drivetrain.DifferentialTorqueBiasRatio,
+            DifferentialPreloadTorqueNm = build.Drivetrain.DifferentialPreloadTorqueNm,
             WheelInertiaKgM2 = EstimateWheelInertia(build),
             DrivenWheels = ReadDrivenWheels(build.DrivetrainLayout),
             FrontTyres = MergeTyres(reference.FrontTyres, build.Tyres, true),
@@ -837,6 +839,7 @@ internal sealed class ResolvedDrivetrainBuild
     public string DifferentialId { get; init; } = string.Empty;
     public string DifferentialType { get; init; } = string.Empty;
     public float DifferentialTorqueBiasRatio { get; init; }
+    public float DifferentialPreloadTorqueNm { get; init; }
     public float TransmissionEfficiency { get; init; }
     public float ManualShiftTimeSeconds { get; init; }
     public float AutomaticShiftTimeSeconds { get; init; }

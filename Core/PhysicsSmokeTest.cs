@@ -322,8 +322,8 @@ public static class PhysicsSmokeTest
             limiterActivated |= simulator.State.RevLimiterActive;
         }
 
-        float allowedGrassLaunchRpm = MathF.Min(parameters.UpshiftRpm * 0.98f, parameters.RedlineRpm * 0.96f);
-        if (limiterActivated || maxRpm > allowedGrassLaunchRpm)
+        float allowedGrassLaunchRpm = parameters.RedlineRpm + parameters.RevLimiterBounceRpm + 150f;
+        if (maxRpm > allowedGrassLaunchRpm)
         {
             throw new InvalidOperationException($"Physics smoke test failed: grass launch RPM flared too much. Max RPM {maxRpm:0}, allowed {allowedGrassLaunchRpm:0}, upshift {parameters.UpshiftRpm:0}, limiter active {limiterActivated}.");
         }

@@ -30,7 +30,11 @@ public static class SurfaceLibraryLoader
             ReadRequiredValueSingle(surface, "rollingResistanceMultiplier"),
             ReadRequiredValueSingle(surface, "longitudinalDragCoefficient"),
             ReadRequiredValueSingle(surface, "lateralDragCoefficient"),
-            ReadRequiredValueSingle(surface, "wheelSpinDragCoefficient"));
+            ReadRequiredValueSingle(surface, "wheelSpinDragCoefficient"),
+            ReadValueSingle(surface, 0f, "muStatic"),
+            ReadValueSingle(surface, 0f, "muDynamic"),
+            ReadValueSingle(surface, 0f, "optimalSlipRatio"),
+            ReadValueSingle(surface, 0f, "displacementDragCoefficient"));
     }
 
     private static string ResolveDataPath(string path)
@@ -82,6 +86,23 @@ public static class SurfaceLibraryLoader
         }
 
         throw new InvalidDataException($"Expected '{property}' to be a value object or number.");
+    }
+
+    private static float ReadValueSingle(JsonElement root, float fallback, string property)
+    {
+        if (!root.TryGetProperty(property, out JsonElement element))
+        {
+            return fallback;
+        }
+
+        if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty("value", out JsonElement valueElement))
+        {
+            element = valueElement;
+        }
+
+        return element.ValueKind == JsonValueKind.Number && element.TryGetSingle(out float value)
+            ? value
+            : fallback;
     }
 
     private static JsonElement Require(JsonElement root, string property)

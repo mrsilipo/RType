@@ -126,6 +126,7 @@ public static class VehicleDefinitionLoader
             FrontSuspensionGeometry = ReadSuspensionGeometry(root, "front"),
             RearSuspensionGeometry = ReadSuspensionGeometry(root, "rear"),
             DifferentialTorqueBiasRatio = ReadValueSingle(root, 1f, "powertrain", "differentials", "front", "torqueBiasRatio"),
+            DifferentialPreloadTorqueNm = ReadValueSingle(root, 0f, "powertrain", "differentials", "front", "preloadNm"),
             WheelInertiaKgM2 = EstimateWheelInertia(root, frontTyres.LoadedRadiusMeters),
             DrivenWheels = ReadDrivenWheels(root),
             FrontTyres = frontTyres,

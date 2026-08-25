@@ -242,6 +242,14 @@ public sealed class VehicleState
 
     public float FfLsdManagedFrontAxleTorqueNm { get; set; }
 
+    public float FfLsdFrontLeftActualTorqueNm { get; set; }
+
+    public float FfLsdFrontRightActualTorqueNm { get; set; }
+
+    public string FfLsdLowGripAnchor { get; set; } = string.Empty;
+
+    public float FrontDriveTorqueSteerYawMomentNm { get; set; }
+
     public float FrontLeftLateralForceN { get; set; }
 
     public float FrontRightLateralForceN { get; set; }
@@ -257,6 +265,22 @@ public sealed class VehicleState
     public float RearLeftSurfaceGrip { get; set; }
 
     public float RearRightSurfaceGrip { get; set; }
+
+    public float FrontLeftSurfaceMu { get; set; }
+
+    public float FrontRightSurfaceMu { get; set; }
+
+    public float RearLeftSurfaceMu { get; set; }
+
+    public float RearRightSurfaceMu { get; set; }
+
+    public float FrontLeftDisplacementDragForceN { get; set; }
+
+    public float FrontRightDisplacementDragForceN { get; set; }
+
+    public float RearLeftDisplacementDragForceN { get; set; }
+
+    public float RearRightDisplacementDragForceN { get; set; }
 
     public string FrontLeftSurfaceName { get; set; } = "ROAD";
 

@@ -18,6 +18,18 @@
       },
       "wheelSpinDragCoefficient": {
         "value": 0
+      },
+      "muStatic": {
+        "value": 1.15
+      },
+      "muDynamic": {
+        "value": 0.9
+      },
+      "optimalSlipRatio": {
+        "value": 0.08
+      },
+      "displacementDragCoefficient": {
+        "value": 0.01
       }
     },
     "curb": {
@@ -36,6 +48,18 @@
       },
       "wheelSpinDragCoefficient": {
         "value": 4
+      },
+      "muStatic": {
+        "value": 0.92
+      },
+      "muDynamic": {
+        "value": 0.64
+      },
+      "optimalSlipRatio": {
+        "value": 0.1
+      },
+      "displacementDragCoefficient": {
+        "value": 0.025
       }
     },
     "grass": {
@@ -54,6 +78,18 @@
       },
       "wheelSpinDragCoefficient": {
         "value": 34
+      },
+      "muStatic": {
+        "value": 0.45
+      },
+      "muDynamic": {
+        "value": 0.3
+      },
+      "optimalSlipRatio": {
+        "value": 0.06
+      },
+      "displacementDragCoefficient": {
+        "value": 0.05
       }
     }
   }

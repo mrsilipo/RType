@@ -176,6 +176,8 @@ public sealed class VehicleSimulationParameters
 
     public float DifferentialTorqueBiasRatio { get; init; } = 1f;
 
+    public float DifferentialPreloadTorqueNm { get; init; }
+
     public float WheelInertiaKgM2 { get; init; } = 0.85f;
 
     public DrivenWheelSet DrivenWheels { get; init; } = new(true, true, false, false);

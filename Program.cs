@@ -12,6 +12,12 @@ if (args.Any(arg => arg.Equals("--handling-probe", StringComparison.OrdinalIgnor
     return;
 }
 
+if (args.Any(arg => arg.Equals("--surface-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    SurfaceProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
 if (args.Any(arg => arg.Equals("--launch-probe", StringComparison.OrdinalIgnoreCase)))
 {
     LaunchProbe.Run(GameLaunchOptions.FromArgs(args));

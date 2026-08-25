@@ -52,6 +52,10 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
     private float _ffLsdInsideFrontMaxTorqueNm;
     private float _ffLsdOutsideFrontMaxTorqueNm;
     private float _ffLsdManagedFrontAxleTorqueNm;
+    private float _ffLsdFrontLeftActualTorqueNm;
+    private float _ffLsdFrontRightActualTorqueNm;
+    private string _ffLsdLowGripAnchor = string.Empty;
+    private float _frontDriveTorqueSteerYawMomentNm;
 
     public VehicleSimulationParameters Parameters => _parameters;
 
@@ -490,6 +494,10 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         State.FfLsdInsideFrontMaxTorqueNm = _ffLsdInsideFrontMaxTorqueNm;
         State.FfLsdOutsideFrontMaxTorqueNm = _ffLsdOutsideFrontMaxTorqueNm;
         State.FfLsdManagedFrontAxleTorqueNm = _ffLsdManagedFrontAxleTorqueNm;
+        State.FfLsdFrontLeftActualTorqueNm = _ffLsdFrontLeftActualTorqueNm;
+        State.FfLsdFrontRightActualTorqueNm = _ffLsdFrontRightActualTorqueNm;
+        State.FfLsdLowGripAnchor = _ffLsdLowGripAnchor;
+        State.FrontDriveTorqueSteerYawMomentNm = _frontDriveTorqueSteerYawMomentNm;
         State.FrontLeftLateralForceN = GetWheel(WheelCorner.FrontLeft).LateralForceN;
         State.FrontRightLateralForceN = GetWheel(WheelCorner.FrontRight).LateralForceN;
         State.RearLeftLateralForceN = GetWheel(WheelCorner.RearLeft).LateralForceN;
@@ -498,6 +506,14 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         State.FrontRightSurfaceGrip = GetWheel(WheelCorner.FrontRight).SurfaceGrip;
         State.RearLeftSurfaceGrip = GetWheel(WheelCorner.RearLeft).SurfaceGrip;
         State.RearRightSurfaceGrip = GetWheel(WheelCorner.RearRight).SurfaceGrip;
+        State.FrontLeftSurfaceMu = GetWheel(WheelCorner.FrontLeft).ActiveSurfaceMu;
+        State.FrontRightSurfaceMu = GetWheel(WheelCorner.FrontRight).ActiveSurfaceMu;
+        State.RearLeftSurfaceMu = GetWheel(WheelCorner.RearLeft).ActiveSurfaceMu;
+        State.RearRightSurfaceMu = GetWheel(WheelCorner.RearRight).ActiveSurfaceMu;
+        State.FrontLeftDisplacementDragForceN = GetWheel(WheelCorner.FrontLeft).DisplacementDragForceN;
+        State.FrontRightDisplacementDragForceN = GetWheel(WheelCorner.FrontRight).DisplacementDragForceN;
+        State.RearLeftDisplacementDragForceN = GetWheel(WheelCorner.RearLeft).DisplacementDragForceN;
+        State.RearRightDisplacementDragForceN = GetWheel(WheelCorner.RearRight).DisplacementDragForceN;
         State.FrontLeftSurfaceName = GetWheel(WheelCorner.FrontLeft).SurfaceName;
         State.FrontRightSurfaceName = GetWheel(WheelCorner.FrontRight).SurfaceName;
         State.RearLeftSurfaceName = GetWheel(WheelCorner.RearLeft).SurfaceName;
@@ -657,12 +673,13 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             wheelLongitudinalVelocity,
             radius,
             _engineParameters.VehicleSafety.MinimumSlipSpeedMetersPerSecond);
+        float activeSurfaceMu = CalculateActiveSurfaceMu(surface, slipRatio);
         float slipAngle = MathHelper.Clamp(
             MathF.Atan2(wheelLateralVelocity, MathF.Max(1.5f, MathF.Abs(wheelLongitudinalVelocity))),
             -0.75f,
             0.75f);
 
-        float gripLimit = CalculateGripLimit(wheel, surface.Grip);
+        float gripLimit = CalculateGripLimit(wheel, surface.StaticFrictionCoefficient);
         float wheelBrakeSign = SignWithFallback(wheel.AngularVelocityRadiansPerSecond, wheelLongitudinalVelocity);
         float effectiveBrakeTorqueNm = ApplyAbs(wheel, brakeTorqueNm, slipRatio, wheelLongitudinalVelocity, dt);
         float wheelRecoveryT = IsFrontWheel(wheel.Corner)
@@ -693,7 +710,8 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
 
         float passiveLongitudinalForce = CalculatePassiveSurfaceForce(
             wheelLongitudinalVelocity,
-            wheel.Tyres.RollingResistanceCoefficient * surface.RollingResistanceMultiplier * wheel.NormalLoadN,
+            wheel.Tyres.RollingResistanceCoefficient * surface.RollingResistanceMultiplier * wheel.NormalLoadN +
+            wheel.NormalLoadN * MathF.Max(0f, surface.DisplacementDragCoefficient),
             surface.LongitudinalDragCoefficient);
         float passiveLateralForce = CalculatePassiveSurfaceForce(
             wheelLateralVelocity,
@@ -785,6 +803,11 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         wheel.LongitudinalForceN = totalLongitudinalForce;
         wheel.LateralForceN = totalLateralForce;
         wheel.SurfaceGrip = surface.Grip;
+        wheel.StaticSurfaceMu = surface.StaticFrictionCoefficient;
+        wheel.DynamicSurfaceMu = surface.DynamicFrictionCoefficient;
+        wheel.OptimalSurfaceSlipRatio = surface.OptimalSlipRatio;
+        wheel.ActiveSurfaceMu = activeSurfaceMu;
+        wheel.DisplacementDragForceN = wheel.NormalLoadN * MathF.Max(0f, surface.DisplacementDragCoefficient);
         wheel.SurfaceName = surface.Name;
         float bodyForceX = totalLongitudinalForce * sinSteer + totalLateralForce * cosSteer;
         float bodyForceZ = totalLongitudinalForce * cosSteer - totalLateralForce * sinSteer;
@@ -798,7 +821,24 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             effectiveSlipAngle,
             wheel.GripUsage,
             surface.Grip,
+            activeSurfaceMu,
+            wheel.DisplacementDragForceN,
             surface.Name);
+    }
+
+    private static float CalculateActiveSurfaceMu(SurfaceSample surface, float slipRatio)
+    {
+        float staticMu = MathF.Max(0.01f, surface.StaticFrictionCoefficient);
+        float dynamicMu = MathHelper.Clamp(surface.DynamicFrictionCoefficient, 0.01f, staticMu);
+        float optimalSlip = MathF.Max(0.01f, surface.OptimalSlipRatio);
+        float absSlip = MathF.Abs(slipRatio);
+        if (absSlip <= optimalSlip)
+        {
+            return staticMu;
+        }
+
+        float slideT = MathHelper.Clamp((absSlip - optimalSlip) / 0.5f, 0f, 1f);
+        return MathHelper.Lerp(staticMu, dynamicMu, slideT);
     }
 
     private static float CalculateSlipRatio(
@@ -1489,6 +1529,10 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         _ffLsdInsideFrontMaxTorqueNm = 0f;
         _ffLsdOutsideFrontMaxTorqueNm = 0f;
         _ffLsdManagedFrontAxleTorqueNm = 0f;
+        _ffLsdFrontLeftActualTorqueNm = 0f;
+        _ffLsdFrontRightActualTorqueNm = 0f;
+        _ffLsdLowGripAnchor = string.Empty;
+        _frontDriveTorqueSteerYawMomentNm = 0f;
         if (MathF.Abs(totalDriveTorque) < 0.001f || _parameters.DrivenWheels.Count == 0)
         {
             return torques;
@@ -1563,56 +1607,71 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             !_parameters.DrivenWheels.IsDriven(WheelCorner.FrontLeft) ||
             !_parameters.DrivenWheels.IsDriven(WheelCorner.FrontRight) ||
             _parameters.DrivenWheels.IsDriven(WheelCorner.RearLeft) ||
-            _parameters.DrivenWheels.IsDriven(WheelCorner.RearRight) ||
-            MathF.Abs(_filteredSteerInput) <= 0.04f)
+            _parameters.DrivenWheels.IsDriven(WheelCorner.RearRight))
         {
             return false;
         }
 
-        WheelCorner inside = normalLoads[(int)WheelCorner.FrontLeft] <= normalLoads[(int)WheelCorner.FrontRight]
-            ? WheelCorner.FrontLeft
-            : WheelCorner.FrontRight;
-        WheelCorner outside = GetOppositeWheelCorner(inside);
-        WheelRuntimeState insideWheel = GetWheel(inside);
-        WheelRuntimeState outsideWheel = GetWheel(outside);
+        WheelRuntimeState leftWheel = GetWheel(WheelCorner.FrontLeft);
+        WheelRuntimeState rightWheel = GetWheel(WheelCorner.FrontRight);
+        float leftMaxTorque = CalculateWheelTractiveTorqueCapacity(leftWheel, normalLoads[(int)WheelCorner.FrontLeft]);
+        float rightMaxTorque = CalculateWheelTractiveTorqueCapacity(rightWheel, normalLoads[(int)WheelCorner.FrontRight]);
+        float highestCapacity = MathF.Max(leftMaxTorque, rightMaxTorque);
+        float capacityDifferenceT = highestCapacity > 1f
+            ? MathF.Abs(leftMaxTorque - rightMaxTorque) / highestCapacity
+            : 0f;
+        bool lsdDemand =
+            MathF.Abs(_filteredSteerInput) > 0.04f ||
+            capacityDifferenceT > 0.05f ||
+            MathF.Abs(leftWheel.SlipRatio - rightWheel.SlipRatio) > 0.025f;
+        if (!lsdDemand)
+        {
+            return false;
+        }
 
-        float insideMaxTorque = CalculateWheelTractiveTorqueCapacity(insideWheel, normalLoads[(int)inside]);
-        float outsideMaxTorque = CalculateWheelTractiveTorqueCapacity(outsideWheel, normalLoads[(int)outside]);
+        bool leftIsAnchor = leftMaxTorque <= rightMaxTorque;
+        WheelCorner anchor = leftIsAnchor ? WheelCorner.FrontLeft : WheelCorner.FrontRight;
+        WheelCorner highGrip = leftIsAnchor ? WheelCorner.FrontRight : WheelCorner.FrontLeft;
+        WheelRuntimeState anchorWheel = leftIsAnchor ? leftWheel : rightWheel;
+        WheelRuntimeState highGripWheel = leftIsAnchor ? rightWheel : leftWheel;
+        float lowGripAnchorMaxTorque = leftIsAnchor ? leftMaxTorque : rightMaxTorque;
+        float highGripWheelMaxTorque = leftIsAnchor ? rightMaxTorque : leftMaxTorque;
         float torqueBias = MathF.Max(1f, _parameters.DifferentialTorqueBiasRatio);
-        float outsideViaLsdMax = MathF.Min(outsideMaxTorque, insideMaxTorque * torqueBias);
-        float managedAxleTorque = insideMaxTorque + outsideViaLsdMax;
+        float preloadTorque = MathF.Max(0f, _parameters.DifferentialPreloadTorqueNm);
+        float highGripViaLsdMax = MathF.Min(highGripWheelMaxTorque, (lowGripAnchorMaxTorque + preloadTorque) * torqueBias);
+        float managedAxleTorque = lowGripAnchorMaxTorque + highGripViaLsdMax;
         if (managedAxleTorque <= 1f)
         {
             return false;
         }
 
-        _ffLsdInsideFrontMaxTorqueNm = insideMaxTorque;
-        _ffLsdOutsideFrontMaxTorqueNm = outsideViaLsdMax;
+        _ffLsdInsideFrontMaxTorqueNm = lowGripAnchorMaxTorque;
+        _ffLsdOutsideFrontMaxTorqueNm = highGripViaLsdMax;
         _ffLsdManagedFrontAxleTorqueNm = managedAxleTorque;
-        _ffLsdCornerExitBite = CalculateFfLsdCornerExitBite(insideWheel, outsideWheel, axleTorque, managedAxleTorque, driveThrottle);
+        _ffLsdLowGripAnchor = anchor.ToString();
+        _ffLsdCornerExitBite = CalculateFfLsdCornerExitBite(anchorWheel, highGripWheel, axleTorque, managedAxleTorque, driveThrottle);
 
-        float availableTorque = MathF.Min(axleTorque, managedAxleTorque);
-        if (torqueBias <= 1.01f)
-        {
-            float openWheelTorque = MathF.Min(availableTorque * 0.5f, insideMaxTorque);
-            torques[(int)inside] = openWheelTorque;
-            torques[(int)outside] = openWheelTorque;
-            return true;
-        }
+        float actualAxleTorque = MathF.Min(axleTorque, managedAxleTorque);
+        float torqueScale = MathHelper.Clamp(actualAxleTorque / managedAxleTorque, 0f, 1f);
+        float anchorActualTorque = lowGripAnchorMaxTorque * torqueScale;
+        float highGripActualTorque = highGripViaLsdMax * torqueScale;
 
-        float insideTorque = MathF.Min(insideMaxTorque, availableTorque / (1f + torqueBias));
-        float outsideTorque = MathF.Min(availableTorque - insideTorque, outsideViaLsdMax);
-        float unusedTorque = MathF.Max(0f, availableTorque - insideTorque - outsideTorque);
-        insideTorque = MathF.Min(insideMaxTorque, insideTorque + unusedTorque);
-
-        torques[(int)inside] = insideTorque;
-        torques[(int)outside] = outsideTorque;
+        torques[(int)anchor] = anchorActualTorque;
+        torques[(int)highGrip] = highGripActualTorque;
+        _ffLsdFrontLeftActualTorqueNm = torques[(int)WheelCorner.FrontLeft];
+        _ffLsdFrontRightActualTorqueNm = torques[(int)WheelCorner.FrontRight];
+        float leftDriveForce = _ffLsdFrontLeftActualTorqueNm / MathF.Max(0.05f, leftWheel.Tyres.LoadedRadiusMeters);
+        float rightDriveForce = _ffLsdFrontRightActualTorqueNm / MathF.Max(0.05f, rightWheel.Tyres.LoadedRadiusMeters);
+        _frontDriveTorqueSteerYawMomentNm = (leftDriveForce - rightDriveForce) * _parameters.FrontTrackMeters * 0.5f;
         return true;
     }
 
     private static float CalculateWheelTractiveTorqueCapacity(WheelRuntimeState wheel, float normalLoadN)
     {
-        float mu = MathF.Max(0f, wheel.Tyres.PeakFriction * wheel.SurfaceGrip);
+        float surfaceMu = wheel.ActiveSurfaceMu > 0f
+            ? wheel.ActiveSurfaceMu
+            : wheel.StaticSurfaceMu;
+        float mu = MathF.Max(0f, wheel.Tyres.PeakFriction * surfaceMu);
         return MathF.Max(0f, normalLoadN * mu * MathF.Max(0.05f, wheel.Tyres.LoadedRadiusMeters));
     }
 
@@ -4099,6 +4158,8 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         float SlipAngleRadians,
         float GripUsage,
         float SurfaceGrip,
+        float ActiveSurfaceMu,
+        float DisplacementDragForceN,
         string SurfaceName);
 
     private readonly record struct WallCollisionResult(int ContactCount, float ImpactSpeedKph);
@@ -4153,6 +4214,16 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         public float LateralForceN { get; set; }
 
         public float SurfaceGrip { get; set; } = 1f;
+
+        public float StaticSurfaceMu { get; set; } = 1f;
+
+        public float DynamicSurfaceMu { get; set; } = 0.78f;
+
+        public float OptimalSurfaceSlipRatio { get; set; } = 0.10f;
+
+        public float ActiveSurfaceMu { get; set; } = 1f;
+
+        public float DisplacementDragForceN { get; set; }
 
         public string SurfaceName { get; set; } = "ROAD";
 
