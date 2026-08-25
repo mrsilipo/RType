@@ -23,6 +23,8 @@ public static class SurfaceProbe
         RunCase("all grass launch", parameters, engineParameters, new FixedSurfaceSampler(surfaces.Grass), new VehicleInput(0.95f, 0f, 0.10f));
         RunCase("left grass split throttle", parameters, engineParameters, new VehicleRelativeSplitSurfaceSampler(surfaces.Grass, surfaces.Road), new VehicleInput(0.95f, 0f, 0.28f));
         RunCase("right grass split throttle", parameters, engineParameters, new VehicleRelativeSplitSurfaceSampler(surfaces.Road, surfaces.Grass), new VehicleInput(0.95f, 0f, -0.28f));
+        RunCase("all dirt launch", parameters, engineParameters, new FixedSurfaceSampler(surfaces.Dirt), new VehicleInput(0.95f, 0f, 0.10f));
+        RunCase("left dirt split throttle", parameters, engineParameters, new VehicleRelativeSplitSurfaceSampler(surfaces.Dirt, surfaces.Road), new VehicleInput(0.95f, 0f, 0.28f));
     }
 
     private static void RunCase(
@@ -75,7 +77,8 @@ public static class SurfaceProbe
             $"slip FL/FR {end.FrontLeftSlipRatio:0.00}/{end.FrontRightSlipRatio:0.00}, peak front slip {peakFrontSlip:0.00}, " +
             $"lsd anchor {end.FfLsdLowGripAnchor}, FL/FR torque {end.FfLsdFrontLeftActualTorqueNm:0}/{end.FfLsdFrontRightActualTorqueNm:0}Nm, " +
             $"managed {peakManagedTorque:0}Nm, yaw diag {peakYawMoment:0}Nm, drag FL/FR {end.FrontLeftDisplacementDragForceN:0}/{end.FrontRightDisplacementDragForceN:0}N, " +
-            $"curb wheels {end.CurbContactWheelCount}, curb load FL/FR {end.FrontLeftCurbLoadMultiplier:0.00}/{end.FrontRightCurbLoadMultiplier:0.00}");
+            $"curb wheels {end.CurbContactWheelCount}, curb load FL/FR {end.FrontLeftCurbLoadMultiplier:0.00}/{end.FrontRightCurbLoadMultiplier:0.00}, " +
+            $"surface vib wheels {end.SurfaceVibrationContactWheelCount}, surface load FL/FR {end.FrontLeftSurfaceLoadMultiplier:0.00}/{end.FrontRightSurfaceLoadMultiplier:0.00}");
     }
 
     private sealed class FixedSurfaceSampler : ITrackSurfaceSampler

@@ -30,6 +30,18 @@
       },
       "displacementDragCoefficient": {
         "value": 0
+      },
+      "vibrationPrimaryFrequency": {
+        "value": 0
+      },
+      "vibrationPrimaryAmplitude": {
+        "value": 0
+      },
+      "vibrationSecondaryFrequency": {
+        "value": 0
+      },
+      "vibrationSecondaryAmplitude": {
+        "value": 0
       }
     },
     "curb": {
@@ -59,6 +71,18 @@
         "value": 0.09
       },
       "displacementDragCoefficient": {
+        "value": 0
+      },
+      "vibrationPrimaryFrequency": {
+        "value": 4
+      },
+      "vibrationPrimaryAmplitude": {
+        "value": 0.25
+      },
+      "vibrationSecondaryFrequency": {
+        "value": 0
+      },
+      "vibrationSecondaryAmplitude": {
         "value": 0
       }
     },
@@ -90,6 +114,60 @@
       },
       "displacementDragCoefficient": {
         "value": 0.05
+      },
+      "vibrationPrimaryFrequency": {
+        "value": 2.5
+      },
+      "vibrationPrimaryAmplitude": {
+        "value": 0.35
+      },
+      "vibrationSecondaryFrequency": {
+        "value": 5
+      },
+      "vibrationSecondaryAmplitude": {
+        "value": 0.2
+      }
+    },
+    "dirt": {
+      "name": "DIRT",
+      "grip": {
+        "value": 0.7
+      },
+      "rollingResistanceMultiplier": {
+        "value": 4.8
+      },
+      "longitudinalDragCoefficient": {
+        "value": 7.5
+      },
+      "lateralDragCoefficient": {
+        "value": 4.2
+      },
+      "wheelSpinDragCoefficient": {
+        "value": 22
+      },
+      "muStatic": {
+        "value": 0.65
+      },
+      "muDynamic": {
+        "value": 0.55
+      },
+      "optimalSlipRatio": {
+        "value": 0.2
+      },
+      "displacementDragCoefficient": {
+        "value": 0.08
+      },
+      "vibrationPrimaryFrequency": {
+        "value": 1.5
+      },
+      "vibrationPrimaryAmplitude": {
+        "value": 0.3
+      },
+      "vibrationSecondaryFrequency": {
+        "value": 3.5
+      },
+      "vibrationSecondaryAmplitude": {
+        "value": 0.15
       }
     }
   }

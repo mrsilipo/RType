@@ -304,6 +304,16 @@ public sealed class VehicleState
 
     public int CurbContactWheelCount { get; set; }
 
+    public float FrontLeftSurfaceLoadMultiplier { get; set; } = 1f;
+
+    public float FrontRightSurfaceLoadMultiplier { get; set; } = 1f;
+
+    public float RearLeftSurfaceLoadMultiplier { get; set; } = 1f;
+
+    public float RearRightSurfaceLoadMultiplier { get; set; } = 1f;
+
+    public int SurfaceVibrationContactWheelCount { get; set; }
+
     public string FrontLeftSurfaceName { get; set; } = "ROAD";
 
     public string FrontRightSurfaceName { get; set; } = "ROAD";

@@ -1,3 +1,5 @@
+using Microsoft.Xna.Framework;
+
 namespace RType.World;
 
 public readonly struct SurfaceSample
@@ -12,7 +14,11 @@ public readonly struct SurfaceSample
         float staticFrictionCoefficient = 0f,
         float dynamicFrictionCoefficient = 0f,
         float optimalSlipRatio = 0f,
-        float displacementDragCoefficient = 0f)
+        float displacementDragCoefficient = 0f,
+        float vibrationPrimaryFrequency = 0f,
+        float vibrationPrimaryAmplitude = 0f,
+        float vibrationSecondaryFrequency = 0f,
+        float vibrationSecondaryAmplitude = 0f)
     {
         Name = name;
         Grip = grip;
@@ -24,6 +30,10 @@ public readonly struct SurfaceSample
         DynamicFrictionCoefficient = dynamicFrictionCoefficient > 0f ? dynamicFrictionCoefficient : MathF.Max(0.05f, grip * 0.78f);
         OptimalSlipRatio = optimalSlipRatio > 0f ? optimalSlipRatio : 0.10f;
         DisplacementDragCoefficient = displacementDragCoefficient;
+        VibrationPrimaryFrequency = MathF.Max(0f, vibrationPrimaryFrequency);
+        VibrationPrimaryAmplitude = MathHelper.Clamp(vibrationPrimaryAmplitude, 0f, 0.95f);
+        VibrationSecondaryFrequency = MathF.Max(0f, vibrationSecondaryFrequency);
+        VibrationSecondaryAmplitude = MathHelper.Clamp(vibrationSecondaryAmplitude, 0f, 0.95f);
     }
 
     public string Name { get; }
@@ -45,4 +55,12 @@ public readonly struct SurfaceSample
     public float OptimalSlipRatio { get; }
 
     public float DisplacementDragCoefficient { get; }
+
+    public float VibrationPrimaryFrequency { get; }
+
+    public float VibrationPrimaryAmplitude { get; }
+
+    public float VibrationSecondaryFrequency { get; }
+
+    public float VibrationSecondaryAmplitude { get; }
 }

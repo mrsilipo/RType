@@ -18,7 +18,8 @@ public static class SurfaceLibraryLoader
         return new SurfaceLibrary(
             ReadSurface(surfaces, "road"),
             ReadSurface(surfaces, "curb"),
-            ReadSurface(surfaces, "grass"));
+            ReadSurface(surfaces, "grass"),
+            ReadOptionalSurface(surfaces, "dirt", ReadSurface(surfaces, "grass")));
     }
 
     private static SurfaceSample ReadSurface(JsonElement surfaces, string id)
@@ -34,7 +35,18 @@ public static class SurfaceLibraryLoader
             ReadValueSingle(surface, 0f, "muStatic"),
             ReadValueSingle(surface, 0f, "muDynamic"),
             ReadValueSingle(surface, 0f, "optimalSlipRatio"),
-            ReadValueSingle(surface, 0f, "displacementDragCoefficient"));
+            ReadValueSingle(surface, 0f, "displacementDragCoefficient"),
+            ReadValueSingle(surface, 0f, "vibrationPrimaryFrequency"),
+            ReadValueSingle(surface, 0f, "vibrationPrimaryAmplitude"),
+            ReadValueSingle(surface, 0f, "vibrationSecondaryFrequency"),
+            ReadValueSingle(surface, 0f, "vibrationSecondaryAmplitude"));
+    }
+
+    private static SurfaceSample ReadOptionalSurface(JsonElement surfaces, string id, SurfaceSample fallback)
+    {
+        return surfaces.ValueKind == JsonValueKind.Object && surfaces.TryGetProperty(id, out _)
+            ? ReadSurface(surfaces, id)
+            : fallback;
     }
 
     private static string ResolveDataPath(string path)
