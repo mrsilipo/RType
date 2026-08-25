@@ -41,6 +41,12 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
     private float _filteredBrakeInput;
     private float _dynamicBodyPitchRadians;
     private float _dynamicBodyRollRadians;
+    private float _loadTransferLongitudinalAcceleration;
+    private float _loadTransferLateralAcceleration;
+    private float _visualLoadTransferLateralAcceleration;
+    private float _longitudinalLoadTransferN;
+    private float _frontLateralLoadTransferN;
+    private float _rearLateralLoadTransferN;
     private readonly float[] _visualSuspensionCompressionMeters = new float[4];
     private readonly float[] _visualSuspensionVelocityMetersPerSecond = new float[4];
     private bool _digitalBrakeAssistActive;
@@ -378,6 +384,8 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
 
         totalForceZ += CalculateAeroDrag(forwardSpeed);
         AddGradeForces(forward, ref totalForceZ);
+        _loadTransferLongitudinalAcceleration = totalForceZ / MathF.Max(1f, _parameters.MassKg);
+        _loadTransferLateralAcceleration = totalForceX / MathF.Max(1f, _parameters.MassKg);
 
         float averageSlipAngle = slipAngleTotal / _wheels.Length;
         float averageGripUsage = gripUsageTotal / _wheels.Length;
@@ -445,6 +453,12 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         State.LateralSpeed = Vector2.Dot(State.Velocity, right);
         State.LongitudinalAcceleration = Vector2.Dot(worldAcceleration, forward);
         State.LateralAcceleration = Vector2.Dot(worldAcceleration, right);
+        State.PhysicalLoadTransferLongitudinalAcceleration = _loadTransferLongitudinalAcceleration;
+        State.PhysicalLoadTransferLateralAcceleration = _loadTransferLateralAcceleration;
+        State.VisualLoadTransferLateralAcceleration = _visualLoadTransferLateralAcceleration;
+        State.LongitudinalLoadTransferN = _longitudinalLoadTransferN;
+        State.FrontLateralLoadTransferN = _frontLateralLoadTransferN;
+        State.RearLateralLoadTransferN = _rearLateralLoadTransferN;
         State.SurfaceGrip = weakestGrip;
         State.SurfaceName = weakestSurface;
         State.Throttle = throttle;
@@ -1484,6 +1498,38 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
 
     private float[] CalculateNormalLoads(float forwardSpeed)
     {
+        return CalculateNormalLoads(
+            forwardSpeed,
+            _loadTransferLongitudinalAcceleration,
+            _loadTransferLateralAcceleration,
+            0f,
+            publishDiagnostics: true);
+    }
+
+    private float[] CalculateVisualNormalLoads(float forwardSpeed)
+    {
+        ArcadeHandlingParameters arcade = _parameters.ArcadeHandling;
+        float pseudoLateralAcceleration = _filteredSteerInput *
+                                          forwardSpeed *
+                                          MathF.Abs(forwardSpeed) *
+                                          arcade.PseudoLateralTransferScale;
+        float pseudoTransferT = arcade.PseudoLateralTransferBlend * SmoothStep(4f, 18f, MathF.Abs(forwardSpeed));
+        _visualLoadTransferLateralAcceleration = _loadTransferLateralAcceleration + pseudoLateralAcceleration * pseudoTransferT;
+        return CalculateNormalLoads(
+            forwardSpeed,
+            _loadTransferLongitudinalAcceleration,
+            _visualLoadTransferLateralAcceleration,
+            0f,
+            publishDiagnostics: false);
+    }
+
+    private float[] CalculateNormalLoads(
+        float forwardSpeed,
+        float longitudinalAcceleration,
+        float lateralAcceleration,
+        float minimumWheelLoadN,
+        bool publishDiagnostics)
+    {
         float totalWeight = _parameters.MassKg * Gravity;
         float frontStatic = totalWeight * MathHelper.Clamp(_parameters.FrontWeightDistribution, 0.1f, 0.9f);
         float rearStatic = totalWeight - frontStatic;
@@ -1491,7 +1537,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
 
         float frontAeroLoad = -_parameters.FrontLiftFactor * speedSquared;
         float rearAeroLoad = -_parameters.RearLiftFactor * speedSquared;
-        float longitudinalTransfer = _parameters.MassKg * State.LongitudinalAcceleration * _parameters.CenterOfGravityHeightMeters / _parameters.WheelbaseMeters;
+        float longitudinalTransfer = _parameters.MassKg * longitudinalAcceleration * _parameters.CenterOfGravityHeightMeters / _parameters.WheelbaseMeters;
 
         float frontAxleLoad = MathF.Max(80f, frontStatic - longitudinalTransfer + frontAeroLoad);
         float rearAxleLoad = MathF.Max(80f, rearStatic + longitudinalTransfer + rearAeroLoad);
@@ -1502,23 +1548,22 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
                                   _parameters.RearAntiRollBarRateNmPerRad;
         float frontRollShare = frontRollStiffness / MathF.Max(1f, frontRollStiffness + rearRollStiffness);
 
-        ArcadeHandlingParameters arcade = _parameters.ArcadeHandling;
-        float pseudoLateralAcceleration = _filteredSteerInput *
-                                          forwardSpeed *
-                                          MathF.Abs(forwardSpeed) *
-                                          arcade.PseudoLateralTransferScale;
-        float pseudoTransferT = arcade.PseudoLateralTransferBlend * SmoothStep(4f, 18f, MathF.Abs(forwardSpeed));
-        float lateralTransferAcceleration = MathHelper.Lerp(State.LateralAcceleration, pseudoLateralAcceleration, pseudoTransferT);
-        float totalLateralTransferMoment = _parameters.MassKg * lateralTransferAcceleration * _parameters.CenterOfGravityHeightMeters;
+        float totalLateralTransferMoment = _parameters.MassKg * lateralAcceleration * _parameters.CenterOfGravityHeightMeters;
         float frontLateralTransfer = totalLateralTransferMoment * frontRollShare / MathF.Max(0.4f, _parameters.FrontTrackMeters);
         float rearLateralTransfer = totalLateralTransferMoment * (1f - frontRollShare) / MathF.Max(0.4f, _parameters.RearTrackMeters);
+        if (publishDiagnostics)
+        {
+            _longitudinalLoadTransferN = longitudinalTransfer;
+            _frontLateralLoadTransferN = frontLateralTransfer;
+            _rearLateralLoadTransferN = rearLateralTransfer;
+        }
 
         return
         [
-            MathF.Max(20f, frontAxleLoad * 0.5f + frontLateralTransfer * 0.5f),
-            MathF.Max(20f, frontAxleLoad * 0.5f - frontLateralTransfer * 0.5f),
-            MathF.Max(20f, rearAxleLoad * 0.5f + rearLateralTransfer * 0.5f),
-            MathF.Max(20f, rearAxleLoad * 0.5f - rearLateralTransfer * 0.5f)
+            MathF.Max(minimumWheelLoadN, frontAxleLoad * 0.5f + frontLateralTransfer * 0.5f),
+            MathF.Max(minimumWheelLoadN, frontAxleLoad * 0.5f - frontLateralTransfer * 0.5f),
+            MathF.Max(minimumWheelLoadN, rearAxleLoad * 0.5f + rearLateralTransfer * 0.5f),
+            MathF.Max(minimumWheelLoadN, rearAxleLoad * 0.5f - rearLateralTransfer * 0.5f)
         ];
     }
 
@@ -3707,6 +3752,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         ArcadeHandlingParameters arcade = _parameters.ArcadeHandling;
         Vector2 center = new(State.Position.X, State.Position.Z);
         Span<float> groundHeights = stackalloc float[4];
+        Span<float> physicalSupportHeights = stackalloc float[4];
         Span<float> supportHeights = stackalloc float[4];
 
         foreach (WheelRuntimeState wheel in _wheels)
@@ -3715,14 +3761,18 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             groundHeights[(int)wheel.Corner] = _surfaceSampler.GetElevation(wheelPosition);
         }
 
-        UpdateVisualSuspension(dt);
+        float[] visualNormalLoads = CalculateVisualNormalLoads(Vector2.Dot(State.Velocity, forward));
+        UpdateVisualSuspension(dt, visualNormalLoads);
         for (int i = 0; i < _wheels.Length; i++)
         {
+            physicalSupportHeights[i] = groundHeights[i] - _wheels[i].SuspensionCompressionMeters;
             supportHeights[i] = groundHeights[i] - _visualSuspensionCompressionMeters[i];
         }
 
         float groundFrontHeight = Average(groundHeights[(int)WheelCorner.FrontLeft], groundHeights[(int)WheelCorner.FrontRight]);
         float groundRearHeight = Average(groundHeights[(int)WheelCorner.RearLeft], groundHeights[(int)WheelCorner.RearRight]);
+        float physicalFrontHeight = Average(physicalSupportHeights[(int)WheelCorner.FrontLeft], physicalSupportHeights[(int)WheelCorner.FrontRight]);
+        float physicalRearHeight = Average(physicalSupportHeights[(int)WheelCorner.RearLeft], physicalSupportHeights[(int)WheelCorner.RearRight]);
         float supportFrontHeight = Average(supportHeights[(int)WheelCorner.FrontLeft], supportHeights[(int)WheelCorner.FrontRight]);
         float supportRearHeight = Average(supportHeights[(int)WheelCorner.RearLeft], supportHeights[(int)WheelCorner.RearRight]);
         float supportCenterHeight = Average(
@@ -3739,22 +3789,26 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         float frontRollWeight = CalculateFrontRollWeight();
         float groundPitch = -MathF.Atan2(groundFrontHeight - groundRearHeight, wheelbase);
         float groundRoll = MathHelper.Lerp(CalculateAxleRoll(groundHeights, false), CalculateAxleRoll(groundHeights, true), frontRollWeight);
-        float bodyPitch = -MathF.Atan2(supportFrontHeight - supportRearHeight, wheelbase);
-        float bodyRoll = MathHelper.Lerp(CalculateAxleRoll(supportHeights, false), CalculateAxleRoll(supportHeights, true), frontRollWeight);
+        float physicalBodyPitch = -MathF.Atan2(physicalFrontHeight - physicalRearHeight, wheelbase);
+        float physicalBodyRoll = MathHelper.Lerp(CalculateAxleRoll(physicalSupportHeights, false), CalculateAxleRoll(physicalSupportHeights, true), frontRollWeight);
+        float visualBodyPitch = -MathF.Atan2(supportFrontHeight - supportRearHeight, wheelbase);
+        float visualBodyRoll = MathHelper.Lerp(CalculateAxleRoll(supportHeights, false), CalculateAxleRoll(supportHeights, true), frontRollWeight);
 
         State.Position = new Vector3(State.Position.X, supportCenterHeight, State.Position.Z);
         State.WheelContactCenterHeightMeters = groundCenterHeight;
         State.GroundPitchRadians = MathHelper.Clamp(groundPitch, -0.18f, 0.18f);
         State.GroundRollRadians = MathHelper.Clamp(groundRoll, -0.14f, 0.14f);
-        float physicsBodyPitch = MathHelper.Clamp(bodyPitch, -0.18f, 0.18f);
-        float physicsBodyRoll = MathHelper.Clamp(bodyRoll, -0.14f, 0.14f);
+        float physicsBodyPitch = MathHelper.Clamp(physicalBodyPitch, -0.18f, 0.18f);
+        float physicsBodyRoll = MathHelper.Clamp(physicalBodyRoll, -0.14f, 0.14f);
+        float presentationBodyPitch = MathHelper.Clamp(visualBodyPitch, -0.18f, 0.18f);
+        float presentationBodyRoll = MathHelper.Clamp(visualBodyRoll, -0.14f, 0.14f);
         State.BodyPitchRadians = ScalePresentationBodyAngle(
-            physicsBodyPitch,
+            presentationBodyPitch,
             State.GroundPitchRadians,
             arcade.VisualBodyPitchScale,
             arcade.VisualBodyPitchLimitRadians);
         State.BodyRollRadians = ScalePresentationBodyAngle(
-            physicsBodyRoll,
+            presentationBodyRoll,
             State.GroundRollRadians,
             arcade.VisualBodyRollScale,
             arcade.VisualBodyRollLimitRadians);
@@ -3778,7 +3832,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         return groundAngle + MathHelper.Clamp(suspensionDelta, -limit, limit);
     }
 
-    private void UpdateVisualSuspension(float dt)
+    private void UpdateVisualSuspension(float dt, float[] visualNormalLoads)
     {
         ArcadeHandlingParameters arcade = _parameters.ArcadeHandling;
         for (int i = 0; i < _wheels.Length; i++)
@@ -3790,8 +3844,10 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
                 : arcade.RearVisualSuspensionMultiplier;
             WheelRuntimeState oppositeWheel = GetWheel(GetOppositeWheelCorner(wheel.Corner));
             float axleAverageCompression = Average(wheel.SuspensionCompressionMeters, oppositeWheel.SuspensionCompressionMeters);
-            float axleAverageLoad = Average(wheel.NormalLoadN, oppositeWheel.NormalLoadN);
-            float loadTransferRatio = (wheel.NormalLoadN - axleAverageLoad) / MathF.Max(1f, GetStaticWheelLoad(wheel.Corner));
+            float wheelVisualLoad = visualNormalLoads[i];
+            float oppositeVisualLoad = visualNormalLoads[(int)oppositeWheel.Corner];
+            float axleAverageLoad = Average(wheelVisualLoad, oppositeVisualLoad);
+            float loadTransferRatio = (wheelVisualLoad - axleAverageLoad) / MathF.Max(1f, GetStaticWheelLoad(wheel.Corner));
             float heavePitchCompression = axleAverageCompression *
                                           arcade.VisualSuspensionMotionScale *
                                           arcade.VisualSuspensionHeavePitchScale *

@@ -72,6 +72,18 @@ public sealed class VehicleState
 
     public float LateralAcceleration { get; set; }
 
+    public float PhysicalLoadTransferLongitudinalAcceleration { get; set; }
+
+    public float PhysicalLoadTransferLateralAcceleration { get; set; }
+
+    public float VisualLoadTransferLateralAcceleration { get; set; }
+
+    public float LongitudinalLoadTransferN { get; set; }
+
+    public float FrontLateralLoadTransferN { get; set; }
+
+    public float RearLateralLoadTransferN { get; set; }
+
     public float SurfaceGrip { get; set; } = 1f;
 
     public string SurfaceName { get; set; } = "ROAD";

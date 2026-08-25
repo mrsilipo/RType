@@ -18,6 +18,12 @@ if (args.Any(arg => arg.Equals("--surface-probe", StringComparison.OrdinalIgnore
     return;
 }
 
+if (args.Any(arg => arg.Equals("--weight-transfer-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    WeightTransferProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
 if (args.Any(arg => arg.Equals("--launch-probe", StringComparison.OrdinalIgnoreCase)))
 {
     LaunchProbe.Run(GameLaunchOptions.FromArgs(args));
