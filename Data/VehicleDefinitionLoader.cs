@@ -143,7 +143,7 @@ public static class VehicleDefinitionLoader
 
     private static float CalculateRevLimiterBounceRpm(float redlineRpm)
     {
-        return MathF.Max(80f, MathF.Max(450f, redlineRpm) * 0.08f);
+        return RevLimiterPresentationRules.CalculateBounceDepthRpm(redlineRpm);
     }
 
     private static ArcadeHandlingParameters ReadArcadeHandling(JsonElement root)

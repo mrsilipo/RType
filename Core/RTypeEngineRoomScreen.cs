@@ -156,7 +156,6 @@ public sealed class RTypeEngineRoomScreen : IDisposable
         _rpm = MathHelper.Lerp(_rpm, targetRpm, 1f - MathF.Exp(-response * dt));
 
         bool limiter = _rpm >= redline;
-        _displayRpm = MathF.Min(_rpm, redline);
         if (limiter)
         {
             if (!_wasLimiter)
@@ -164,14 +163,14 @@ public sealed class RTypeEngineRoomScreen : IDisposable
                 _limiterVisualPhase = 0f;
             }
 
-            float cycle = _limiterVisualPhase / 0.10f;
-            cycle -= MathF.Floor(cycle);
-            float bounce = MathF.Sin(cycle * MathF.PI) * _parameters.RevLimiterBounceRpm;
-            _displayRpm = redline - MathF.Max(0f, bounce);
-            _limiterVisualPhase += dt;
+            float bounceSeconds = RevLimiterPresentationRules.CalculateBounceSeconds(redline);
+            _limiterVisualPhase += dt / bounceSeconds;
+            _limiterVisualPhase -= MathF.Floor(_limiterVisualPhase);
+            _displayRpm = RevLimiterPresentationRules.CalculateBouncedRpm(redline, _limiterVisualPhase);
         }
         else
         {
+            _displayRpm = MathF.Min(_rpm, redline);
             _limiterVisualPhase = 0f;
         }
 
@@ -232,6 +231,7 @@ public sealed class RTypeEngineRoomScreen : IDisposable
         _vehicle.Velocity = new Vector2(0f, _speedMetersPerSecond);
         _vehicle.RevLimiterActive = limiter;
         _vehicle.RevLimiterBounceIntensity = limiter ? 1f : 0f;
+        _vehicle.RevLimiterBouncePhase = limiter ? _limiterVisualPhase : 0f;
         _vehicle.ShiftKickIntensity = _shiftKick;
         _vehicle.PowertrainShockIntensity = _shiftKick * 0.65f;
         _vehicle.EngineBrakeTorqueNm = (1f - _throttle) * SmoothStep(2600f, _parameters.RedlineRpm, _rpm) * 46f;

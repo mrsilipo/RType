@@ -7,10 +7,6 @@ namespace RType.Audio;
 internal sealed class RaceEngineSampleSound : IDisposable
 {
     private const float SilentLoopVolume = 0.0001f;
-    private const float HighestReferenceRedlineRpm = 12000f;
-    private const float SlowestLimiterBounceSeconds = 1.00f;
-    private const float FastestLimiterBounceSeconds = 0.25f;
-
     private readonly VehicleAudioParameters _parameters;
     private readonly SampleLoop[] _loops;
     private float _smoothedRpm;
@@ -302,16 +298,12 @@ internal sealed class RaceEngineSampleSound : IDisposable
 
     private float CalculateLimiterBounceRpm(float redlineRpm)
     {
-        float redline = MathF.Max(450f, redlineRpm);
-        float depth = redline * 0.08f;
-        float wave = 0.5f - 0.5f * MathF.Cos(_limiterBouncePhase * MathF.Tau);
-        return MathHelper.Clamp(redline - depth * wave, 450f, redline);
+        return RevLimiterPresentationRules.CalculateBouncedRpm(redlineRpm, _limiterBouncePhase);
     }
 
     private static float CalculateLimiterBounceSeconds(float redlineRpm)
     {
-        float t = MathHelper.Clamp((redlineRpm - 4500f) / (HighestReferenceRedlineRpm - 4500f), 0f, 1f);
-        return MathHelper.Lerp(SlowestLimiterBounceSeconds, FastestLimiterBounceSeconds, t);
+        return RevLimiterPresentationRules.CalculateBounceSeconds(redlineRpm);
     }
 
     private int ResolveLimiterBounceLoopIndex()

@@ -34,6 +34,8 @@ public sealed class VehicleState
 
     public float RevLimiterBounceIntensity { get; set; }
 
+    public float RevLimiterBouncePhase { get; set; }
+
     public float LimiterTorqueMultiplier { get; set; } = 1f;
 
     public bool IsShifting { get; set; }
