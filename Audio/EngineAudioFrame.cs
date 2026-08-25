@@ -55,10 +55,10 @@ internal readonly record struct EngineAudioFrame(
         float deltaSeconds)
     {
         float pauseScale = paused ? 0f : 1f;
-        float redlineRpm = MathF.Max(450f, vehicle.RedlineRpm);
+        float limiterHardCutRpm = MathF.Max(450f, vehicle.LimiterHardCutRpm > 0f ? vehicle.LimiterHardCutRpm : vehicle.RedlineRpm);
         float throttle = MathHelper.Clamp(MathF.Max(vehicle.Throttle, vehicle.EffectiveThrottle), 0f, 1f);
         float shapedThrottle = MathF.Pow(throttle, MathF.Max(0.1f, parameters.RaceAudioThrottleGamma));
-        float overrun = CalculateOverrun(throttle, rpm, redlineRpm, vehicle.SpeedMetersPerSecond);
+        float overrun = CalculateOverrun(throttle, rpm, limiterHardCutRpm, vehicle.SpeedMetersPerSecond);
         float vtecKick = MathHelper.Clamp(vehicle.EnginePowerUnitVtecKickIntensity, 0f, 1f);
         float vtecBlend = MathHelper.Clamp(
             MathF.Max(highRpmBlend, vehicle.EnginePowerUnitVtecBlend) + vtecKick * 0.32f,
@@ -91,8 +91,8 @@ internal readonly record struct EngineAudioFrame(
         float gearRatio = ResolveGearRatio(parameters, vehicle.Gear);
 
         return new EngineAudioFrame(
-            MathHelper.Clamp(rpm, 450f, redlineRpm * 1.12f),
-            redlineRpm,
+            MathHelper.Clamp(rpm, 450f, limiterHardCutRpm * 1.12f),
+            limiterHardCutRpm,
             throttle,
             shapedThrottle,
             load,

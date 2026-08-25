@@ -95,6 +95,10 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         State = new VehicleState
         {
             VehicleName = _parameters.DisplayName,
+            PowerRedlineRpm = _parameters.PowerRedlineRpm,
+            LimiterHardCutRpm = _parameters.LimiterHardCutRpm,
+            LimiterResumeRpm = _parameters.RevLimiterResumeRpm,
+            MaxGaugeRpm = _parameters.MaxGaugeRpm,
             RedlineRpm = _parameters.RedlineRpm,
             Position = startPosition,
             HeadingRadians = startHeadingRadians,

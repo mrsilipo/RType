@@ -35,7 +35,8 @@ public static class VehicleDefinitionLoader
         float rearLiftCoefficient = ReadValueSingle(root, 0.03f, "aero", "rearLiftCoefficient");
         TyreAxleParameters frontTyres = ReadTyres(root, "front");
         TyreAxleParameters rearTyres = ReadTyres(root, "rear");
-        float redlineRpm = ReadValueSingle(root, 6800f, "powertrain", "engine", "revLimiterRpm");
+        float powerRedlineRpm = ReadValueSingle(root, 6600f, "powertrain", "engine", "redlineRpm");
+        float limiterHardCutRpm = ReadValueSingle(root, powerRedlineRpm + 200f, "powertrain", "engine", "revLimiterRpm");
 
         return new VehicleSimulationParameters
         {
@@ -55,12 +56,15 @@ public static class VehicleDefinitionLoader
             DrivetrainEfficiency = ReadValueSingle(root, 0.82f, "simulation", "currentPrototype", "drivetrainEfficiency"),
             ClosedThrottleEngineBrakeTorqueNm = ReadValueSingle(root, 32f, "simulation", "currentPrototype", "closedThrottleEngineBrakeTorqueNm"),
             IdleRpm = ReadValueSingle(root, 900f, "powertrain", "engine", "idleRpm"),
-            RedlineRpm = redlineRpm,
+            PowerRedlineRpm = powerRedlineRpm,
+            LimiterHardCutRpm = limiterHardCutRpm,
+            MaxGaugeRpm = CalculateDefaultMaxGaugeRpm(limiterHardCutRpm),
+            RedlineRpm = limiterHardCutRpm,
             RevLimiterResumeRpm = ReadValueSingle(root, 6620f, "powertrain", "engine", "revLimiter", "resumeRpm"),
             RevLimiterFuelCutSeconds = ReadValueSingle(root, 0.08f, "powertrain", "engine", "revLimiter", "fuelCutSeconds"),
             RevLimiterRestoreSeconds = ReadValueSingle(root, 0.05f, "powertrain", "engine", "revLimiter", "restoreSeconds"),
             RevLimiterCutTorqueMultiplier = ReadValueSingle(root, 0.08f, "powertrain", "engine", "revLimiter", "cutTorqueMultiplier"),
-            RevLimiterBounceRpm = CalculateRevLimiterBounceRpm(redlineRpm),
+            RevLimiterBounceRpm = CalculateRevLimiterBounceRpm(limiterHardCutRpm),
             EngineRotationalInertiaKgM2 = ReadValueSingle(root, 0.22f, "powertrain", "engine", "rotationalInertiaKgM2"),
             VtecEnabled = ReadBoolean(root, false, "powertrain", "engine", "vtec", "enabled"),
             VtecActivationRpm = ReadValueSingle(root, 5800f, "powertrain", "engine", "vtec", "activationRpm"),
@@ -145,6 +149,12 @@ public static class VehicleDefinitionLoader
     private static float CalculateRevLimiterBounceRpm(float redlineRpm)
     {
         return RevLimiterPresentationRules.CalculateBounceDepthRpm(redlineRpm);
+    }
+
+    private static float CalculateDefaultMaxGaugeRpm(float limiterRpm)
+    {
+        float padded = MathF.Max(1000f, limiterRpm) + 1000f;
+        return MathF.Ceiling(padded / 1000f) * 1000f;
     }
 
     private static ArcadeHandlingParameters ReadArcadeHandling(JsonElement root)
@@ -361,6 +371,9 @@ public static class VehicleDefinitionLoader
             HighRpmMinimumThrottle = ReadValueSingle(root, 0f, "audio", "highRpmMinimumThrottle"),
             HighRpmMinimumSpeedMetersPerSecond = ReadValueSingle(root, 0f, "audio", "highRpmMinimumSpeedMetersPerSecond"),
             HighRpmVolumeBoost = ReadValueSingle(root, 0.12f, "audio", "highRpmVolumeBoost"),
+            LimiterStutterFrequencyHz = ReadEngineAudioValueSingle(root, engineAudioProfile, 15f, "limiter", "stutterHz"),
+            LimiterStutterOffDuty = ReadEngineAudioValueSingle(root, engineAudioProfile, 0.48f, "limiter", "offDuty"),
+            LimiterStutterIntensity = ReadEngineAudioValueSingle(root, engineAudioProfile, 1f, "limiter", "intensity"),
             RTypeEngineEnabled = ReadBoolean(root, true, "audio", "rTypeEngine", "enabled"),
             RTypeEngineBuildPath = ReadString(
                 root,

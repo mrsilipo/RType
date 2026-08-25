@@ -8,17 +8,18 @@ public static class RpmPresentationSmoother
     {
         float rawRpm = MathF.Max(300f, state.Rpm);
         float previousPhysicsRpm = MathF.Max(300f, state.PreviousPhysicsRpm);
+        float limiterHardCutRpm = MathF.Max(450f, state.LimiterHardCutRpm > 0f ? state.LimiterHardCutRpm : state.RedlineRpm);
         float physicsAlpha = MathHelper.Clamp(state.PhysicsTickAlpha, 0f, 1f);
         float physicsRpmDelta = rawRpm - previousPhysicsRpm;
         float projectedRpm = !state.IsShifting && physicsRpmDelta > 0f
             ? rawRpm + physicsRpmDelta * physicsAlpha
             : rawRpm;
         projectedRpm = MathHelper.Clamp(projectedRpm, 300f, MathF.Max(rawRpm, previousPhysicsRpm) + 700f);
-        bool limiterPinned = (state.RevLimiterActive || state.MechanicalOverRevActive) && state.RedlineRpm > 0f;
+        bool limiterPinned = (state.RevLimiterActive || state.MechanicalOverRevActive) && limiterHardCutRpm > 0f;
         if (limiterPinned)
         {
-            projectedRpm = MathF.Min(projectedRpm, state.RedlineRpm);
-            projectedRpm = ApplyLimiterNeedleBounce(projectedRpm, state);
+            projectedRpm = MathF.Min(projectedRpm, limiterHardCutRpm);
+            projectedRpm = ApplyLimiterNeedleBounce(projectedRpm, state, limiterHardCutRpm);
         }
 
         float vtecKick = MathHelper.Clamp(state.EnginePowerUnitVtecKickIntensity, 0f, 1f);
@@ -75,7 +76,7 @@ public static class RpmPresentationSmoother
             : MathHelper.Lerp(state.DisplayedRpmTarget, projectedRpm, targetBlend);
 
         float targetRpm = limiterPinned
-            ? MathF.Min(state.DisplayedRpmTarget, state.RedlineRpm)
+            ? MathF.Min(state.DisplayedRpmTarget, limiterHardCutRpm)
             : state.DisplayedRpmTarget;
         if (limiterPinned && state.RevLimiterBounceIntensity > 0.05f)
         {
@@ -144,7 +145,7 @@ public static class RpmPresentationSmoother
 
         float stressMargin = powertrainStress ? 850f : 500f;
         float maximumDisplayedRpm = limiterPinned
-            ? state.RedlineRpm
+            ? limiterHardCutRpm
             : MathF.Max(projectedRpm, targetRpm) + stressMargin;
         state.DisplayedRpm = MathHelper.Clamp(nextRpm, 300f, maximumDisplayedRpm);
     }
@@ -160,7 +161,7 @@ public static class RpmPresentationSmoother
         return current + MathF.Sign(delta) * maximumDelta;
     }
 
-    private static float ApplyLimiterNeedleBounce(float projectedRpm, VehicleState state)
+    private static float ApplyLimiterNeedleBounce(float projectedRpm, VehicleState state, float limiterHardCutRpm)
     {
         float bounce = MathHelper.Clamp(state.RevLimiterBounceIntensity, 0f, 1f);
         if (bounce <= 0.02f)
@@ -168,8 +169,12 @@ public static class RpmPresentationSmoother
             return projectedRpm;
         }
 
-        float bouncedRpm = RevLimiterPresentationRules.CalculateBouncedRpm(state.RedlineRpm, state.RevLimiterBouncePhase);
-        return MathF.Min(projectedRpm, MathF.Max(300f, bouncedRpm));
+        float phase = state.RevLimiterBouncePhase - MathF.Floor(state.RevLimiterBouncePhase);
+        float bounceDepth = RevLimiterPresentationRules.CalculateBounceDepthRpm(limiterHardCutRpm);
+        float shake = MathF.Sin(phase * MathF.Tau * 8f) * bounceDepth * 0.10f * bounce;
+        float dip = (0.08f + 0.10f * (0.5f - 0.5f * MathF.Cos(phase * MathF.Tau))) * bounceDepth * bounce;
+        float needleRpm = limiterHardCutRpm - dip + shake;
+        return MathHelper.Clamp(needleRpm, limiterHardCutRpm - bounceDepth * 0.28f, limiterHardCutRpm);
     }
 
     private static float SmoothStep(float edge0, float edge1, float value)

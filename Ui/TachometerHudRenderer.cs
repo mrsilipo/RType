@@ -31,14 +31,15 @@ public sealed class TachometerHudRenderer : IDisposable
 
     public void Draw(SpriteBatch spriteBatch, TachometerHudState state)
     {
+        float maxGaugeRpm = ResolveGaugeMaxRpm(state.MaxGaugeRpm, state.LimiterHardCutRpm);
         DrawDial(spriteBatch);
         DrawRpmArc(spriteBatch);
-        DrawRedline(spriteBatch, state.RedlineRpm);
-        DrawTicks(spriteBatch, state.RedlineRpm);
-        DrawRevLimiterMarker(spriteBatch, state.RedlineRpm);
-        DrawRpmNumbers(spriteBatch);
+        DrawRedline(spriteBatch, state.PowerRedlineRpm, maxGaugeRpm);
+        DrawTicks(spriteBatch, state.PowerRedlineRpm, maxGaugeRpm);
+        DrawRevLimiterMarker(spriteBatch, state.LimiterHardCutRpm, maxGaugeRpm);
+        DrawRpmNumbers(spriteBatch, maxGaugeRpm);
         DrawRpmLabel(spriteBatch);
-        DrawNeedle(spriteBatch, state.Rpm, state.RedlineRpm, state.RevLimiterActive, state.MechanicalOverRevActive);
+        DrawNeedle(spriteBatch, state.Rpm, state.LimiterHardCutRpm, maxGaugeRpm, state.RevLimiterActive, state.MechanicalOverRevActive);
         DrawSpeedDisplay(spriteBatch, state.SpeedMetersPerSecond);
         DrawGearDisplay(spriteBatch, state.GearValue);
     }
@@ -76,10 +77,10 @@ public sealed class TachometerHudRenderer : IDisposable
             Config.Colours.RpmArc);
     }
 
-    private void DrawRedline(SpriteBatch spriteBatch, float redlineRpm)
+    private void DrawRedline(SpriteBatch spriteBatch, float powerRedlineRpm, float maxGaugeRpm)
     {
-        float start = ResolveRedlineStart(redlineRpm);
-        float end = MathHelper.Clamp(Config.Redline.RedlineEnd, Config.Rpm.RpmMin, Config.Rpm.RpmMax);
+        float start = ResolvePowerRedlineStart(powerRedlineRpm, maxGaugeRpm);
+        float end = maxGaugeRpm;
         if (end <= start)
         {
             return;
@@ -90,37 +91,37 @@ public sealed class TachometerHudRenderer : IDisposable
             spriteBatch,
             center,
             Scale(Config.Redline.RedlineArcRadius),
-            RpmToAngle(start),
-            RpmToAngle(end),
+            RpmToAngle(start, maxGaugeRpm),
+            RpmToAngle(end, maxGaugeRpm),
             Scale(Config.Redline.RedlineArcWidth),
             Config.Colours.RedlineColor);
     }
 
-    private void DrawTicks(SpriteBatch spriteBatch, float redlineRpm)
+    private void DrawTicks(SpriteBatch spriteBatch, float powerRedlineRpm, float maxGaugeRpm)
     {
         float minorStep = CalculateReadableMinorStep();
-        foreach (float rpm in EnumerateRpmValues(Config.Rpm.RpmMin, Config.Rpm.RpmMax, minorStep))
+        foreach (float rpm in EnumerateRpmValues(Config.Rpm.RpmMin, maxGaugeRpm, minorStep))
         {
             if (IsMajorRpm(rpm))
             {
                 continue;
             }
 
-            Color color = IsRedlineRpm(rpm, redlineRpm) && Config.Redline.ReplaceNormalTickColor
+            Color color = IsRedlineRpm(rpm, powerRedlineRpm, maxGaugeRpm) && Config.Redline.ReplaceNormalTickColor
                 ? Config.Colours.RedlineTickColor
                 : Config.Colours.MinorTickColor;
             bool halfMajor = IsHalfMajorRpm(rpm);
             float length = halfMajor ? Config.Ticks.HalfMajorTickLength : Config.Ticks.MinorTickLength;
             float width = halfMajor ? Config.Ticks.HalfMajorTickWidth : Config.Ticks.MinorTickWidth;
-            DrawTick(spriteBatch, rpm, length, width, color);
+            DrawTick(spriteBatch, rpm, length, width, maxGaugeRpm, color);
         }
 
-        foreach (float rpm in EnumerateRpmValues(Config.Rpm.RpmMin, Config.Rpm.RpmMax, Config.Rpm.RpmMajorStep))
+        foreach (float rpm in EnumerateRpmValues(Config.Rpm.RpmMin, maxGaugeRpm, Config.Rpm.RpmMajorStep))
         {
-            Color color = IsRedlineRpm(rpm, redlineRpm) && Config.Redline.ReplaceNormalTickColor
+            Color color = IsRedlineRpm(rpm, powerRedlineRpm, maxGaugeRpm) && Config.Redline.ReplaceNormalTickColor
                 ? Config.Colours.RedlineTickColor
                 : Config.Colours.MajorTickColor;
-            DrawTick(spriteBatch, rpm, Config.Ticks.MajorTickLength, Config.Ticks.MajorTickWidth, color);
+            DrawTick(spriteBatch, rpm, Config.Ticks.MajorTickLength, Config.Ticks.MajorTickWidth, maxGaugeRpm, color);
         }
     }
 
@@ -129,33 +130,35 @@ public sealed class TachometerHudRenderer : IDisposable
         float rpm,
         float localLength,
         float localWidth,
+        float maxGaugeRpm,
         Color color)
     {
         Vector2 center = DialCenter();
-        Vector2 direction = AngleToVector(RpmToAngle(rpm));
+        Vector2 direction = AngleToVector(RpmToAngle(rpm, maxGaugeRpm));
         float outerRadius = Scale(Config.Dial.DialRadius + Config.Ticks.TickOuterRadiusOffset);
         Vector2 outer = center + direction * outerRadius;
         Vector2 inner = outer - direction * Scale(localLength);
         DrawLine(spriteBatch, inner, outer, Scale(localWidth), color);
     }
 
-    private void DrawRevLimiterMarker(SpriteBatch spriteBatch, float redlineRpm)
+    private void DrawRevLimiterMarker(SpriteBatch spriteBatch, float limiterHardCutRpm, float maxGaugeRpm)
     {
-        float rpm = ResolveRedlineStart(redlineRpm);
+        float rpm = MathHelper.Clamp(limiterHardCutRpm, Config.Rpm.RpmMin, maxGaugeRpm);
         DrawTick(
             spriteBatch,
             rpm,
             Config.Redline.RedlineTickLength,
             Config.Redline.RedlineTickWidth,
+            maxGaugeRpm,
             Config.Colours.RedlineTickColor);
     }
 
-    private void DrawRpmNumbers(SpriteBatch spriteBatch)
+    private void DrawRpmNumbers(SpriteBatch spriteBatch, float maxGaugeRpm)
     {
         Vector2 center = DialCenter();
-        foreach (float rpm in EnumerateRpmValues(Config.Rpm.RpmMin, Config.Rpm.RpmMax, Config.Rpm.RpmMajorStep))
+        foreach (float rpm in EnumerateRpmValues(Config.Rpm.RpmMin, maxGaugeRpm, Config.Rpm.RpmMajorStep))
         {
-            Vector2 direction = AngleToVector(RpmToAngle(rpm));
+            Vector2 direction = AngleToVector(RpmToAngle(rpm, maxGaugeRpm));
             Vector2 numberCenter = center +
                                    direction * Scale(Config.Numbers.RpmNumberRadius) +
                                    ScaleVector(Config.Numbers.RpmNumberOffsetX, Config.Numbers.RpmNumberOffsetY);
@@ -186,16 +189,17 @@ public sealed class TachometerHudRenderer : IDisposable
     private void DrawNeedle(
         SpriteBatch spriteBatch,
         float rpm,
-        float redlineRpm,
+        float limiterHardCutRpm,
+        float maxGaugeRpm,
         bool revLimiterActive,
         bool mechanicalOverRevActive)
     {
         TachometerNeedleConfig needle = Config.Needle;
         Vector2 pivot = HudPoint(needle.NeedlePivotX, needle.NeedlePivotY);
         float needleRpm = revLimiterActive || mechanicalOverRevActive
-            ? MathF.Min(rpm, ResolveRedlineStart(redlineRpm))
+            ? MathF.Min(rpm, limiterHardCutRpm)
             : rpm;
-        Vector2 direction = AngleToVector(RpmToAngle(needleRpm));
+        Vector2 direction = AngleToVector(RpmToAngle(needleRpm, maxGaugeRpm));
         Vector2 tip = pivot + direction * Scale(needle.NeedleLength);
         Vector2 tail = pivot - direction * Scale(needle.NeedleTailLength);
         Color needleColor = revLimiterActive || mechanicalOverRevActive
@@ -443,17 +447,17 @@ public sealed class TachometerHudRenderer : IDisposable
         return MathF.Abs(offset - nearest) < 0.5f;
     }
 
-    private bool IsRedlineRpm(float rpm, float redlineRpm)
+    private bool IsRedlineRpm(float rpm, float powerRedlineRpm, float maxGaugeRpm)
     {
-        return rpm >= ResolveRedlineStart(redlineRpm) && rpm <= Config.Redline.RedlineEnd;
+        return rpm >= ResolvePowerRedlineStart(powerRedlineRpm, maxGaugeRpm) && rpm <= maxGaugeRpm;
     }
 
-    private float ResolveRedlineStart(float redlineRpm)
+    private float ResolvePowerRedlineStart(float powerRedlineRpm, float maxGaugeRpm)
     {
-        float start = redlineRpm > Config.Rpm.RpmMin
-            ? redlineRpm
+        float start = powerRedlineRpm > Config.Rpm.RpmMin
+            ? powerRedlineRpm
             : Config.Redline.RedlineStart;
-        return MathHelper.Clamp(start, Config.Rpm.RpmMin, Config.Rpm.RpmMax);
+        return MathHelper.Clamp(start, Config.Rpm.RpmMin, maxGaugeRpm);
     }
 
     private IEnumerable<float> EnumerateRpmValues(float minRpm, float maxRpm, float step)
@@ -464,16 +468,23 @@ public sealed class TachometerHudRenderer : IDisposable
         {
             if (rpm >= minRpm - 0.5f)
             {
-                yield return MathHelper.Clamp(rpm, Config.Rpm.RpmMin, Config.Rpm.RpmMax);
+                yield return MathHelper.Clamp(rpm, Config.Rpm.RpmMin, maxRpm);
             }
         }
     }
 
-    private float RpmToAngle(float rpm)
+    private float RpmToAngle(float rpm, float maxGaugeRpm)
     {
-        float range = MathF.Max(1f, Config.Rpm.RpmMax - Config.Rpm.RpmMin);
+        float gaugeMax = ResolveGaugeMaxRpm(maxGaugeRpm, maxGaugeRpm);
+        float range = MathF.Max(1f, gaugeMax - Config.Rpm.RpmMin);
         float t = MathHelper.Clamp((rpm - Config.Rpm.RpmMin) / range, 0f, 1f);
         return MathHelper.Lerp(Config.Dial.DialStartAngle, Config.Dial.DialEndAngle, t);
+    }
+
+    private float ResolveGaugeMaxRpm(float requestedGaugeMaxRpm, float limiterHardCutRpm)
+    {
+        float minimum = MathF.Max(Config.Rpm.RpmMin + 1000f, limiterHardCutRpm + 250f);
+        return MathF.Max(minimum, requestedGaugeMaxRpm > 0f ? requestedGaugeMaxRpm : Config.Rpm.RpmMax);
     }
 
     private Vector2 DialCenter()

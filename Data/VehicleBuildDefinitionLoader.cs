@@ -269,6 +269,9 @@ internal static class VehicleBuildDefinitionLoader
             DrivetrainEfficiency = build.Handling.DrivetrainEfficiency,
             ClosedThrottleEngineBrakeTorqueNm = build.Handling.ClosedThrottleEngineBrakeTorqueNm,
             IdleRpm = build.Engine.IdleRpm,
+            PowerRedlineRpm = build.Engine.PowerRedlineRpm,
+            LimiterHardCutRpm = build.Engine.LimiterRpm,
+            MaxGaugeRpm = CalculateDefaultMaxGaugeRpm(build.Engine.LimiterRpm),
             RedlineRpm = build.Engine.LimiterRpm,
             RevLimiterResumeRpm = reference.RevLimiterResumeRpm,
             RevLimiterFuelCutSeconds = reference.RevLimiterFuelCutSeconds,
@@ -359,6 +362,12 @@ internal static class VehicleBuildDefinitionLoader
     private static float CalculateRevLimiterBounceRpm(float redlineRpm)
     {
         return RevLimiterPresentationRules.CalculateBounceDepthRpm(redlineRpm);
+    }
+
+    private static float CalculateDefaultMaxGaugeRpm(float limiterRpm)
+    {
+        float padded = MathF.Max(1000f, limiterRpm) + 1000f;
+        return MathF.Ceiling(padded / 1000f) * 1000f;
     }
 
     private static BrakeSystemParameters MergeBrakes(BrakeSystemParameters reference, ResolvedBrakeBuild build)
@@ -658,6 +667,7 @@ internal static class VehicleBuildDefinitionLoader
         return new ResolvedEngineBuild
         {
             IdleRpm = reference.IdleRpm,
+            PowerRedlineRpm = reference.PowerRedlineRpm,
             LimiterRpm = reference.RedlineRpm,
             RotationalInertiaKgM2 = reference.EngineRotationalInertiaKgM2,
             VtecEnabled = reference.VtecEnabled,
@@ -788,6 +798,7 @@ internal sealed class ResolvedVehicleBuild
 internal sealed class ResolvedEngineBuild
 {
     public float IdleRpm { get; init; } = 900f;
+    public float PowerRedlineRpm { get; init; } = 8200f;
     public float LimiterRpm { get; init; } = 8400f;
     public float RotationalInertiaKgM2 { get; init; } = 0.22f;
     public bool VtecEnabled { get; init; } = true;

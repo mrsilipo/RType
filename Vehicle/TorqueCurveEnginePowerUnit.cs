@@ -25,7 +25,7 @@ internal sealed class TorqueCurveEnginePowerUnit : IEnginePowerUnit
         float rpm = MathHelper.Clamp(
             request.Rpm,
             450f,
-            MathF.Max(450f, _parameters.RedlineRpm + _parameters.RevLimiterBounceRpm));
+            MathF.Max(450f, _parameters.LimiterHardCutRpm + _parameters.RevLimiterBounceRpm));
         float throttle = MathHelper.Clamp(request.Throttle, 0f, 1f);
         float limiterTorqueMultiplier = MathHelper.Clamp(request.LimiterTorqueMultiplier, 0f, 1.25f);
         float driveTorque = _parameters.TorqueAtRpm(rpm) * throttle * limiterTorqueMultiplier;

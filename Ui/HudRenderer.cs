@@ -115,7 +115,7 @@ public sealed class HudRenderer : IDisposable
         y += 24;
         DrawDebugLine(spriteBatch, $"THR {vehicle.Throttle:0.0}/{vehicle.EffectiveThrottle:0.0} BRK {vehicle.Brake:0.0} HB {vehicle.Handbrake:0.0}", y);
         y += 24;
-        DrawDebugLine(spriteBatch, $"RPM {vehicle.Rpm:0}/{vehicle.DisplayedRpm:0} LIMIT {vehicle.RedlineRpm:0} CLUTCH SLIP {vehicle.ClutchSlipRpm:0}", y);
+        DrawDebugLine(spriteBatch, $"RPM {vehicle.Rpm:0}/{vehicle.DisplayedRpm:0} RED {vehicle.PowerRedlineRpm:0} CUT {vehicle.LimiterHardCutRpm:0} CLUTCH SLIP {vehicle.ClutchSlipRpm:0}", y);
         y += 24;
         DrawDebugLine(spriteBatch, $"RTYPE {(vehicle.RTypeEngineActive ? "ON" : "OFF")} {vehicle.RTypeEngineRpm:0}RPM VTEC {vehicle.RTypeEngineVtecBlend:0.00} CUT {(vehicle.RTypeEngineLimiterCut ? "ON" : "OFF")} PK {vehicle.RTypeEngineOutputPeak:0.00}", y);
         y += 24;

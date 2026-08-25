@@ -16,6 +16,10 @@ public static class AudioDiagnosticsSmoke
 
         VehicleState state = new()
         {
+            PowerRedlineRpm = parameters.PowerRedlineRpm,
+            LimiterHardCutRpm = parameters.LimiterHardCutRpm,
+            LimiterResumeRpm = parameters.RevLimiterResumeRpm,
+            MaxGaugeRpm = parameters.MaxGaugeRpm,
             RedlineRpm = parameters.RedlineRpm,
             Rpm = parameters.IdleRpm,
             DisplayedRpm = parameters.IdleRpm,
@@ -28,7 +32,7 @@ public static class AudioDiagnosticsSmoke
         Tick(audio, state, parameters.IdleRpm, limiter: false);
         Tick(audio, state, 3500f, limiter: false);
         Tick(audio, state, 6200f, limiter: false);
-        Tick(audio, state, 8300f, limiter: true);
+        Tick(audio, state, parameters.LimiterHardCutRpm, limiter: true);
         Thread.Sleep(250);
         audio.Stop();
 
@@ -44,7 +48,7 @@ public static class AudioDiagnosticsSmoke
             state.RevLimiterActive = limiter;
             state.RevLimiterBounceIntensity = limiter ? 1f : 0f;
             state.RevLimiterBouncePhase = limiter
-                ? RevLimiterPresentationRules.AdvanceBouncePhase(state.RevLimiterBouncePhase, state.RedlineRpm, dt)
+                ? RevLimiterPresentationRules.AdvanceBouncePhase(state.RevLimiterBouncePhase, state.LimiterHardCutRpm, dt)
                 : 0f;
             RpmPresentationSmoother.Update(state, dt);
             audio.Update(state, CameraMode.Chase1, active: true, paused: false, dt);

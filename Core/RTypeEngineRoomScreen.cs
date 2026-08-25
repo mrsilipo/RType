@@ -49,6 +49,10 @@ public sealed class RTypeEngineRoomScreen : IDisposable
         _parameters = VehicleBuildDefinitionLoader.LoadSimulationParameters(VehicleBuildPath);
         _rpm = _parameters.IdleRpm;
         _vehicle.VehicleName = _parameters.DisplayName;
+        _vehicle.PowerRedlineRpm = _parameters.PowerRedlineRpm;
+        _vehicle.LimiterHardCutRpm = _parameters.LimiterHardCutRpm;
+        _vehicle.LimiterResumeRpm = _parameters.RevLimiterResumeRpm;
+        _vehicle.MaxGaugeRpm = _parameters.MaxGaugeRpm;
         _vehicle.RedlineRpm = _parameters.RedlineRpm;
         _vehicle.Gear = _gear;
         _vehicle.Rpm = _rpm;
@@ -138,22 +142,26 @@ public sealed class RTypeEngineRoomScreen : IDisposable
 
     private void UpdateRaceBench(float dt)
     {
-        float redline = _parameters.RedlineRpm;
-        float vtec = SmoothStep(_parameters.VtecActivationRpm, _parameters.VtecActivationRpm + _parameters.VtecTransitionWidthRpm, _rpm);
+        float powerRedline = MathF.Max(_parameters.IdleRpm + 1000f, _parameters.PowerRedlineRpm);
+        float limiterHardCut = MathF.Max(powerRedline, _parameters.LimiterHardCutRpm);
+        bool hasVtec = HasVtec();
+        float vtec = hasVtec
+            ? SmoothStep(_parameters.VtecActivationRpm, _parameters.VtecActivationRpm + _parameters.VtecTransitionWidthRpm, _rpm)
+            : 0f;
         float loadDrag = _dynoLoadEngaged
             ? MathHelper.Lerp(0.18f, 0.82f, _load)
             : 0f;
         float targetRpm = _throttle > 0.02f
-            ? MathHelper.Lerp(_parameters.IdleRpm + 600f, redline + _parameters.RevLimiterBounceRpm, MathF.Pow(_throttle, 0.72f))
+            ? MathHelper.Lerp(_parameters.IdleRpm + 600f, limiterHardCut + _parameters.RevLimiterBounceRpm, MathF.Pow(_throttle, 0.72f))
             : CalculateIdleCycleRpm();
-        targetRpm -= loadDrag * MathHelper.Lerp(280f, 1850f, SmoothStep(1800f, redline, _rpm));
+        targetRpm -= loadDrag * MathHelper.Lerp(280f, 1850f, SmoothStep(1800f, limiterHardCut, _rpm));
         float response = _throttle > 0.02f
             ? MathHelper.Lerp(5.6f, 9.4f, _throttle) * MathHelper.Lerp(1f, 1.16f, vtec)
             : 7.2f;
         response *= MathHelper.Lerp(1f, 0.62f, loadDrag);
         _rpm = MathHelper.Lerp(_rpm, targetRpm, 1f - MathF.Exp(-response * dt));
 
-        bool limiter = _rpm >= redline;
+        bool limiter = _rpm >= limiterHardCut;
         if (limiter)
         {
             if (!_wasLimiter)
@@ -161,7 +169,7 @@ public sealed class RTypeEngineRoomScreen : IDisposable
                 _limiterVisualPhase = 0f;
             }
 
-            _limiterVisualPhase = RevLimiterPresentationRules.AdvanceBouncePhase(_limiterVisualPhase, redline, dt);
+            _limiterVisualPhase = RevLimiterPresentationRules.AdvanceBouncePhase(_limiterVisualPhase, limiterHardCut, dt);
         }
         else
         {
@@ -216,6 +224,10 @@ public sealed class RTypeEngineRoomScreen : IDisposable
 
     private void PopulateVehicleState(float vtec, bool limiter)
     {
+        _vehicle.PowerRedlineRpm = _parameters.PowerRedlineRpm;
+        _vehicle.LimiterHardCutRpm = _parameters.LimiterHardCutRpm;
+        _vehicle.LimiterResumeRpm = _parameters.RevLimiterResumeRpm;
+        _vehicle.MaxGaugeRpm = _parameters.MaxGaugeRpm;
         _vehicle.RedlineRpm = _parameters.RedlineRpm;
         _vehicle.Gear = _gear;
         _vehicle.Rpm = _rpm;
@@ -229,8 +241,8 @@ public sealed class RTypeEngineRoomScreen : IDisposable
         _vehicle.RevLimiterBouncePhase = limiter ? _limiterVisualPhase : 0f;
         _vehicle.ShiftKickIntensity = _shiftKick;
         _vehicle.PowertrainShockIntensity = _shiftKick * 0.65f;
-        _vehicle.EngineBrakeTorqueNm = (1f - _throttle) * SmoothStep(2600f, _parameters.RedlineRpm, _rpm) * 46f;
-        _vehicle.DriveForce = _throttle * MathHelper.Lerp(220f, 2550f, SmoothStep(_parameters.IdleRpm, _parameters.RedlineRpm, _rpm));
+        _vehicle.EngineBrakeTorqueNm = (1f - _throttle) * SmoothStep(2600f, _parameters.LimiterHardCutRpm, _rpm) * 46f;
+        _vehicle.DriveForce = _throttle * MathHelper.Lerp(220f, 2550f, SmoothStep(_parameters.IdleRpm, _parameters.PowerRedlineRpm, _rpm));
     }
 
     private void ShiftTo(int gear)
@@ -251,7 +263,7 @@ public sealed class RTypeEngineRoomScreen : IDisposable
             float nextRatio = ResolveGearRatio(_gear);
             if (previousRatio > 0f && nextRatio > 0f)
             {
-                _rpm = MathHelper.Clamp(_rpm * nextRatio / previousRatio, _parameters.IdleRpm, _parameters.RedlineRpm * 1.08f);
+                _rpm = MathHelper.Clamp(_rpm * nextRatio / previousRatio, _parameters.IdleRpm, _parameters.LimiterHardCutRpm * 1.08f);
             }
         }
     }
@@ -326,13 +338,22 @@ public sealed class RTypeEngineRoomScreen : IDisposable
         Rectangle bar = new(panel.X + 60, panel.Y + 320, panel.Width - 120, 52);
         DrawRect(spriteBatch, bar, GaugeColor);
         float displayedRpm = MathF.Max(300f, _vehicle.DisplayedRpm);
-        float rpmNorm = MathHelper.Clamp(displayedRpm / MathF.Max(1f, _parameters.RedlineRpm), 0f, 1f);
+        float gaugeMax = MathF.Max(_parameters.MaxGaugeRpm, _parameters.LimiterHardCutRpm + 250f);
+        float rpmNorm = MathHelper.Clamp(displayedRpm / MathF.Max(1f, gaugeMax), 0f, 1f);
         DrawRect(spriteBatch, new Rectangle(bar.X, bar.Y, (int)MathF.Round(bar.Width * rpmNorm), bar.Height), rpmNorm > 0.92f ? BrandRed : Color.White);
-        int vtecX = bar.X + (int)MathF.Round(bar.Width * MathHelper.Clamp(_parameters.VtecActivationRpm / _parameters.RedlineRpm, 0f, 1f));
-        DrawRect(spriteBatch, new Rectangle(vtecX, bar.Y - 24, 6, bar.Height + 48), BrandRed);
-        _font.Draw(spriteBatch, "VTEC", vtecX - 42, bar.Y - 56, 3, BrandRed);
+        if (HasVtec())
+        {
+            int vtecX = bar.X + (int)MathF.Round(bar.Width * MathHelper.Clamp(_parameters.VtecActivationRpm / gaugeMax, 0f, 1f));
+            DrawRect(spriteBatch, new Rectangle(vtecX, bar.Y - 24, 6, bar.Height + 48), BrandRed);
+            _font.Draw(spriteBatch, "VTEC", vtecX - 42, bar.Y - 56, 3, BrandRed);
+        }
+
+        int redlineX = bar.X + (int)MathF.Round(bar.Width * MathHelper.Clamp(_parameters.PowerRedlineRpm / gaugeMax, 0f, 1f));
+        int limiterX = bar.X + (int)MathF.Round(bar.Width * MathHelper.Clamp(_parameters.LimiterHardCutRpm / gaugeMax, 0f, 1f));
+        DrawRect(spriteBatch, new Rectangle(redlineX, bar.Y, 4, bar.Height), BrandRed);
+        DrawRect(spriteBatch, new Rectangle(limiterX, bar.Y - 8, 4, bar.Height + 16), Color.White);
         _font.Draw(spriteBatch, $"{displayedRpm:0000} RPM", panel.X + 92, panel.Y + 138, 12, TextColor);
-        _font.Draw(spriteBatch, $"LIMIT {_parameters.RedlineRpm:0}", panel.X + 66, panel.Y + 414, 5, MutedTextColor);
+        _font.Draw(spriteBatch, $"RED {_parameters.PowerRedlineRpm:0}  CUT {_parameters.LimiterHardCutRpm:0}", panel.X + 66, panel.Y + 414, 4, MutedTextColor);
         _font.Draw(spriteBatch, $"CUT {(state.LimiterCut ? "ON" : "OFF")}", panel.X + 486, panel.Y + 414, 5, state.LimiterCut ? BrandRed : MutedTextColor);
     }
 
@@ -411,5 +432,12 @@ public sealed class RTypeEngineRoomScreen : IDisposable
     private static bool IsRole(string role, string expected)
     {
         return role.Trim().Equals(expected, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool HasVtec()
+    {
+        return _parameters.VtecEnabled &&
+               _parameters.VtecActivationRpm > _parameters.IdleRpm &&
+               _parameters.Audio.EngineSamples.Any(sample => sample.HighRpm || IsRole(sample.Role, "vtec"));
     }
 }

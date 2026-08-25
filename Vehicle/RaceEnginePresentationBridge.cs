@@ -11,7 +11,8 @@ public static class RaceEnginePresentationBridge
         float? crankPhaseDegrees = null)
     {
         float rpm = MathF.Max(300f, state.Rpm);
-        float redline = MathF.Max(450f, parameters.RedlineRpm);
+        float powerRedline = MathF.Max(450f, parameters.PowerRedlineRpm);
+        float limiterHardCut = MathF.Max(powerRedline, parameters.LimiterHardCutRpm);
         float dt = MathHelper.Clamp(deltaSeconds, 0f, 1f / 20f);
         float throttle = MathHelper.Clamp(MathF.Max(state.Throttle, state.EffectiveThrottle), 0f, 1f);
         float vtec = parameters.VtecEnabled
@@ -20,19 +21,23 @@ public static class RaceEnginePresentationBridge
                 parameters.VtecActivationRpm + MathF.Max(1f, parameters.VtecTransitionWidthRpm),
                 rpm)
             : 0f;
-        bool limiter = state.RevLimiterActive || rpm >= redline - 1f;
+        bool limiter = state.RevLimiterActive || rpm >= limiterHardCut - 1f;
 
-        state.RedlineRpm = redline;
+        state.PowerRedlineRpm = powerRedline;
+        state.LimiterHardCutRpm = limiterHardCut;
+        state.LimiterResumeRpm = parameters.RevLimiterResumeRpm;
+        state.MaxGaugeRpm = MathF.Max(limiterHardCut, parameters.MaxGaugeRpm);
+        state.RedlineRpm = limiterHardCut;
         state.EnginePowerUnitActive = true;
         state.EnginePowerUnitCrankRpm = rpm;
         state.EnginePowerUnitVtecBlend = vtec;
         state.EnginePowerUnitVtecKickIntensity = MathHelper.Clamp(MathF.Max(state.ShiftKickIntensity, state.PowertrainShockIntensity) * vtec, 0f, 1f);
-        state.EnginePowerUnitLoad = MathHelper.Clamp(throttle * 0.72f + SmoothStep(2600f, redline, rpm) * 0.18f + state.Brake * 0.10f, 0f, 1f);
+        state.EnginePowerUnitLoad = MathHelper.Clamp(throttle * 0.72f + SmoothStep(2600f, limiterHardCut, rpm) * 0.18f + state.Brake * 0.10f, 0f, 1f);
         state.EnginePowerUnitFuelCutBlend = limiter ? 1f : 0f;
         state.EnginePowerUnitCrankPhaseDegrees = crankPhaseDegrees ??
             (state.EnginePowerUnitCrankPhaseDegrees + rpm / 60f * 360f * dt) % 720f;
         state.EnginePowerUnitTransmissionRpm = MathF.Abs(state.SpeedMetersPerSecond) / MathF.Max(0.001f, parameters.WheelRadiusMeters) * 60f / MathHelper.TwoPi;
-        state.EnginePowerUnitAfterfireBlend = (1f - throttle) * SmoothStep(4200f, redline, rpm);
+        state.EnginePowerUnitAfterfireBlend = (1f - throttle) * SmoothStep(4200f, limiterHardCut, rpm);
         state.EnginePowerUnitEngineDriveTorqueNm = parameters.TorqueAtRpm(rpm) * throttle * state.LimiterTorqueMultiplier;
         state.EnginePowerUnitCrankFrictionTorqueNm = parameters.EngineBrakeTorqueAtRpm(rpm) * (1f - throttle);
         state.DisplayedSpeedMetersPerSecond = DrivetrainPresentationRules.CalculateDisplayedSpeedMetersPerSecond(state, parameters);

@@ -34,6 +34,14 @@ public sealed class VehicleSimulationParameters
 
     public float IdleRpm { get; init; } = 900f;
 
+    public float PowerRedlineRpm { get; init; } = 6500f;
+
+    public float LimiterHardCutRpm { get; init; } = 6800f;
+
+    public float MaxGaugeRpm { get; init; } = 8000f;
+
+    // Compatibility alias. New limiter/HUD/audio code should use PowerRedlineRpm
+    // and LimiterHardCutRpm explicitly.
     public float RedlineRpm { get; init; } = 6800f;
 
     public float RevLimiterResumeRpm { get; init; } = 6620f;

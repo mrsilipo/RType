@@ -26,8 +26,11 @@ public static class AudioProbe
     private static void ProbeVehicleBuild(string buildPath)
     {
         VehicleSimulationParameters parameters = VehicleBuildDefinitionLoader.LoadSimulationParameters(buildPath);
-        Console.WriteLine($"{parameters.DisplayName} active engine audio: race sample recipe, redline {parameters.RedlineRpm:0} rpm, VTEC {parameters.VtecActivationRpm:0} rpm, limiter uses VTEC/high-RPM bounce with no dedicated limiter sample");
-        Console.WriteLine($"  limiter visualization: depth {RevLimiterPresentationRules.CalculateBounceDepthRpm(parameters.RedlineRpm):0} rpm, period {RevLimiterPresentationRules.CalculateBounceSeconds(parameters.RedlineRpm):0.000}s");
+        string vtecText = parameters.VtecEnabled
+            ? $"VTEC {parameters.VtecActivationRpm:0} rpm"
+            : "no VTEC";
+        Console.WriteLine($"{parameters.DisplayName} active engine audio: race sample recipe, power redline {parameters.PowerRedlineRpm:0} rpm, hard cut {parameters.LimiterHardCutRpm:0} rpm, {vtecText}, limiter uses pinned VTEC/high-RPM stutter with no dedicated limiter sample");
+        Console.WriteLine($"  limiter visualization: depth {RevLimiterPresentationRules.CalculateBounceDepthRpm(parameters.LimiterHardCutRpm):0} rpm, period {RevLimiterPresentationRules.CalculateBounceSeconds(parameters.LimiterHardCutRpm):0.000}s, audio stutter {parameters.Audio.LimiterStutterFrequencyHz:0.0} Hz, offDuty {parameters.Audio.LimiterStutterOffDuty:0.00}");
         ProbeRaceEngineAudio(parameters);
     }
 

@@ -9,7 +9,7 @@
     "Playable engine tone uses idle_0900 as a quiet 10% non-limiter bed, normal_3500 below VTEC, and vtec_6200 above VTEC.",
     "All source WAVs have been manually edited to loop cleanly and should be used as full-file loops.",
     "VTEC handoff is controlled by the vehicle VTEC blend, not by midpoint sample RPM.",
-    "Limiter has no dedicated sound file and no redline crossfade; at the actual limiter it forces the vtec_6200 loop and bounces pitch/needle from the shared redline bounce rule."
+    "Limiter has no dedicated sound file and no redline crossfade; at the actual limiter it forces the vtec_6200 loop at pinned hard-cut pitch, shutters the volume, and only the tachometer needle uses the shared limiter bounce rule."
   ],
   "engineLoop": "Assets/Sounds/Honda/normal_3500.wav",
   "highRpmLoop": "Assets/Sounds/Honda/vtec_6200.wav",
@@ -30,6 +30,18 @@
   },
   "engineSampleVolume": {
     "value": 1.0
+  },
+  "limiter": {
+    "mode": "stutter",
+    "stutterHz": {
+      "value": 15
+    },
+    "offDuty": {
+      "value": 0.48
+    },
+    "intensity": {
+      "value": 1.0
+    }
   },
   "samples": [
     {

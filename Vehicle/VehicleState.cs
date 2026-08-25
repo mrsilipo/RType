@@ -6,6 +6,15 @@ public sealed class VehicleState
 {
     public string VehicleName { get; set; } = "Prototype Car";
 
+    public float PowerRedlineRpm { get; set; } = 6500f;
+
+    public float LimiterHardCutRpm { get; set; } = 6800f;
+
+    public float LimiterResumeRpm { get; set; } = 6620f;
+
+    public float MaxGaugeRpm { get; set; } = 8000f;
+
+    // Compatibility alias retained while older call sites are migrated.
     public float RedlineRpm { get; set; } = 6800f;
 
     public Vector3 Position { get; set; }

@@ -25,22 +25,7 @@ public static class DrivetrainPresentationRules
         VehicleState state,
         VehicleSimulationParameters parameters)
     {
-        bool gearLockedLimiterPresentation =
-            state.Gear != 0 &&
-            state.RevLimiterBounceIntensity > 0.05f &&
-            state.DisplayedRpm > 0f;
-
-        if (!gearLockedLimiterPresentation)
-        {
-            return MathF.Abs(state.SignedForwardSpeed);
-        }
-
-        float gearSpeed = CalculateSignedGearSpeedMetersPerSecond(
-            parameters,
-            state.Gear,
-            state.DisplayedRpm,
-            state.SignedForwardSpeed);
-        return MathF.Abs(gearSpeed);
+        return MathF.Abs(state.SignedForwardSpeed);
     }
 
     private static float ResolveGearRatio(VehicleSimulationParameters parameters, int gear)

@@ -60,6 +60,12 @@ public sealed class VehicleAudioParameters
 
     public float HighRpmVolumeBoost { get; init; } = 0.12f;
 
+    public float LimiterStutterFrequencyHz { get; init; } = 15f;
+
+    public float LimiterStutterOffDuty { get; init; } = 0.48f;
+
+    public float LimiterStutterIntensity { get; init; } = 1f;
+
     public bool RTypeEngineEnabled { get; init; } = true;
 
     public string RTypeEngineBuildPath { get; init; } = "Data/VehicleBuilds/ek9_showroom_stock.json";
