@@ -86,6 +86,8 @@ public sealed class RacingGame : Game
     private bool _mouseRightClicked;
     private bool _mouseMovedThisFrame;
     private bool _mouseStateInitialized;
+    private float _controllerRumbleLeft;
+    private float _controllerRumbleRight;
 
     public RacingGame(GameLaunchOptions launchOptions)
     {
@@ -106,6 +108,7 @@ public sealed class RacingGame : Game
 
         Window.Title = "R Type Honda Racing";
         Window.AllowUserResizing = true;
+        Exiting += (_, _) => StopControllerRumble();
         IsMouseVisible = false;
         IsFixedTimeStep = true;
         TargetElapsedTime = TimeSpan.FromSeconds(1.0 / 60.0);
@@ -134,6 +137,7 @@ public sealed class RacingGame : Game
 
     protected override void UnloadContent()
     {
+        StopControllerRumble();
         _vehicleAudio?.Dispose();
         _engineRoom?.Dispose();
         _menuSounds?.Dispose();
@@ -194,6 +198,7 @@ public sealed class RacingGame : Game
             _eventSelection);
         IsMouseVisible = IsMenuFlowState(_flowState);
         UpdateVehicleAudio(dt);
+        UpdateControllerRumble(dt);
         _elapsedSinceStart += gameTime.ElapsedGameTime;
         UpdateFrameCounter(gameTime);
 
@@ -709,6 +714,54 @@ public sealed class RacingGame : Game
         }
 
         _vehicleAudio.Update(_vehicle.State, _camera?.Mode ?? CameraMode.Chase1, active, _paused, dt);
+    }
+
+    private void UpdateControllerRumble(float dt)
+    {
+        bool active = _vehicle is not null && _flowState is GameFlowState.PreRace or GameFlowState.Racing && !_paused;
+        if (!active || _vehicle is null || !GamePad.GetState(PlayerIndex.One).IsConnected)
+        {
+            FadeControllerRumble(dt, 16f);
+            return;
+        }
+
+        VehicleState state = _vehicle.State;
+        float targetLeft = MathHelper.Clamp(state.SurfaceRumbleLeft, 0f, 1f);
+        float targetRight = MathHelper.Clamp(state.SurfaceRumbleRight, 0f, 1f);
+        float rise = MathHelper.Clamp(1f - MathF.Exp(-32f * dt), 0f, 1f);
+        float fall = MathHelper.Clamp(1f - MathF.Exp(-12f * dt), 0f, 1f);
+        _controllerRumbleLeft = MathHelper.Lerp(_controllerRumbleLeft, targetLeft, targetLeft > _controllerRumbleLeft ? rise : fall);
+        _controllerRumbleRight = MathHelper.Lerp(_controllerRumbleRight, targetRight, targetRight > _controllerRumbleRight ? rise : fall);
+        ApplyControllerRumble();
+    }
+
+    private void FadeControllerRumble(float dt, float rate)
+    {
+        float blend = MathHelper.Clamp(1f - MathF.Exp(-rate * dt), 0f, 1f);
+        _controllerRumbleLeft = MathHelper.Lerp(_controllerRumbleLeft, 0f, blend);
+        _controllerRumbleRight = MathHelper.Lerp(_controllerRumbleRight, 0f, blend);
+        if (_controllerRumbleLeft <= 0.001f && _controllerRumbleRight <= 0.001f)
+        {
+            StopControllerRumble();
+            return;
+        }
+
+        ApplyControllerRumble();
+    }
+
+    private void ApplyControllerRumble()
+    {
+        GamePad.SetVibration(
+            PlayerIndex.One,
+            MathHelper.Clamp(_controllerRumbleLeft, 0f, 1f),
+            MathHelper.Clamp(_controllerRumbleRight, 0f, 1f));
+    }
+
+    private void StopControllerRumble()
+    {
+        _controllerRumbleLeft = 0f;
+        _controllerRumbleRight = 0f;
+        GamePad.SetVibration(PlayerIndex.One, 0f, 0f);
     }
 
     private void UpdateMouseState()

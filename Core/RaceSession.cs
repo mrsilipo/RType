@@ -172,8 +172,42 @@ public sealed class RaceSession
 
     private static bool IsOffTrack(VehicleState vehicle)
     {
-        return !vehicle.SurfaceName.Equals("ROAD", StringComparison.OrdinalIgnoreCase) &&
-               !vehicle.SurfaceName.Equals("CURB", StringComparison.OrdinalIgnoreCase);
+        bool onlyAggregateSurfaceAvailable =
+            vehicle.FrontLeftSurfaceName.Equals("ROAD", StringComparison.OrdinalIgnoreCase) &&
+            vehicle.FrontRightSurfaceName.Equals("ROAD", StringComparison.OrdinalIgnoreCase) &&
+            vehicle.RearLeftSurfaceName.Equals("ROAD", StringComparison.OrdinalIgnoreCase) &&
+            vehicle.RearRightSurfaceName.Equals("ROAD", StringComparison.OrdinalIgnoreCase) &&
+            vehicle.FrontLeftSurfaceBlend <= 0f &&
+            vehicle.FrontRightSurfaceBlend <= 0f &&
+            vehicle.RearLeftSurfaceBlend <= 0f &&
+            vehicle.RearRightSurfaceBlend <= 0f;
+        if (onlyAggregateSurfaceAvailable &&
+            !vehicle.SurfaceName.Equals("ROAD", StringComparison.OrdinalIgnoreCase) &&
+            !vehicle.SurfaceName.Equals("CURB", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return IsWheelOffTrack(vehicle.FrontLeftSurfaceName, vehicle.FrontLeftSurfaceBlend) ||
+               IsWheelOffTrack(vehicle.FrontRightSurfaceName, vehicle.FrontRightSurfaceBlend) ||
+               IsWheelOffTrack(vehicle.RearLeftSurfaceName, vehicle.RearLeftSurfaceBlend) ||
+               IsWheelOffTrack(vehicle.RearRightSurfaceName, vehicle.RearRightSurfaceBlend);
+    }
+
+    private static bool IsWheelOffTrack(string surfaceName, float blendWeight)
+    {
+        if (surfaceName.Equals("ROAD", StringComparison.OrdinalIgnoreCase) ||
+            surfaceName.Equals("CURB", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (surfaceName.Equals("CURB_GRASS", StringComparison.OrdinalIgnoreCase))
+        {
+            return blendWeight >= 0.5f;
+        }
+
+        return true;
     }
 
     private static bool CrossedForward(float previousProgress, float currentProgress, float marker)

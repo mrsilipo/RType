@@ -323,6 +323,18 @@ public sealed class VehicleState
 
     public int SurfaceVibrationContactWheelCount { get; set; }
 
+    public float SurfaceRumbleLeft { get; set; }
+
+    public float SurfaceRumbleRight { get; set; }
+
+    public float FrontLeftSurfaceBlend { get; set; }
+
+    public float FrontRightSurfaceBlend { get; set; }
+
+    public float RearLeftSurfaceBlend { get; set; }
+
+    public float RearRightSurfaceBlend { get; set; }
+
     public string FrontLeftSurfaceName { get; set; } = "ROAD";
 
     public string FrontRightSurfaceName { get; set; } = "ROAD";

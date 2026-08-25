@@ -51,6 +51,8 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
     private float _physicsTimeSeconds;
     private int _curbContactWheelCount;
     private int _surfaceVibrationContactWheelCount;
+    private float _surfaceRumbleLeft;
+    private float _surfaceRumbleRight;
     private readonly float[] _visualSuspensionCompressionMeters = new float[4];
     private readonly float[] _visualSuspensionVelocityMetersPerSecond = new float[4];
     private bool _digitalBrakeAssistActive;
@@ -548,6 +550,12 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         State.RearLeftSurfaceLoadMultiplier = GetWheel(WheelCorner.RearLeft).SurfaceLoadMultiplier;
         State.RearRightSurfaceLoadMultiplier = GetWheel(WheelCorner.RearRight).SurfaceLoadMultiplier;
         State.SurfaceVibrationContactWheelCount = _surfaceVibrationContactWheelCount;
+        State.SurfaceRumbleLeft = _surfaceRumbleLeft;
+        State.SurfaceRumbleRight = _surfaceRumbleRight;
+        State.FrontLeftSurfaceBlend = GetWheel(WheelCorner.FrontLeft).SurfaceBlendWeight;
+        State.FrontRightSurfaceBlend = GetWheel(WheelCorner.FrontRight).SurfaceBlendWeight;
+        State.RearLeftSurfaceBlend = GetWheel(WheelCorner.RearLeft).SurfaceBlendWeight;
+        State.RearRightSurfaceBlend = GetWheel(WheelCorner.RearRight).SurfaceBlendWeight;
         State.FrontLeftSurfaceName = GetWheel(WheelCorner.FrontLeft).SurfaceName;
         State.FrontRightSurfaceName = GetWheel(WheelCorner.FrontRight).SurfaceName;
         State.RearLeftSurfaceName = GetWheel(WheelCorner.RearLeft).SurfaceName;
@@ -842,6 +850,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         wheel.OptimalSurfaceSlipRatio = surface.OptimalSlipRatio;
         wheel.ActiveSurfaceMu = activeSurfaceMu;
         wheel.DisplacementDragForceN = wheel.NormalLoadN * MathF.Max(0f, surface.DisplacementDragCoefficient);
+        wheel.SurfaceBlendWeight = surface.BlendWeight;
         wheel.SurfaceName = surface.Name;
         float bodyForceX = totalLongitudinalForce * sinSteer + totalLateralForce * cosSteer;
         float bodyForceZ = totalLongitudinalForce * cosSteer - totalLateralForce * sinSteer;
@@ -1595,7 +1604,10 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         {
             _wheels[i].CurbLoadMultiplier = 1f;
             _wheels[i].SurfaceLoadMultiplier = 1f;
+            _wheels[i].SurfaceBlendWeight = 0f;
         }
+        _surfaceRumbleLeft = 0f;
+        _surfaceRumbleRight = 0f;
 
         if (speedMetersPerSecond <= SurfaceLoadVibrationMinimumSpeedMetersPerSecond)
         {
@@ -1611,6 +1623,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             Vector3 contactPosition = center + right3 * wheel.LocalX + forward3 * wheel.LocalZ;
             SurfaceSample surface = _surfaceSampler.Sample(contactPosition);
             bool isCurb = surface.Name.Equals("CURB", StringComparison.OrdinalIgnoreCase);
+            bool isCurbGrassBlend = surface.Name.Equals("CURB_GRASS", StringComparison.OrdinalIgnoreCase);
             if (isCurb)
             {
                 _curbContactWheelCount++;
@@ -1641,9 +1654,44 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             float multiplier = MathHelper.Clamp(1f - MathF.Abs(vibration), 0f, 1f);
             normalLoads[i] = MathF.Max(0f, normalLoads[i] * multiplier);
             wheel.SurfaceLoadMultiplier = multiplier;
-            wheel.CurbLoadMultiplier = isCurb ? multiplier : 1f;
+            wheel.CurbLoadMultiplier = isCurb || isCurbGrassBlend ? multiplier : 1f;
+            wheel.SurfaceBlendWeight = surface.BlendWeight;
+            AccumulateSurfaceRumble(wheel, surface, MathF.Abs(vibration), speedMetersPerSecond);
             _surfaceVibrationContactWheelCount++;
         }
+    }
+
+    private void AccumulateSurfaceRumble(
+        WheelRuntimeState wheel,
+        SurfaceSample surface,
+        float vibrationMagnitude,
+        float speedMetersPerSecond)
+    {
+        if (vibrationMagnitude <= 0.001f)
+        {
+            return;
+        }
+
+        float speedFactor = SmoothStep(1.0f, 30.0f, speedMetersPerSecond);
+        float axleFactor = IsFrontWheel(wheel.Corner) ? 1f : 0.55f;
+        float surfaceBlend = surface.Name.Equals("CURB_GRASS", StringComparison.OrdinalIgnoreCase)
+            ? surface.BlendWeight
+            : surface.Name.Equals("GRASS", StringComparison.OrdinalIgnoreCase) ||
+              surface.Name.Equals("DIRT", StringComparison.OrdinalIgnoreCase)
+                ? 1f
+                : 0f;
+        float curbShare = surface.Name.Equals("CURB", StringComparison.OrdinalIgnoreCase)
+            ? 1f
+            : surface.Name.Equals("CURB_GRASS", StringComparison.OrdinalIgnoreCase)
+                ? 1f - surfaceBlend
+                : 0f;
+
+        _surfaceRumbleRight = MathF.Max(
+            _surfaceRumbleRight,
+            vibrationMagnitude * speedFactor * axleFactor * curbShare * 1.80f);
+        _surfaceRumbleLeft = MathF.Max(
+            _surfaceRumbleLeft,
+            vibrationMagnitude * speedFactor * axleFactor * surfaceBlend * 2.20f);
     }
 
     private static float GetSurfaceVibrationPhaseOffset(WheelRuntimeState wheel)
@@ -4374,6 +4422,8 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         public float CurbLoadMultiplier { get; set; } = 1f;
 
         public float SurfaceLoadMultiplier { get; set; } = 1f;
+
+        public float SurfaceBlendWeight { get; set; }
 
         public string SurfaceName { get; set; } = "ROAD";
 

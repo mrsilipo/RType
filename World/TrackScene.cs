@@ -12,6 +12,7 @@ public sealed class TrackScene : ITrackSurfaceSampler, ITrackProgressSampler, ID
     private const float DefaultGrassWidthMeters = 26.0f;
     private const float CurbInnerOffsetFromRoadEdgeMeters = 0.20f;
     private const float CurbOuterOffsetFromRoadEdgeMeters = 1.10f;
+    private const float CurbGrassBlendZoneMeters = 0.25f;
     private static readonly ProfilePoint[] LakesideBankProfileDegrees =
     [
         new(0.00f, 0.0f),
@@ -194,9 +195,17 @@ public sealed class TrackScene : ITrackSurfaceSampler, ITrackProgressSampler, ID
             return _surfaceLibrary.Road;
         }
 
-        if (projection.Distance <= roadWidth + CurbOuterOffsetFromRoadEdgeMeters)
+        float curbOuter = roadWidth + CurbOuterOffsetFromRoadEdgeMeters;
+        float curbGrassBlendStart = curbOuter - CurbGrassBlendZoneMeters;
+        if (projection.Distance <= curbGrassBlendStart)
         {
             return _surfaceLibrary.Curb;
+        }
+
+        if (projection.Distance <= curbOuter)
+        {
+            float blend = (projection.Distance - curbGrassBlendStart) / MathF.Max(0.001f, CurbGrassBlendZoneMeters);
+            return SurfaceSample.Blend("CURB_GRASS", _surfaceLibrary.Curb, _surfaceLibrary.Grass, blend);
         }
 
         return _surfaceLibrary.Grass;
