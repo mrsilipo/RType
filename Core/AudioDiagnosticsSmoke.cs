@@ -41,9 +41,12 @@ public static class AudioDiagnosticsSmoke
         for (int i = 0; i < 90; i++)
         {
             state.Rpm = rpm;
-            state.DisplayedRpm = rpm;
             state.RevLimiterActive = limiter;
-            state.RevLimiterBounceIntensity = limiter ? (i % 18 < 10 ? 0.9f : 0.18f) : 0f;
+            state.RevLimiterBounceIntensity = limiter ? 1f : 0f;
+            state.RevLimiterBouncePhase = limiter
+                ? RevLimiterPresentationRules.AdvanceBouncePhase(state.RevLimiterBouncePhase, state.RedlineRpm, dt)
+                : 0f;
+            RpmPresentationSmoother.Update(state, dt);
             audio.Update(state, CameraMode.Chase1, active: true, paused: false, dt);
             Thread.Sleep(16);
         }

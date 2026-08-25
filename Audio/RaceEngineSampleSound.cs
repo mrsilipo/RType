@@ -278,8 +278,6 @@ internal sealed class RaceEngineSampleSound : IDisposable
 
     private void UpdateLimiterBouncePhase(EngineAudioFrame frame)
     {
-        float dt = MathHelper.Clamp(frame.DeltaSeconds, 0f, 0.1f);
-        float bounceSeconds = CalculateLimiterBounceSeconds(frame.RedlineRpm);
         bool limiterSignal = frame.RedlineRpm > 0f &&
                              (frame.Rpm >= frame.RedlineRpm - 1f || frame.Limiter > 0.5f);
         _limiterAudioBlend = limiterSignal ? 1f : 0f;
@@ -291,9 +289,8 @@ internal sealed class RaceEngineSampleSound : IDisposable
             return;
         }
 
-        _limiterAudioHoldSeconds = bounceSeconds;
-        _limiterBouncePhase += dt / bounceSeconds;
-        _limiterBouncePhase -= MathF.Floor(_limiterBouncePhase);
+        _limiterAudioHoldSeconds = CalculateLimiterBounceSeconds(frame.RedlineRpm);
+        _limiterBouncePhase = frame.LimiterBouncePhase - MathF.Floor(frame.LimiterBouncePhase);
     }
 
     private float CalculateLimiterBounceRpm(float redlineRpm)

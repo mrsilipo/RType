@@ -32,7 +32,6 @@ public sealed class RTypeEngineRoomScreen : IDisposable
     private KeyboardState _previousKeyboard;
     private int _gear = 1;
     private float _rpm;
-    private float _displayRpm;
     private float _speedMetersPerSecond;
     private float _throttle;
     private float _load;
@@ -49,7 +48,6 @@ public sealed class RTypeEngineRoomScreen : IDisposable
         _font = new PixelFont(_pixel);
         _parameters = VehicleBuildDefinitionLoader.LoadSimulationParameters(VehicleBuildPath);
         _rpm = _parameters.IdleRpm;
-        _displayRpm = _rpm;
         _vehicle.VehicleName = _parameters.DisplayName;
         _vehicle.RedlineRpm = _parameters.RedlineRpm;
         _vehicle.Gear = _gear;
@@ -163,14 +161,10 @@ public sealed class RTypeEngineRoomScreen : IDisposable
                 _limiterVisualPhase = 0f;
             }
 
-            float bounceSeconds = RevLimiterPresentationRules.CalculateBounceSeconds(redline);
-            _limiterVisualPhase += dt / bounceSeconds;
-            _limiterVisualPhase -= MathF.Floor(_limiterVisualPhase);
-            _displayRpm = RevLimiterPresentationRules.CalculateBouncedRpm(redline, _limiterVisualPhase);
+            _limiterVisualPhase = RevLimiterPresentationRules.AdvanceBouncePhase(_limiterVisualPhase, redline, dt);
         }
         else
         {
-            _displayRpm = MathF.Min(_rpm, redline);
             _limiterVisualPhase = 0f;
         }
 
@@ -191,6 +185,7 @@ public sealed class RTypeEngineRoomScreen : IDisposable
         _shiftKick = MathHelper.Lerp(_shiftKick, 0f, 1f - MathF.Exp(-18f * dt));
         _crankPhase = (_crankPhase + _rpm / 60f * 360f * dt) % 720f;
         PopulateVehicleState(vtec, limiter);
+        RpmPresentationSmoother.Update(_vehicle, dt);
 
         _audio.Update(_vehicle, CameraMode.Chase1, active: true, paused: false, dt);
 
@@ -222,8 +217,6 @@ public sealed class RTypeEngineRoomScreen : IDisposable
         _vehicle.RedlineRpm = _parameters.RedlineRpm;
         _vehicle.Gear = _gear;
         _vehicle.Rpm = _rpm;
-        _vehicle.DisplayedRpm = _displayRpm;
-        _vehicle.DisplayedRpmTarget = _displayRpm;
         _vehicle.Throttle = _throttle;
         _vehicle.EffectiveThrottle = _throttle;
         _vehicle.Brake = _load;
@@ -282,7 +275,10 @@ public sealed class RTypeEngineRoomScreen : IDisposable
     {
         _gear = 1;
         _rpm = _parameters.IdleRpm;
-        _displayRpm = _rpm;
+        _vehicle.Rpm = _rpm;
+        _vehicle.DisplayedRpm = _rpm;
+        _vehicle.DisplayedRpmTarget = _rpm;
+        _vehicle.DisplayedRpmVelocity = 0f;
         _speedMetersPerSecond = 0f;
         _shiftKick = 0f;
         _crankPhase = 0f;
@@ -319,12 +315,13 @@ public sealed class RTypeEngineRoomScreen : IDisposable
         _font.Draw(spriteBatch, "TACHOMETER", panel.X + 34, panel.Y + 32, 5, TextColor);
         Rectangle bar = new(panel.X + 60, panel.Y + 320, panel.Width - 120, 52);
         DrawRect(spriteBatch, bar, GaugeColor);
-        float rpmNorm = MathHelper.Clamp(_displayRpm / MathF.Max(1f, _parameters.RedlineRpm), 0f, 1f);
+        float displayedRpm = MathF.Max(300f, _vehicle.DisplayedRpm);
+        float rpmNorm = MathHelper.Clamp(displayedRpm / MathF.Max(1f, _parameters.RedlineRpm), 0f, 1f);
         DrawRect(spriteBatch, new Rectangle(bar.X, bar.Y, (int)MathF.Round(bar.Width * rpmNorm), bar.Height), rpmNorm > 0.92f ? BrandRed : Color.White);
         int vtecX = bar.X + (int)MathF.Round(bar.Width * MathHelper.Clamp(_parameters.VtecActivationRpm / _parameters.RedlineRpm, 0f, 1f));
         DrawRect(spriteBatch, new Rectangle(vtecX, bar.Y - 24, 6, bar.Height + 48), BrandRed);
         _font.Draw(spriteBatch, "VTEC", vtecX - 42, bar.Y - 56, 3, BrandRed);
-        _font.Draw(spriteBatch, $"{_displayRpm:0000} RPM", panel.X + 92, panel.Y + 138, 12, TextColor);
+        _font.Draw(spriteBatch, $"{displayedRpm:0000} RPM", panel.X + 92, panel.Y + 138, 12, TextColor);
         _font.Draw(spriteBatch, $"LIMIT {_parameters.RedlineRpm:0}", panel.X + 66, panel.Y + 414, 5, MutedTextColor);
         _font.Draw(spriteBatch, $"CUT {(state.LimiterCut ? "ON" : "OFF")}", panel.X + 486, panel.Y + 414, 5, state.LimiterCut ? BrandRed : MutedTextColor);
     }

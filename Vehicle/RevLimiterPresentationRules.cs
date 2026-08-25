@@ -19,6 +19,13 @@ public static class RevLimiterPresentationRules
         return MathHelper.Lerp(SlowestBounceSeconds, FastestBounceSeconds, t);
     }
 
+    public static float AdvanceBouncePhase(float phase, float redlineRpm, float deltaSeconds)
+    {
+        float bounceSeconds = MathF.Max(0.001f, CalculateBounceSeconds(redlineRpm));
+        float next = phase + MathHelper.Clamp(deltaSeconds, 0f, 1f / 20f) / bounceSeconds;
+        return next - MathF.Floor(next);
+    }
+
     public static float CalculateBouncedRpm(float redlineRpm, float phase)
     {
         float redline = MathF.Max(450f, redlineRpm);

@@ -3240,14 +3240,11 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
                 State.Rpm)
             : 0f;
         float proximity = MathF.Max(throttleProximity, mechanicalLimiterStress);
-        float chatterHz = 1f / RevLimiterPresentationRules.CalculateBounceSeconds(_parameters.RedlineRpm);
-        _revLimiterChatterPhaseSeconds += MathF.Max(0f, dt) * chatterHz;
-        if (_revLimiterChatterPhaseSeconds > 1000f)
-        {
-            _revLimiterChatterPhaseSeconds -= MathF.Floor(_revLimiterChatterPhaseSeconds);
-        }
-
-        float cycle = _revLimiterChatterPhaseSeconds - MathF.Floor(_revLimiterChatterPhaseSeconds);
+        _revLimiterChatterPhaseSeconds = RevLimiterPresentationRules.AdvanceBouncePhase(
+            _revLimiterChatterPhaseSeconds,
+            _parameters.RedlineRpm,
+            dt);
+        float cycle = _revLimiterChatterPhaseSeconds;
         State.RevLimiterBouncePhase = cycle;
         float cutPulse = SmoothStep(0.08f, 0.16f, cycle) *
                          (1f - SmoothStep(0.36f, 0.78f, cycle));
