@@ -234,6 +234,14 @@ public sealed class VehicleState
 
     public float RearRightLongitudinalForceN { get; set; }
 
+    public float FfLsdCornerExitBite { get; set; }
+
+    public float FfLsdInsideFrontMaxTorqueNm { get; set; }
+
+    public float FfLsdOutsideFrontMaxTorqueNm { get; set; }
+
+    public float FfLsdManagedFrontAxleTorqueNm { get; set; }
+
     public float FrontLeftLateralForceN { get; set; }
 
     public float FrontRightLateralForceN { get; set; }

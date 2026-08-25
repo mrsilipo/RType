@@ -48,6 +48,10 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
     private float _launchClutchEngagement;
     private float _launchClutchTimerSeconds;
     private bool _preRevLaunchActive;
+    private float _ffLsdCornerExitBite;
+    private float _ffLsdInsideFrontMaxTorqueNm;
+    private float _ffLsdOutsideFrontMaxTorqueNm;
+    private float _ffLsdManagedFrontAxleTorqueNm;
 
     public VehicleSimulationParameters Parameters => _parameters;
 
@@ -291,7 +295,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             totalDriveTorque = CalculateTotalDriveTorque(driveThrottle, forwardSpeed, dt);
         }
 
-        float[] driveTorques = DistributeDriveTorque(totalDriveTorque, normalLoads);
+        float[] driveTorques = DistributeDriveTorque(totalDriveTorque, normalLoads, driveThrottle);
         SteeringAngles steeringAngles = CalculateSteeringAngles(
             _filteredSteerInput,
             MathF.Abs(forwardSpeed),
@@ -482,6 +486,10 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         State.FrontRightLongitudinalForceN = GetWheel(WheelCorner.FrontRight).LongitudinalForceN;
         State.RearLeftLongitudinalForceN = GetWheel(WheelCorner.RearLeft).LongitudinalForceN;
         State.RearRightLongitudinalForceN = GetWheel(WheelCorner.RearRight).LongitudinalForceN;
+        State.FfLsdCornerExitBite = _ffLsdCornerExitBite;
+        State.FfLsdInsideFrontMaxTorqueNm = _ffLsdInsideFrontMaxTorqueNm;
+        State.FfLsdOutsideFrontMaxTorqueNm = _ffLsdOutsideFrontMaxTorqueNm;
+        State.FfLsdManagedFrontAxleTorqueNm = _ffLsdManagedFrontAxleTorqueNm;
         State.FrontLeftLateralForceN = GetWheel(WheelCorner.FrontLeft).LateralForceN;
         State.FrontRightLateralForceN = GetWheel(WheelCorner.FrontRight).LateralForceN;
         State.RearLeftLateralForceN = GetWheel(WheelCorner.RearLeft).LateralForceN;
@@ -968,7 +976,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
                                       _parameters.DrivenWheels.IsDriven(wheel.Corner) &&
                                       driveTorqueNm > 0.1f &&
                                       brakeTorqueNm <= 0.1f
-            ? arcade.DrivenGripAllowance
+            ? arcade.DrivenGripAllowance + _ffLsdCornerExitBite * 0.12f
             : arcade.GenericGripAllowance;
         float brakingAllowance = brakeTorqueNm > 0.1f
             ? arcade.BrakingGripAllowance
@@ -1474,9 +1482,13 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         ];
     }
 
-    private float[] DistributeDriveTorque(float totalDriveTorque, float[] normalLoads)
+    private float[] DistributeDriveTorque(float totalDriveTorque, float[] normalLoads, float driveThrottle)
     {
         float[] torques = new float[4];
+        _ffLsdCornerExitBite = 0f;
+        _ffLsdInsideFrontMaxTorqueNm = 0f;
+        _ffLsdOutsideFrontMaxTorqueNm = 0f;
+        _ffLsdManagedFrontAxleTorqueNm = 0f;
         if (MathF.Abs(totalDriveTorque) < 0.001f || _parameters.DrivenWheels.Count == 0)
         {
             return torques;
@@ -1500,6 +1512,11 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             }
 
             float axleTorque = totalDriveTorque * 2f / _parameters.DrivenWheels.Count;
+            if (TryDistributeFfLsdFrontAxleTorque(left, right, axleTorque, normalLoads, driveThrottle, torques))
+            {
+                return;
+            }
+
             float loadLeft = normalLoads[(int)left];
             float loadRight = normalLoads[(int)right];
             float leftShare = loadLeft / MathF.Max(1f, loadLeft + loadRight);
@@ -1530,6 +1547,103 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
 
             torques[index] = totalDriveTorque / _parameters.DrivenWheels.Count;
         }
+    }
+
+    private bool TryDistributeFfLsdFrontAxleTorque(
+        WheelCorner left,
+        WheelCorner right,
+        float axleTorque,
+        float[] normalLoads,
+        float driveThrottle,
+        float[] torques)
+    {
+        if (left is not WheelCorner.FrontLeft ||
+            right is not WheelCorner.FrontRight ||
+            axleTorque <= 0.001f ||
+            !_parameters.DrivenWheels.IsDriven(WheelCorner.FrontLeft) ||
+            !_parameters.DrivenWheels.IsDriven(WheelCorner.FrontRight) ||
+            _parameters.DrivenWheels.IsDriven(WheelCorner.RearLeft) ||
+            _parameters.DrivenWheels.IsDriven(WheelCorner.RearRight) ||
+            MathF.Abs(_filteredSteerInput) <= 0.04f)
+        {
+            return false;
+        }
+
+        WheelCorner inside = normalLoads[(int)WheelCorner.FrontLeft] <= normalLoads[(int)WheelCorner.FrontRight]
+            ? WheelCorner.FrontLeft
+            : WheelCorner.FrontRight;
+        WheelCorner outside = GetOppositeWheelCorner(inside);
+        WheelRuntimeState insideWheel = GetWheel(inside);
+        WheelRuntimeState outsideWheel = GetWheel(outside);
+
+        float insideMaxTorque = CalculateWheelTractiveTorqueCapacity(insideWheel, normalLoads[(int)inside]);
+        float outsideMaxTorque = CalculateWheelTractiveTorqueCapacity(outsideWheel, normalLoads[(int)outside]);
+        float torqueBias = MathF.Max(1f, _parameters.DifferentialTorqueBiasRatio);
+        float outsideViaLsdMax = MathF.Min(outsideMaxTorque, insideMaxTorque * torqueBias);
+        float managedAxleTorque = insideMaxTorque + outsideViaLsdMax;
+        if (managedAxleTorque <= 1f)
+        {
+            return false;
+        }
+
+        _ffLsdInsideFrontMaxTorqueNm = insideMaxTorque;
+        _ffLsdOutsideFrontMaxTorqueNm = outsideViaLsdMax;
+        _ffLsdManagedFrontAxleTorqueNm = managedAxleTorque;
+        _ffLsdCornerExitBite = CalculateFfLsdCornerExitBite(insideWheel, outsideWheel, axleTorque, managedAxleTorque, driveThrottle);
+
+        float availableTorque = MathF.Min(axleTorque, managedAxleTorque);
+        if (torqueBias <= 1.01f)
+        {
+            float openWheelTorque = MathF.Min(availableTorque * 0.5f, insideMaxTorque);
+            torques[(int)inside] = openWheelTorque;
+            torques[(int)outside] = openWheelTorque;
+            return true;
+        }
+
+        float insideTorque = MathF.Min(insideMaxTorque, availableTorque / (1f + torqueBias));
+        float outsideTorque = MathF.Min(availableTorque - insideTorque, outsideViaLsdMax);
+        float unusedTorque = MathF.Max(0f, availableTorque - insideTorque - outsideTorque);
+        insideTorque = MathF.Min(insideMaxTorque, insideTorque + unusedTorque);
+
+        torques[(int)inside] = insideTorque;
+        torques[(int)outside] = outsideTorque;
+        return true;
+    }
+
+    private static float CalculateWheelTractiveTorqueCapacity(WheelRuntimeState wheel, float normalLoadN)
+    {
+        float mu = MathF.Max(0f, wheel.Tyres.PeakFriction * wheel.SurfaceGrip);
+        return MathF.Max(0f, normalLoadN * mu * MathF.Max(0.05f, wheel.Tyres.LoadedRadiusMeters));
+    }
+
+    private float CalculateFfLsdCornerExitBite(
+        WheelRuntimeState insideWheel,
+        WheelRuntimeState outsideWheel,
+        float requestedAxleTorque,
+        float managedAxleTorque,
+        float driveThrottle)
+    {
+        float throttleT = SmoothStep(0.18f, 0.85f, driveThrottle);
+        float rpmT = SmoothStep(4500f, MathF.Max(5000f, _parameters.RedlineRpm), State.Rpm);
+        float vtecT = _parameters.VtecEnabled
+            ? SmoothStep(_parameters.VtecActivationRpm - 300f, _parameters.VtecActivationRpm + 700f, State.Rpm)
+            : 0f;
+        float lsdT = MathHelper.Clamp((_parameters.DifferentialTorqueBiasRatio - 1f) / 2.2f, 0f, 1f);
+        float steerT = SmoothStep(0.10f, 0.70f, MathF.Abs(_filteredSteerInput));
+        float torqueDemandT = SmoothStep(managedAxleTorque * 0.35f, managedAxleTorque, requestedAxleTorque);
+        float insideDriveSlip = MathF.Max(0f, insideWheel.SlipRatio);
+        float outsideDriveSlip = MathF.Max(0f, outsideWheel.SlipRatio);
+        float insideSlipT = SmoothStep(0.03f, 0.16f, MathF.Max(insideDriveSlip, insideDriveSlip - outsideDriveSlip));
+
+        return MathHelper.Clamp(
+            throttleT *
+            MathF.Max(rpmT, vtecT * 0.85f) *
+            lsdT *
+            steerT *
+            MathHelper.Lerp(0.65f, 1.15f, insideSlipT) *
+            MathHelper.Lerp(0.70f, 1f, torqueDemandT),
+            0f,
+            1f);
     }
 
     private float CalculateLimitedSlipShareCorrection(WheelCorner left, WheelCorner right, float totalDriveTorque)
@@ -1790,7 +1904,15 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         float lockMultiplier = MathHelper.Lerp(1f, MathHelper.Clamp(_parameters.SteeringHighSpeedLockMultiplier, 0.1f, 1f), assistT);
         float assistedMaxAngle = mechanicalMaxAngle * lockMultiplier;
         float speedMatchedMaxAngle = CalculateSpeedMatchedSteeringAngle(mechanicalMaxAngle, speedMetersPerSecond);
+        speedMatchedMaxAngle = MathF.Min(
+            mechanicalMaxAngle,
+            speedMatchedMaxAngle * (1f + _ffLsdCornerExitBite * 0.18f));
         float inputFilteredMaxAngle = MathF.Min(assistedMaxAngle, speedMatchedMaxAngle);
+        float highSpeedLsdBiteT = SmoothStep(18f, 32f, speedMetersPerSecond);
+        float lsdSteeringAuthority = MathHelper.Lerp(0.22f, 0.88f, highSpeedLsdBiteT);
+        inputFilteredMaxAngle = MathF.Min(
+            mechanicalMaxAngle,
+            inputFilteredMaxAngle * (1f + _ffLsdCornerExitBite * lsdSteeringAuthority));
         SteeringAssistParameters steeringAssist = _engineParameters.SteeringAssist;
         float brakeAuthorityT =
             SmoothStep(steeringAssist.BrakeAngleBoostBrakeStart, steeringAssist.BrakeAngleBoostBrakeEnd, brake) *

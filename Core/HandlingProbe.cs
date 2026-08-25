@@ -54,6 +54,8 @@ public static class HandlingProbe
         float endFrontGripUsage = 0f;
         float endRearGripUsage = 0f;
         float endEffectiveThrottle = 0f;
+        float peakLsdBite = 0f;
+        float peakManagedFrontTorque = 0f;
 
         for (int i = 0; i < 144; i++)
         {
@@ -65,6 +67,8 @@ public static class HandlingProbe
             endFrontGripUsage = (state.FrontLeftGripUsage + state.FrontRightGripUsage) * 0.5f;
             endRearGripUsage = (state.RearLeftGripUsage + state.RearRightGripUsage) * 0.5f;
             endEffectiveThrottle = state.EffectiveThrottle;
+            peakLsdBite = MathF.Max(peakLsdBite, state.FfLsdCornerExitBite);
+            peakManagedFrontTorque = MathF.Max(peakManagedFrontTorque, state.FfLsdManagedFrontAxleTorqueNm);
         }
 
         VehicleState end = simulator.State;
@@ -72,7 +76,8 @@ public static class HandlingProbe
         Console.WriteLine(
             $"{parameters.DisplayName} target {targetSpeedMetersPerSecond * 3.6f:0} km/h {label}: {startSpeed * 3.6f:0.0}->{end.SpeedMetersPerSecond * 3.6f:0.0} km/h, " +
             $"heading {headingChangeDeg:0.0} deg, peak yaw {peakYawRateDeg:0.0} deg/s, peak lat {peakLatG:0.00} g, " +
-            $"peak roll {peakBodyRollDeg:0.00} deg, grip F/R {endFrontGripUsage:0.00}/{endRearGripUsage:0.00}, eff thr {endEffectiveThrottle:0.00}, gear {end.Gear}, rpm {end.Rpm:0}");
+            $"peak roll {peakBodyRollDeg:0.00} deg, grip F/R {endFrontGripUsage:0.00}/{endRearGripUsage:0.00}, eff thr {endEffectiveThrottle:0.00}, " +
+            $"lsd bite {peakLsdBite:0.00}, managed front {peakManagedFrontTorque:0}Nm, gear {end.Gear}, rpm {end.Rpm:0}");
     }
 
     private static void DriveToSpeed(SimpleVehicleSimulator simulator, float targetSpeedMetersPerSecond, float dt)
