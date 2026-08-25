@@ -16,7 +16,9 @@ public readonly record struct TachometerHudState(
         return new TachometerHudState(
             vehicle.DisplayedRpm,
             vehicle.RedlineRpm,
-            MathF.Abs(vehicle.SignedForwardSpeed),
+            vehicle.DisplayedSpeedMetersPerSecond > 0f
+                ? vehicle.DisplayedSpeedMetersPerSecond
+                : MathF.Abs(vehicle.SignedForwardSpeed),
             gear,
             vehicle.RevLimiterActive,
             vehicle.MechanicalOverRevActive);

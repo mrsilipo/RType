@@ -186,6 +186,8 @@ public sealed class RTypeEngineRoomScreen : IDisposable
         _crankPhase = (_crankPhase + _rpm / 60f * 360f * dt) % 720f;
         PopulateVehicleState(vtec, limiter);
         RpmPresentationSmoother.Update(_vehicle, dt);
+        RaceEnginePresentationBridge.ApplyAudioState(_vehicle, _parameters, dt, _crankPhase);
+        _vehicle.EnginePowerUnitLoad = MathHelper.Clamp(_vehicle.EnginePowerUnitLoad + _load * 0.28f, 0f, 1f);
 
         _audio.Update(_vehicle, CameraMode.Chase1, active: true, paused: false, dt);
 
@@ -229,8 +231,6 @@ public sealed class RTypeEngineRoomScreen : IDisposable
         _vehicle.PowertrainShockIntensity = _shiftKick * 0.65f;
         _vehicle.EngineBrakeTorqueNm = (1f - _throttle) * SmoothStep(2600f, _parameters.RedlineRpm, _rpm) * 46f;
         _vehicle.DriveForce = _throttle * MathHelper.Lerp(220f, 2550f, SmoothStep(_parameters.IdleRpm, _parameters.RedlineRpm, _rpm));
-        RaceEnginePresentationBridge.ApplyAudioState(_vehicle, _parameters, 0f, _crankPhase);
-        _vehicle.EnginePowerUnitLoad = MathHelper.Clamp(_vehicle.EnginePowerUnitLoad + _load * 0.28f, 0f, 1f);
     }
 
     private void ShiftTo(int gear)
@@ -362,7 +362,7 @@ public sealed class RTypeEngineRoomScreen : IDisposable
         DrawPanel(spriteBatch, panel);
         _font.Draw(
             spriteBatch,
-            $"MODE RACE SAMPLE ENGINE   SPD {_speedMetersPerSecond * 3.6f,5:0} KPH   LOAD {_load:0.00}   VOL {state.LastOutputRms:0.000}   PROFILE {state.ProfileId}   HEAVY SIM ENGINE ROOM DISCONNECTED",
+            $"MODE RACE SAMPLE ENGINE   SPD {_vehicle.DisplayedSpeedMetersPerSecond * 3.6f,5:0} KPH   LOAD {_load:0.00}   VOL {state.LastOutputRms:0.000}   PROFILE {state.ProfileId}   HEAVY SIM ENGINE ROOM DISCONNECTED",
             panel.X + 34,
             panel.Y + 30,
             3,

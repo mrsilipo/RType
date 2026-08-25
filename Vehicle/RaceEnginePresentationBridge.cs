@@ -35,6 +35,7 @@ public static class RaceEnginePresentationBridge
         state.EnginePowerUnitAfterfireBlend = (1f - throttle) * SmoothStep(4200f, redline, rpm);
         state.EnginePowerUnitEngineDriveTorqueNm = parameters.TorqueAtRpm(rpm) * throttle * state.LimiterTorqueMultiplier;
         state.EnginePowerUnitCrankFrictionTorqueNm = parameters.EngineBrakeTorqueAtRpm(rpm) * (1f - throttle);
+        state.DisplayedSpeedMetersPerSecond = DrivetrainPresentationRules.CalculateDisplayedSpeedMetersPerSecond(state, parameters);
     }
 
     private static float SmoothStep(float edge0, float edge1, float value)

@@ -64,6 +64,8 @@ public sealed class VehicleState
 
     public float SignedForwardSpeed { get; set; }
 
+    public float DisplayedSpeedMetersPerSecond { get; set; }
+
     public float LateralSpeed { get; set; }
 
     public float LongitudinalAcceleration { get; set; }
