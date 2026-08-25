@@ -87,13 +87,13 @@
         "buttons": []
       },
       "shiftDown": {
-        "buttons": [
-          "LeftShoulder"
+        "negativeAxes": [
+          "RightThumbstickY"
         ]
       },
       "shiftUp": {
-        "buttons": [
-          "RightShoulder"
+        "positiveAxes": [
+          "RightThumbstickY"
         ]
       },
       "pause": {

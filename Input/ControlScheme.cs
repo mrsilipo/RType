@@ -89,6 +89,10 @@ public sealed class InputBinding
     public string[] Buttons { get; init; } = [];
 
     public string[] Triggers { get; init; } = [];
+
+    public string[] PositiveAxes { get; init; } = [];
+
+    public string[] NegativeAxes { get; init; } = [];
 }
 
 public sealed class MenuControlMap

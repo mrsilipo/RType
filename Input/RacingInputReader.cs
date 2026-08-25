@@ -127,7 +127,9 @@ public sealed class RacingInputReader
         InputBinding gamePadBinding = actionSelector(_scheme.GamePad.Actions);
         return AnyKeyDown(keyboard, keyboardBinding.Keys) ||
                AnyButtonDown(gamePad, gamePadBinding.Buttons) ||
-               AnyTriggerDown(gamePad, gamePadBinding.Triggers);
+               AnyTriggerDown(gamePad, gamePadBinding.Triggers) ||
+               AnyAxisDown(gamePad, gamePadBinding.PositiveAxes, positive: true) ||
+               AnyAxisDown(gamePad, gamePadBinding.NegativeAxes, positive: false);
     }
 
     private float ReadActionValue(
@@ -163,7 +165,9 @@ public sealed class RacingInputReader
     {
         return AnyKeyPressed(keyboard, binding.Keys) ||
                AnyButtonPressed(gamePad, binding.Buttons) ||
-               AnyTriggerPressed(gamePad, binding.Triggers);
+               AnyTriggerPressed(gamePad, binding.Triggers) ||
+               AnyAxisPressed(gamePad, binding.PositiveAxes, positive: true) ||
+               AnyAxisPressed(gamePad, binding.NegativeAxes, positive: false);
     }
 
     private int ReadMenuAxis(
@@ -282,6 +286,42 @@ public sealed class RacingInputReader
         }
 
         return false;
+    }
+
+    private bool AnyAxisPressed(GamePadState gamePad, IEnumerable<string> axisNames, bool positive)
+    {
+        foreach (string axisName in axisNames)
+        {
+            GamePadAxis axis = ParseAxis(axisName);
+            if (AxisDirectionDown(gamePad, axis, positive) &&
+                !AxisDirectionDown(_previousGamePad, axis, positive))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool AnyAxisDown(GamePadState gamePad, IEnumerable<string> axisNames, bool positive)
+    {
+        foreach (string axisName in axisNames)
+        {
+            if (AxisDirectionDown(gamePad, ParseAxis(axisName), positive))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool AxisDirectionDown(GamePadState gamePad, GamePadAxis axis, bool positive)
+    {
+        float value = ReadAxis(gamePad, axis);
+        return positive
+            ? value >= _triggerPressedThreshold
+            : value <= -_triggerPressedThreshold;
     }
 
     private static float ReadAxis(GamePadState gamePad, GamePadAxis axis)
@@ -442,6 +482,11 @@ public sealed class RacingInputReader
         foreach (string trigger in binding.Triggers)
         {
             _ = ParseTrigger(trigger);
+        }
+
+        foreach (string axis in binding.PositiveAxes.Concat(binding.NegativeAxes))
+        {
+            _ = ParseAxis(axis);
         }
     }
 

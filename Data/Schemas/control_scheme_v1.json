@@ -183,6 +183,18 @@
           "items": {
             "type": "string"
           }
+        },
+        "positiveAxes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "negativeAxes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },

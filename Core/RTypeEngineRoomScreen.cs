@@ -95,12 +95,12 @@ public sealed class RTypeEngineRoomScreen : IDisposable
             _dynoLoadEngaged = !_dynoLoadEngaged;
         }
 
-        if (Pressed(gamePad, keyboard, Buttons.RightShoulder, Keys.Up))
+        if (RightStickShiftPressed(gamePad, positive: true))
         {
             ShiftTo(Math.Clamp(_gear + 1, -1, _parameters.ForwardGearRatios.Length));
         }
 
-        if (Pressed(gamePad, keyboard, Buttons.LeftShoulder, Keys.Down))
+        if (RightStickShiftPressed(gamePad, positive: false))
         {
             ShiftTo(Math.Clamp(_gear - 1, -1, _parameters.ForwardGearRatios.Length));
         }
@@ -293,6 +293,16 @@ public sealed class RTypeEngineRoomScreen : IDisposable
                (keyboard.IsKeyDown(key) && !_previousKeyboard.IsKeyDown(key));
     }
 
+    private bool RightStickShiftPressed(GamePadState gamePad, bool positive)
+    {
+        const float threshold = 0.55f;
+        float current = gamePad.ThumbSticks.Right.Y;
+        float previous = _previousGamePad.ThumbSticks.Right.Y;
+        return positive
+            ? current >= threshold && previous < threshold
+            : current <= -threshold && previous > -threshold;
+    }
+
     private void StorePreviousInput(GamePadState gamePad, KeyboardState keyboard)
     {
         _previousGamePad = gamePad;
@@ -305,7 +315,7 @@ public sealed class RTypeEngineRoomScreen : IDisposable
         DrawRect(spriteBatch, new Rectangle(0, 106, Width, 6), BrandRed);
         _font.Draw(spriteBatch, "R TYPE RACE ENGINE ROOM", 52, 32, 6, TextColor);
         _font.Draw(spriteBatch, _parameters.DisplayName, 1140, 28, 3, MutedTextColor);
-        _font.Draw(spriteBatch, "RT THROTTLE  LT LOAD  A LOAD ON/OFF  LB/RB GEAR  Y BACK", 1140, 66, 3, MutedTextColor);
+        _font.Draw(spriteBatch, "RT THROTTLE  LT LOAD  A LOAD ON/OFF  RS UP/DOWN GEAR  Y BACK", 1140, 66, 3, MutedTextColor);
     }
 
     private void DrawTachometer(SpriteBatch spriteBatch, RaceEngineAudioState state)
