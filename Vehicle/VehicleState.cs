@@ -294,6 +294,16 @@ public sealed class VehicleState
 
     public float RearRightDisplacementDragForceN { get; set; }
 
+    public float FrontLeftCurbLoadMultiplier { get; set; } = 1f;
+
+    public float FrontRightCurbLoadMultiplier { get; set; } = 1f;
+
+    public float RearLeftCurbLoadMultiplier { get; set; } = 1f;
+
+    public float RearRightCurbLoadMultiplier { get; set; } = 1f;
+
+    public int CurbContactWheelCount { get; set; }
+
     public string FrontLeftSurfaceName { get; set; } = "ROAD";
 
     public string FrontRightSurfaceName { get; set; } = "ROAD";

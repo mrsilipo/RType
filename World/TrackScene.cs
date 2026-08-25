@@ -10,6 +10,8 @@ public sealed class TrackScene : ITrackSurfaceSampler, ITrackProgressSampler, ID
     private const float WallCollisionShoulderMeters = 0.0f;
     private const float WallHeightMeters = 1.15f;
     private const float DefaultGrassWidthMeters = 26.0f;
+    private const float CurbInnerOffsetFromRoadEdgeMeters = 0.20f;
+    private const float CurbOuterOffsetFromRoadEdgeMeters = 1.10f;
     private static readonly ProfilePoint[] LakesideBankProfileDegrees =
     [
         new(0.00f, 0.0f),
@@ -187,12 +189,12 @@ public sealed class TrackScene : ITrackSurfaceSampler, ITrackProgressSampler, ID
         CenterLineProjection projection = ProjectToCenterLine(new Vector2(position.X, position.Z));
         TrackWidthSample width = GetProjectionWidthSample(projection);
         float roadWidth = width.RoadWidthForSignedDistance(projection.SignedDistance);
-        if (projection.Distance <= roadWidth)
+        if (projection.Distance <= roadWidth + CurbInnerOffsetFromRoadEdgeMeters)
         {
             return _surfaceLibrary.Road;
         }
 
-        if (projection.Distance <= roadWidth + 1.3f)
+        if (projection.Distance <= roadWidth + CurbOuterOffsetFromRoadEdgeMeters)
         {
             return _surfaceLibrary.Curb;
         }
@@ -291,15 +293,15 @@ public sealed class TrackScene : ITrackSurfaceSampler, ITrackProgressSampler, ID
 
         float bankedDistance = MathHelper.Clamp(
             projection.SignedDistance,
-            -width.RightRoadWidthMeters - 1.3f,
-            width.LeftRoadWidthMeters + 1.3f);
+            -width.RightRoadWidthMeters - CurbOuterOffsetFromRoadEdgeMeters,
+            width.LeftRoadWidthMeters + CurbOuterOffsetFromRoadEdgeMeters);
         float bankedElevation = projection.Elevation + bankedDistance * MathF.Tan(bankRadians);
-        if (projection.Distance <= roadWidth + 1.3f)
+        if (projection.Distance <= roadWidth + CurbOuterOffsetFromRoadEdgeMeters)
         {
             return bankedElevation;
         }
 
-        float shoulderT = SmoothStep(roadWidth + 1.3f, roadWidth + grassWidth, projection.Distance);
+        float shoulderT = SmoothStep(roadWidth + CurbOuterOffsetFromRoadEdgeMeters, roadWidth + grassWidth, projection.Distance);
         return MathHelper.Lerp(bankedElevation, projection.Elevation, shoulderT);
     }
 
@@ -513,15 +515,15 @@ public sealed class TrackScene : ITrackSurfaceSampler, ITrackProgressSampler, ID
             TrackWidthSample sample = widthSamples[i];
             float leftRoadWidth = sample.LeftRoadWidthMeters > 0f ? sample.LeftRoadWidthMeters : fallbackRoadHalfWidth;
             float rightRoadWidth = sample.RightRoadWidthMeters > 0f ? sample.RightRoadWidthMeters : fallbackRoadHalfWidth;
-            float leftCurbOuterOffset = leftRoadWidth + 1.10f;
-            float rightCurbOuterOffset = rightRoadWidth + 1.10f;
-            float leftGrassOuterOffset = leftRoadWidth + MathF.Max(1.10f, sample.LeftGrassWidthMeters);
-            float rightGrassOuterOffset = rightRoadWidth + MathF.Max(1.10f, sample.RightGrassWidthMeters);
+            float leftCurbOuterOffset = leftRoadWidth + CurbOuterOffsetFromRoadEdgeMeters;
+            float rightCurbOuterOffset = rightRoadWidth + CurbOuterOffsetFromRoadEdgeMeters;
+            float leftGrassOuterOffset = leftRoadWidth + MathF.Max(CurbOuterOffsetFromRoadEdgeMeters, sample.LeftGrassWidthMeters);
+            float rightGrassOuterOffset = rightRoadWidth + MathF.Max(CurbOuterOffsetFromRoadEdgeMeters, sample.RightGrassWidthMeters);
             leftRoad[i] = leftRoadWidth;
             rightRoad[i] = -rightRoadWidth;
-            leftCurbInner[i] = leftRoadWidth + 0.20f;
+            leftCurbInner[i] = leftRoadWidth + CurbInnerOffsetFromRoadEdgeMeters;
             leftCurbOuter[i] = leftCurbOuterOffset;
-            rightCurbInner[i] = -rightRoadWidth - 0.20f;
+            rightCurbInner[i] = -rightRoadWidth - CurbInnerOffsetFromRoadEdgeMeters;
             rightCurbOuter[i] = -rightCurbOuterOffset;
             leftGrassInner[i] = leftCurbOuterOffset;
             leftGrassOuter[i] = leftGrassOuterOffset;

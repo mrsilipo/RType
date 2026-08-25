@@ -6,6 +6,9 @@ namespace RType.Vehicle;
 public sealed class SimpleVehicleSimulator : IVehicleSimulator
 {
     private const float Gravity = 9.81f;
+    private const float CurbRibDensityFactor = 3.2f;
+    private const float CurbLoadVibrationAmplitude = 0.16f;
+    private const float CurbLoadVibrationMinimumSpeedMetersPerSecond = 1.0f;
 
     private readonly ITrackSurfaceSampler _surfaceSampler;
     private readonly VehicleSimulationParameters _parameters;
@@ -47,6 +50,8 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
     private float _longitudinalLoadTransferN;
     private float _frontLateralLoadTransferN;
     private float _rearLateralLoadTransferN;
+    private float _physicsTimeSeconds;
+    private int _curbContactWheelCount;
     private readonly float[] _visualSuspensionCompressionMeters = new float[4];
     private readonly float[] _visualSuspensionVelocityMetersPerSecond = new float[4];
     private bool _digitalBrakeAssistActive;
@@ -255,6 +260,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
 
     private void Step(VehicleInput input, float dt)
     {
+        _physicsTimeSeconds += MathF.Max(0f, dt);
         State.CrashFlashSeconds = MathF.Max(0f, State.CrashFlashSeconds - dt);
 
         Vector2 forward = GetForward();
@@ -283,6 +289,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         UpdateRecentBrakeSteeringBoost(input.Brake, brake, dt);
         driveThrottle = ApplyBrakeThrottlePriority(driveThrottle, MathF.Max(brake, input.Brake));
         float[] normalLoads = CalculateNormalLoads(forwardSpeed);
+        ApplyCurbLoadVibration(normalLoads, forward, right, MathF.Abs(forwardSpeed));
         bool launchClutchActive = ShouldUseLaunchClutch(driveThrottle, forwardSpeed);
         float totalDriveTorque;
         if (launchClutchActive)
@@ -528,6 +535,11 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         State.FrontRightDisplacementDragForceN = GetWheel(WheelCorner.FrontRight).DisplacementDragForceN;
         State.RearLeftDisplacementDragForceN = GetWheel(WheelCorner.RearLeft).DisplacementDragForceN;
         State.RearRightDisplacementDragForceN = GetWheel(WheelCorner.RearRight).DisplacementDragForceN;
+        State.FrontLeftCurbLoadMultiplier = GetWheel(WheelCorner.FrontLeft).CurbLoadMultiplier;
+        State.FrontRightCurbLoadMultiplier = GetWheel(WheelCorner.FrontRight).CurbLoadMultiplier;
+        State.RearLeftCurbLoadMultiplier = GetWheel(WheelCorner.RearLeft).CurbLoadMultiplier;
+        State.RearRightCurbLoadMultiplier = GetWheel(WheelCorner.RearRight).CurbLoadMultiplier;
+        State.CurbContactWheelCount = _curbContactWheelCount;
         State.FrontLeftSurfaceName = GetWheel(WheelCorner.FrontLeft).SurfaceName;
         State.FrontRightSurfaceName = GetWheel(WheelCorner.FrontRight).SurfaceName;
         State.RearLeftSurfaceName = GetWheel(WheelCorner.RearLeft).SurfaceName;
@@ -1565,6 +1577,43 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             MathF.Max(minimumWheelLoadN, rearAxleLoad * 0.5f + rearLateralTransfer * 0.5f),
             MathF.Max(minimumWheelLoadN, rearAxleLoad * 0.5f - rearLateralTransfer * 0.5f)
         ];
+    }
+
+    private void ApplyCurbLoadVibration(float[] normalLoads, Vector2 forward, Vector2 right, float speedMetersPerSecond)
+    {
+        _curbContactWheelCount = 0;
+        for (int i = 0; i < _wheels.Length; i++)
+        {
+            _wheels[i].CurbLoadMultiplier = 1f;
+        }
+
+        if (speedMetersPerSecond <= CurbLoadVibrationMinimumSpeedMetersPerSecond)
+        {
+            return;
+        }
+
+        Vector3 center = State.Position;
+        Vector3 right3 = new(right.X, 0f, right.Y);
+        Vector3 forward3 = new(forward.X, 0f, forward.Y);
+        for (int i = 0; i < _wheels.Length; i++)
+        {
+            WheelRuntimeState wheel = _wheels[i];
+            Vector3 contactPosition = center + right3 * wheel.LocalX + forward3 * wheel.LocalZ;
+            SurfaceSample surface = _surfaceSampler.Sample(contactPosition);
+            if (!surface.Name.Equals("CURB", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            float phaseOffset = i * 0.73f;
+            float frequencyHz = MathF.Max(0.1f, speedMetersPerSecond * CurbRibDensityFactor);
+            float vibration = MathF.Sin((_physicsTimeSeconds + phaseOffset) * MathHelper.TwoPi * frequencyHz) *
+                              CurbLoadVibrationAmplitude;
+            float multiplier = MathHelper.Clamp(1f - MathF.Abs(vibration), 0f, 1f);
+            normalLoads[i] = MathF.Max(0f, normalLoads[i] * multiplier);
+            wheel.CurbLoadMultiplier = multiplier;
+            _curbContactWheelCount++;
+        }
     }
 
     private float[] DistributeDriveTorque(float totalDriveTorque, float[] normalLoads, float driveThrottle)
@@ -4280,6 +4329,8 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         public float ActiveSurfaceMu { get; set; } = 1f;
 
         public float DisplacementDragForceN { get; set; }
+
+        public float CurbLoadMultiplier { get; set; } = 1f;
 
         public string SurfaceName { get; set; } = "ROAD";
 

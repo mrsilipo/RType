@@ -29,37 +29,37 @@
         "value": 0.08
       },
       "displacementDragCoefficient": {
-        "value": 0.01
+        "value": 0
       }
     },
     "curb": {
       "name": "CURB",
       "grip": {
-        "value": 0.84
+        "value": 0.96
       },
       "rollingResistanceMultiplier": {
-        "value": 1.9
-      },
-      "longitudinalDragCoefficient": {
         "value": 1
       },
+      "longitudinalDragCoefficient": {
+        "value": 0
+      },
       "lateralDragCoefficient": {
-        "value": 1.4
+        "value": 0
       },
       "wheelSpinDragCoefficient": {
-        "value": 4
+        "value": 0
       },
       "muStatic": {
-        "value": 0.92
+        "value": 1.1
       },
       "muDynamic": {
-        "value": 0.64
+        "value": 0.85
       },
       "optimalSlipRatio": {
-        "value": 0.1
+        "value": 0.09
       },
       "displacementDragCoefficient": {
-        "value": 0.025
+        "value": 0
       }
     },
     "grass": {

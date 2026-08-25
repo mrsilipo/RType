@@ -16,6 +16,10 @@ public static class SurfaceProbe
         SurfaceLibrary surfaces = SurfaceLibraryLoader.Load(options.SurfaceDefinitionPath);
 
         RunCase("all road corner exit", parameters, engineParameters, new FixedSurfaceSampler(surfaces.Road), new VehicleInput(0.95f, 0f, 0.62f));
+        RunCase("all curb corner exit", parameters, engineParameters, new FixedSurfaceSampler(surfaces.Curb), new VehicleInput(0.95f, 0f, 0.62f));
+        RunCase("left curb split throttle", parameters, engineParameters, new VehicleRelativeSplitSurfaceSampler(surfaces.Curb, surfaces.Road), new VehicleInput(0.95f, 0f, 0.28f));
+        RunCase("right curb split throttle", parameters, engineParameters, new VehicleRelativeSplitSurfaceSampler(surfaces.Road, surfaces.Curb), new VehicleInput(0.95f, 0f, -0.28f));
+        RunCase("left curb right grass boundary", parameters, engineParameters, new VehicleRelativeSplitSurfaceSampler(surfaces.Curb, surfaces.Grass), new VehicleInput(0.95f, 0f, 0.18f));
         RunCase("all grass launch", parameters, engineParameters, new FixedSurfaceSampler(surfaces.Grass), new VehicleInput(0.95f, 0f, 0.10f));
         RunCase("left grass split throttle", parameters, engineParameters, new VehicleRelativeSplitSurfaceSampler(surfaces.Grass, surfaces.Road), new VehicleInput(0.95f, 0f, 0.28f));
         RunCase("right grass split throttle", parameters, engineParameters, new VehicleRelativeSplitSurfaceSampler(surfaces.Road, surfaces.Grass), new VehicleInput(0.95f, 0f, -0.28f));
@@ -70,7 +74,8 @@ public static class SurfaceProbe
             $"mu FL/FR {end.FrontLeftSurfaceMu:0.00}/{end.FrontRightSurfaceMu:0.00}, " +
             $"slip FL/FR {end.FrontLeftSlipRatio:0.00}/{end.FrontRightSlipRatio:0.00}, peak front slip {peakFrontSlip:0.00}, " +
             $"lsd anchor {end.FfLsdLowGripAnchor}, FL/FR torque {end.FfLsdFrontLeftActualTorqueNm:0}/{end.FfLsdFrontRightActualTorqueNm:0}Nm, " +
-            $"managed {peakManagedTorque:0}Nm, yaw diag {peakYawMoment:0}Nm, drag FL/FR {end.FrontLeftDisplacementDragForceN:0}/{end.FrontRightDisplacementDragForceN:0}N");
+            $"managed {peakManagedTorque:0}Nm, yaw diag {peakYawMoment:0}Nm, drag FL/FR {end.FrontLeftDisplacementDragForceN:0}/{end.FrontRightDisplacementDragForceN:0}N, " +
+            $"curb wheels {end.CurbContactWheelCount}, curb load FL/FR {end.FrontLeftCurbLoadMultiplier:0.00}/{end.FrontRightCurbLoadMultiplier:0.00}");
     }
 
     private sealed class FixedSurfaceSampler : ITrackSurfaceSampler
