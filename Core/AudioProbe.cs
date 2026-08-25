@@ -15,7 +15,7 @@ public static class AudioProbe
 
     public static void Run()
     {
-        ProbeVehicle("Data/Vehicles/ek9_reference_2000.json");
+        ProbeVehicleBuild("Data/VehicleBuilds/ek9_showroom_stock.json");
         ProbeLoop("Generic tyres", "wheelspin", "Assets/Sounds/Generic/TyreScreech_001.wav");
         ProbeLoopSlice("Generic tyres", "wheelspin-sustain-loop", "Assets/Sounds/Generic/TyreScreech_001.wav", TyreSpinLoopStartRatio, TyreSpinLoopEndRatio);
         ProbeLoopSlice("Generic tyres", "wheelspin-chirp-loop", "Assets/Sounds/Generic/TyreScreech_001.wav", TyreChirpLoopStartRatio, TyreChirpLoopEndRatio);
@@ -23,9 +23,9 @@ public static class AudioProbe
         ProbeLoopSlice("Generic tyres", "control-loss-middle-loop", "Assets/Sounds/Generic/TyreScreech_002.wav", ControlLossScreechLoopStartRatio, ControlLossScreechLoopEndRatio);
     }
 
-    private static void ProbeVehicle(string vehiclePath)
+    private static void ProbeVehicleBuild(string buildPath)
     {
-        VehicleSimulationParameters parameters = VehicleDefinitionLoader.LoadSimulationParameters(vehiclePath);
+        VehicleSimulationParameters parameters = VehicleBuildDefinitionLoader.LoadSimulationParameters(buildPath);
         Console.WriteLine($"{parameters.DisplayName} active engine audio: race sample recipe, redline {parameters.RedlineRpm:0} rpm, VTEC {parameters.VtecActivationRpm:0} rpm, limiter uses VTEC/high-RPM bounce with no dedicated limiter sample");
         Console.WriteLine($"  limiter visualization: depth {RevLimiterPresentationRules.CalculateBounceDepthRpm(parameters.RedlineRpm):0} rpm, period {RevLimiterPresentationRules.CalculateBounceSeconds(parameters.RedlineRpm):0.000}s");
         ProbeRaceEngineAudio(parameters);

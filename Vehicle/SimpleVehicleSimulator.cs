@@ -49,6 +49,8 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
     private float _launchClutchTimerSeconds;
     private bool _preRevLaunchActive;
 
+    public VehicleSimulationParameters Parameters => _parameters;
+
     public SimpleVehicleSimulator(
         ITrackSurfaceSampler surfaceSampler,
         Vector3 startPosition,

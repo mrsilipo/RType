@@ -13,7 +13,7 @@ public sealed class RTypeEngineRoomScreen : IDisposable
 {
     private const int Width = UiLayout.Width;
     private const int Height = UiLayout.Height;
-    private const string VehiclePath = "Data/Vehicles/ek9_reference_2000.json";
+    private const string VehicleBuildPath = "Data/VehicleBuilds/ek9_showroom_stock.json";
 
     private static readonly Color BackgroundColor = new(7, 8, 9);
     private static readonly Color PanelColor = new(18, 20, 22);
@@ -47,7 +47,7 @@ public sealed class RTypeEngineRoomScreen : IDisposable
         _pixel = new Texture2D(graphicsDevice, 1, 1);
         _pixel.SetData([Color.White]);
         _font = new PixelFont(_pixel);
-        _parameters = VehicleDefinitionLoader.LoadSimulationParameters(VehiclePath);
+        _parameters = VehicleBuildDefinitionLoader.LoadSimulationParameters(VehicleBuildPath);
         _rpm = _parameters.IdleRpm;
         _displayRpm = _rpm;
         _vehicle.VehicleName = _parameters.DisplayName;
@@ -236,15 +236,8 @@ public sealed class RTypeEngineRoomScreen : IDisposable
         _vehicle.PowertrainShockIntensity = _shiftKick * 0.65f;
         _vehicle.EngineBrakeTorqueNm = (1f - _throttle) * SmoothStep(2600f, _parameters.RedlineRpm, _rpm) * 46f;
         _vehicle.DriveForce = _throttle * MathHelper.Lerp(220f, 2550f, SmoothStep(_parameters.IdleRpm, _parameters.RedlineRpm, _rpm));
-        _vehicle.EnginePowerUnitActive = true;
-        _vehicle.EnginePowerUnitCrankRpm = _rpm;
-        _vehicle.EnginePowerUnitVtecBlend = vtec;
-        _vehicle.EnginePowerUnitVtecKickIntensity = _shiftKick * vtec;
-        _vehicle.EnginePowerUnitLoad = MathHelper.Clamp(_throttle * 0.72f + _load * 0.28f, 0f, 1f);
-        _vehicle.EnginePowerUnitFuelCutBlend = limiter ? 1f : 0f;
-        _vehicle.EnginePowerUnitCrankPhaseDegrees = _crankPhase;
-        _vehicle.EnginePowerUnitTransmissionRpm = MathF.Abs(_speedMetersPerSecond) / MathF.Max(0.001f, _parameters.WheelRadiusMeters) * 60f / MathHelper.TwoPi;
-        _vehicle.EnginePowerUnitAfterfireBlend = (1f - _throttle) * SmoothStep(4200f, _parameters.RedlineRpm, _rpm);
+        RaceEnginePresentationBridge.ApplyAudioState(_vehicle, _parameters, 0f, _crankPhase);
+        _vehicle.EnginePowerUnitLoad = MathHelper.Clamp(_vehicle.EnginePowerUnitLoad + _load * 0.28f, 0f, 1f);
     }
 
     private void ShiftTo(int gear)

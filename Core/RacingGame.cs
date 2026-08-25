@@ -540,6 +540,7 @@ public sealed class RacingGame : Game
         _vehicle = new SimpleVehicleSimulator(_track, _track.StartPosition, _track.StartHeadingRadians, parameters, _simulationEngine);
         _vehicle.SetManualTransmission(_transmissionSelection == 1);
         RpmPresentationSmoother.Update(_vehicle.State, 0f);
+        RaceEnginePresentationBridge.ApplyAudioState(_vehicle.State, parameters, 0f);
         _vehicleAudio?.SetVehicle(parameters.Audio);
         _camera.SetMode(CameraMode.Chase1, _vehicle.State, reset: true);
         _paused = false;
@@ -690,6 +691,7 @@ public sealed class RacingGame : Game
         }
 
         RpmPresentationSmoother.Update(_vehicle.State, dt);
+        RaceEnginePresentationBridge.ApplyAudioState(_vehicle.State, _vehicle.Parameters, dt);
     }
 
     private void UpdateVehicleAudio(float dt)
