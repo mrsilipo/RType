@@ -27,8 +27,12 @@ Assets/Tracks/AssetoCorsaDownloads/
 Assets/Tracks/KN5_Exporter_FBX/
 Assets/Models/Ek9_Sukimoto/
 Assets/Models/Joe'sEK9/*.blend*
+Assets/Models/Joe'sEK9/**/*.blend1
 Assets/Models/Joe'sEK9/Blueprints/
 Assets/Models/Joe'sEK9/*_OLD.*
+Assets/Models/Joe'sEK9/**/*_OLD.*
+Assets/Models/Joe'sEK9/**/EK9_Diffuse.png
+Assets/Models/Joe'sEK9/**/EK9_Diffuse_Layout.png
 Assets/Music/Racing/
 ReferenceSource/
 Audio/RTypeEngine/
