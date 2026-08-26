@@ -10,7 +10,11 @@ public static class AudioDiagnosticsSmoke
 {
     public static void Run(GameLaunchOptions options)
     {
-        VehicleSimulationParameters parameters = VehicleDefinitionLoader.LoadSimulationParameters(options.VehicleDefinitionPath);
+        VehicleSimulationParameters parameters = VehicleRuntimeLoader.LoadSimulationParameters(
+            options.VehiclePath,
+            options.GarageProfilePath,
+            options.GarageVehicleIdOrPath,
+            options.GarageSetupIdOrPath);
         using VehicleAudioSystem audio = new();
         audio.SetVehicle(parameters.Audio);
 
@@ -20,7 +24,6 @@ public static class AudioDiagnosticsSmoke
             LimiterHardCutRpm = parameters.LimiterHardCutRpm,
             LimiterResumeRpm = parameters.RevLimiterResumeRpm,
             MaxGaugeRpm = parameters.MaxGaugeRpm,
-            RedlineRpm = parameters.RedlineRpm,
             Rpm = parameters.IdleRpm,
             DisplayedRpm = parameters.IdleRpm,
             Throttle = 1f,

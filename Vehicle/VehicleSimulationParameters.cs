@@ -40,11 +40,17 @@ public sealed class VehicleSimulationParameters
 
     public float MaxGaugeRpm { get; init; } = 8000f;
 
-    // Compatibility alias. New limiter/HUD/audio code should use PowerRedlineRpm
-    // and LimiterHardCutRpm explicitly.
-    public float RedlineRpm { get; init; } = 6800f;
-
     public float RevLimiterResumeRpm { get; init; } = 6620f;
+
+    public DrivetrainLimits DrivetrainLimits => new(
+        IdleRpm,
+        PowerRedlineRpm,
+        LimiterHardCutRpm,
+        RevLimiterResumeRpm,
+        MaxGaugeRpm);
+
+    [Obsolete("Use PowerRedlineRpm for power/HUD redline and LimiterHardCutRpm for mechanical cut logic.")]
+    public float RedlineRpm => LimiterHardCutRpm;
 
     public float RevLimiterFuelCutSeconds { get; init; } = 0.08f;
 
@@ -94,11 +100,39 @@ public sealed class VehicleSimulationParameters
 
     public float ClutchCouplingRate { get; init; } = 10f;
 
+    public float ClutchEngagementSharpness { get; init; } = 1f;
+
+    public float ClutchSlipDamping { get; init; } = 1f;
+
+    public float ClutchLowSpeedAssistStrength { get; init; } = 0.65f;
+
+    public float ClutchBiteInputStartMultiplier { get; init; } = 0.35f;
+
+    public float ClutchLaunchAssistExponent { get; init; } = 0.55f;
+
+    public float ClutchLowSpeedThrottleGamma { get; init; } = 0.65f;
+
+    public float ClutchLowSpeedThresholdMetersPerSecond { get; init; } = 5f;
+
+    public float ClutchLowSpeedThrottleAssist { get; init; } = 0.45f;
+
+    public float ClutchLowSpeedTorqueAssistNm { get; init; } = 55f;
+
+    public float ClutchRollingLockSpeedMetersPerSecond { get; init; } = 0.85f;
+
+    public float ClutchRollingLockSlipRadiansPerSecond { get; init; } = 115f;
+
+    public float ClutchLockSlipRadiansPerSecond { get; init; } = 62f;
+
+    public float ClutchUnlockSlipRadiansPerSecond { get; init; } = 150f;
+
+    public float IdleControlSensitivityNmPerRadPerSecond { get; init; } = 0.18f;
+
     public float EngineFreeRevResponseRate { get; init; } = 7f;
 
-    public float LaunchSlipTargetRpm { get; init; } = 3800f;
+    public float MaxFreeRevRiseRpmPerSecond { get; init; } = 4600f;
 
-    public float LaunchSlipBlend { get; init; } = 0.3f;
+    public float MaxFreeRevFallRpmPerSecond { get; init; } = 7600f;
 
     public float UpshiftRpm { get; init; } = 6250f;
 

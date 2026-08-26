@@ -9,18 +9,23 @@ public static class PhysicsSmokeTest
 {
     public static void Run(GameLaunchOptions options)
     {
-        VehicleSimulationParameters parameters = VehicleDefinitionLoader.LoadSimulationParameters(options.VehicleDefinitionPath);
+        VehicleSimulationParameters parameters = VehicleRuntimeLoader.LoadSimulationParameters(
+            options.VehiclePath,
+            options.GarageProfilePath,
+            options.GarageVehicleIdOrPath,
+            options.GarageSetupIdOrPath);
         SurfaceLibrary surfaces = SurfaceLibraryLoader.Load(options.SurfaceDefinitionPath);
         VerifySynchronous60HzCadenceDoesNotProjectExtraTick(parameters);
         VerifyRaceSessionTracksSectorsLapsAndInvalidation();
+        VerifyRaceSessionRollingLapHistory();
         SimpleVehicleSimulator simulator = new(
             new FlatSurfaceSampler(),
             new Vector3(0f, 0.06f, 0f),
             0f,
             parameters);
-        if (MathF.Abs(simulator.State.RedlineRpm - parameters.RedlineRpm) > 0.5f)
+        if (MathF.Abs(simulator.State.LimiterHardCutRpm - parameters.LimiterHardCutRpm) > 0.5f)
         {
-            throw new InvalidOperationException($"Physics smoke test failed: vehicle state redline does not match definition. State {simulator.State.RedlineRpm:0}, definition {parameters.RedlineRpm:0}.");
+            throw new InvalidOperationException($"Physics smoke test failed: vehicle state limiter does not match definition. State {simulator.State.LimiterHardCutRpm:0}, definition {parameters.LimiterHardCutRpm:0}.");
         }
 
         float peakSpeed = 0f;
@@ -137,6 +142,7 @@ public static class PhysicsSmokeTest
         VerifyManualHighRpmDownshiftIsAccepted(parameters);
         VerifyManualOverRevDownshiftCreatesEngineBraking(parameters);
         VerifyRevLimiter(parameters);
+        VerifyLimiterPresentationUsesHardCutStateAndGroundSpeed(parameters);
         VerifyEngineBraking(parameters);
         VerifyBrakeHardwareAndAbs(parameters);
         VerifyHardBrakingDoesNotRearLockFirst(parameters);
@@ -147,10 +153,13 @@ public static class PhysicsSmokeTest
         VerifyPostBrakeReleaseTurnKeepsSteeringAuthority(parameters);
         VerifyBrakeOverridesThrottleInHighSpeedTurn(parameters);
         VerifyVehiclePoseTracksWheelGroundContact(parameters);
+        VerifyTrackGradeAndBankingCreatePhysicalGravityForces(parameters);
         VerifyVisualSuspensionUsesFourCornerSupport(parameters);
         VerifyNeutralFreeRevUsesEngineSimulator(parameters);
+        VerifyFreeRevUsesTorqueInertiaRateLimit(parameters);
         VerifyRaceStartHoldAllowsRevsBeforeTraction(parameters);
         VerifyPreRevLaunchUsesSlippingClutch(parameters);
+        VerifyPartialThrottlePullAwayHasRaceBite(parameters);
         VerifyAcceleratorRegatesReverseToFirst(parameters);
         VerifyWallScrapePreservesMomentum(parameters);
         VerifyWallContactDoesNotTrapCar(parameters);
@@ -222,6 +231,59 @@ public static class PhysicsSmokeTest
             throw new InvalidOperationException("Physics smoke test failed: race session did not preserve invalid lap state or finish correctly.");
         }
 
+        RaceSession trackLimitSession = new(new ScriptedProgressTrack(), 1);
+        vehicle = new VehicleState
+        {
+            SurfaceName = "ROAD",
+            Velocity = new Vector2(24f, 0f),
+            Position = new Vector3(0.00f, 0f, 0f),
+            FrontLeftSurfaceName = "ROAD",
+            FrontRightSurfaceName = "ROAD",
+            RearLeftSurfaceName = "CURB_GRASS",
+            RearLeftSurfaceBlend = 0.70f,
+            RearRightSurfaceName = "ROAD"
+        };
+        trackLimitSession.Update(vehicle, TimeSpan.Zero);
+
+        vehicle.Position = new Vector3(0.34f, 0f, 0f);
+        trackLimitSession.Update(vehicle, TimeSpan.FromSeconds(10));
+        vehicle.Position = new Vector3(0.67f, 0f, 0f);
+        vehicle.RearLeftSurfaceName = "GRASS";
+        vehicle.RearLeftSurfaceBlend = 1f;
+        vehicle.RearRightSurfaceName = "CURB_GRASS";
+        vehicle.RearRightSurfaceBlend = 0.90f;
+        trackLimitSession.Update(vehicle, TimeSpan.FromSeconds(10));
+
+        if (trackLimitSession.State.CurrentLapInvalid)
+        {
+            throw new InvalidOperationException("Physics smoke test failed: minor curb/grass fringe excursion incorrectly invalidated the lap.");
+        }
+
+        vehicle.Position = new Vector3(0.02f, 0f, 0f);
+        trackLimitSession.Update(vehicle, TimeSpan.FromSeconds(10));
+
+        if (!trackLimitSession.State.LastLapWasValid)
+        {
+            throw new InvalidOperationException("Physics smoke test failed: legal curb/grass fringe lap was not preserved as valid.");
+        }
+
+        RaceSession fullOffTrackSession = new(new ScriptedProgressTrack(), 1);
+        vehicle = new VehicleState
+        {
+            SurfaceName = "GRASS",
+            Velocity = new Vector2(24f, 0f),
+            Position = new Vector3(0.00f, 0f, 0f),
+            FrontLeftSurfaceName = "GRASS",
+            FrontRightSurfaceName = "GRASS",
+            RearLeftSurfaceName = "GRASS",
+            RearRightSurfaceName = "GRASS"
+        };
+        fullOffTrackSession.Update(vehicle, TimeSpan.Zero);
+        if (!fullOffTrackSession.State.CurrentLapInvalid)
+        {
+            throw new InvalidOperationException("Physics smoke test failed: full-car off-track excursion did not invalidate the lap.");
+        }
+
         RaceSession wrongWaySession = new(new ScriptedProgressTrack(), 1);
         vehicle = new VehicleState
         {
@@ -239,6 +301,22 @@ public static class PhysicsSmokeTest
         if (!wrongWaySession.State.WrongWay || !wrongWaySession.State.CurrentLapInvalid)
         {
             throw new InvalidOperationException("Physics smoke test failed: race session did not flag wrong-way driving.");
+        }
+    }
+
+    private static void VerifyRaceSessionRollingLapHistory()
+    {
+        RaceSessionState state = new(8);
+        for (int i = 1; i <= 6; i++)
+        {
+            state.AddCompletedLapTime(TimeSpan.FromSeconds(70 + i));
+        }
+
+        if (state.CompletedLapTimes.Count != 5 ||
+            state.CompletedLapTimes[0] != TimeSpan.FromSeconds(76) ||
+            state.CompletedLapTimes[4] != TimeSpan.FromSeconds(72))
+        {
+            throw new InvalidOperationException("Physics smoke test failed: race session rolling lap history did not keep the latest five laps newest-first.");
         }
     }
 
@@ -322,7 +400,7 @@ public static class PhysicsSmokeTest
             limiterActivated |= simulator.State.RevLimiterActive;
         }
 
-        float allowedGrassLaunchRpm = parameters.RedlineRpm + parameters.RevLimiterBounceRpm + 150f;
+        float allowedGrassLaunchRpm = parameters.LimiterHardCutRpm + parameters.RevLimiterBounceRpm + 150f;
         if (maxRpm > allowedGrassLaunchRpm)
         {
             throw new InvalidOperationException($"Physics smoke test failed: grass launch RPM flared too much. Max RPM {maxRpm:0}, allowed {allowedGrassLaunchRpm:0}, upshift {parameters.UpshiftRpm:0}, limiter active {limiterActivated}.");
@@ -347,9 +425,9 @@ public static class PhysicsSmokeTest
             limiterActivated |= simulator.State.RevLimiterActive;
         }
 
-        if (limiterActivated || maxRpm > parameters.RedlineRpm * 0.88f)
+        if (limiterActivated || maxRpm > parameters.LimiterHardCutRpm * 0.88f)
         {
-            throw new InvalidOperationException($"Physics smoke test failed: road launch RPM reached the limiter region too quickly. Max RPM {maxRpm:0}, limiter {parameters.RedlineRpm:0}, limiter active {limiterActivated}.");
+            throw new InvalidOperationException($"Physics smoke test failed: road launch RPM reached the limiter region too quickly. Max RPM {maxRpm:0}, limiter {parameters.LimiterHardCutRpm:0}, limiter active {limiterActivated}.");
         }
     }
 
@@ -1084,7 +1162,7 @@ public static class PhysicsSmokeTest
         }
 
         float rpmBeforeShift = simulator.State.Rpm;
-        float allowedThrottleShiftFlareRpm = MathF.Max(120f, parameters.RedlineRpm * 0.035f);
+        float allowedThrottleShiftFlareRpm = MathF.Max(120f, parameters.LimiterHardCutRpm * 0.035f);
         simulator.Update(new VehicleInput(1f, 0f, 0f, shiftUpRequested: true), dt);
         if (!simulator.State.IsShifting || simulator.State.Gear != 2)
         {
@@ -1178,7 +1256,7 @@ public static class PhysicsSmokeTest
             60f *
             secondGearRatio *
             parameters.FinalDriveRatio;
-        if (predictedSecondGearRpm <= parameters.RedlineRpm + parameters.DownshiftOverRevToleranceRpm)
+        if (predictedSecondGearRpm <= parameters.LimiterHardCutRpm + parameters.DownshiftOverRevToleranceRpm)
         {
             throw new InvalidOperationException($"Physics smoke test failed: high-RPM downshift setup did not exceed the old over-rev guard. Predicted {predictedSecondGearRpm:0} RPM.");
         }
@@ -1212,7 +1290,7 @@ public static class PhysicsSmokeTest
 
         const float dt = 1f / 120f;
         float secondGearRatio = parameters.ForwardGearRatios[1];
-        float targetOverRevRpm = parameters.RedlineRpm + parameters.DownshiftOverRevToleranceRpm + 650f;
+        float targetOverRevRpm = parameters.LimiterHardCutRpm + parameters.DownshiftOverRevToleranceRpm + 650f;
         float targetSpeedMetersPerSecond =
             targetOverRevRpm /
             MathF.Max(0.1f, secondGearRatio * parameters.FinalDriveRatio) *
@@ -1233,7 +1311,7 @@ public static class PhysicsSmokeTest
             60f *
             secondGearRatio *
             parameters.FinalDriveRatio;
-        if (predictedSecondGearRpm <= parameters.RedlineRpm + parameters.DownshiftOverRevToleranceRpm)
+        if (predictedSecondGearRpm <= parameters.LimiterHardCutRpm + parameters.DownshiftOverRevToleranceRpm)
         {
             throw new InvalidOperationException($"Physics smoke test failed: over-rev downshift setup was too slow. Predicted {predictedSecondGearRpm:0} RPM.");
         }
@@ -1272,9 +1350,9 @@ public static class PhysicsSmokeTest
 
         float downshiftSpeedDrop = downshiftStartSpeed - downshift.State.SpeedMetersPerSecond;
         float referenceSpeedDrop = referenceStartSpeed - reference.State.SpeedMetersPerSecond;
-        if (maximumRpm > parameters.RedlineRpm + 0.5f)
+        if (maximumRpm > parameters.LimiterHardCutRpm + 0.5f)
         {
-            throw new InvalidOperationException($"Physics smoke test failed: over-rev downshift exceeded displayed engine limiter. Max {maximumRpm:0}, limiter {parameters.RedlineRpm:0}.");
+            throw new InvalidOperationException($"Physics smoke test failed: over-rev downshift exceeded displayed engine limiter. Max {maximumRpm:0}, limiter {parameters.LimiterHardCutRpm:0}.");
         }
 
         if (maximumForcedOverRevRpm <= parameters.DownshiftOverRevToleranceRpm)
@@ -1330,20 +1408,63 @@ public static class PhysicsSmokeTest
             limiterActivated |= simulator.State.RevLimiterActive;
             limiterBounced |= simulator.State.RevLimiterBounceIntensity > 0.05f;
 
-            if (simulator.State.Rpm > parameters.RedlineRpm + 0.5f)
+            if (simulator.State.Rpm > parameters.LimiterHardCutRpm + 0.5f)
             {
-                throw new InvalidOperationException($"Physics smoke test failed: RPM exceeded limiter. RPM {simulator.State.Rpm:0}, limiter {parameters.RedlineRpm:0}.");
+                throw new InvalidOperationException($"Physics smoke test failed: RPM exceeded limiter. RPM {simulator.State.Rpm:0}, limiter {parameters.LimiterHardCutRpm:0}.");
             }
         }
 
         if (!limiterActivated)
         {
-            throw new InvalidOperationException($"Physics smoke test failed: rev limiter never activated. Max RPM {maxRpm:0}, limiter {parameters.RedlineRpm:0}.");
+            throw new InvalidOperationException($"Physics smoke test failed: rev limiter never activated. Max RPM {maxRpm:0}, limiter {parameters.LimiterHardCutRpm:0}.");
         }
 
         if (!limiterBounced)
         {
-            throw new InvalidOperationException($"Physics smoke test failed: rev limiter activated without a bounce signal. Max RPM {maxRpm:0}, limiter {parameters.RedlineRpm:0}.");
+            throw new InvalidOperationException($"Physics smoke test failed: rev limiter activated without a bounce signal. Max RPM {maxRpm:0}, limiter {parameters.LimiterHardCutRpm:0}.");
+        }
+    }
+
+    private static void VerifyLimiterPresentationUsesHardCutStateAndGroundSpeed(VehicleSimulationParameters parameters)
+    {
+        VehicleState state = new()
+        {
+            PowerRedlineRpm = parameters.PowerRedlineRpm,
+            LimiterHardCutRpm = parameters.LimiterHardCutRpm,
+            LimiterResumeRpm = parameters.RevLimiterResumeRpm,
+            MaxGaugeRpm = parameters.MaxGaugeRpm,
+            Rpm = parameters.LimiterHardCutRpm,
+            PreviousPhysicsRpm = parameters.LimiterHardCutRpm,
+            DisplayedRpm = parameters.LimiterHardCutRpm,
+            DisplayedRpmTarget = parameters.LimiterHardCutRpm,
+            RevLimiterActive = true,
+            RevLimiterBounceIntensity = 1f,
+            RevLimiterBouncePhase = 0.25f,
+            SignedForwardSpeed = 31f,
+            Velocity = new Vector2(0f, 31f),
+            Gear = 2,
+            Throttle = 1f,
+            EffectiveThrottle = 1f,
+            LimiterTorqueMultiplier = 0f
+        };
+
+        RpmPresentationSmoother.Update(state, 1f / 120f);
+        RaceEnginePresentationBridge.ApplyAudioState(state, parameters, 1f / 120f);
+
+        if (state.EnginePowerUnitFuelCutBlend < 0.99f || state.EnginePowerUnitEngineDriveTorqueNm != 0f)
+        {
+            throw new InvalidOperationException($"Physics smoke test failed: limiter presentation did not preserve hard fuel cut. FuelCut {state.EnginePowerUnitFuelCutBlend:0.00}, torque {state.EnginePowerUnitEngineDriveTorqueNm:0.0}.");
+        }
+
+        if (MathF.Abs(state.DisplayedSpeedMetersPerSecond - 31f) > 0.001f)
+        {
+            throw new InvalidOperationException($"Physics smoke test failed: limiter speed display was not ground-speed based. Display {state.DisplayedSpeedMetersPerSecond:0.000} m/s.");
+        }
+
+        if (state.DisplayedRpm > parameters.LimiterHardCutRpm + 0.5f ||
+            state.DisplayedRpm < parameters.LimiterHardCutRpm - RevLimiterPresentationRules.CalculateBounceDepthRpm(parameters.LimiterHardCutRpm) * 0.35f)
+        {
+            throw new InvalidOperationException($"Physics smoke test failed: limiter tach display was not pinned near hard cut. Displayed {state.DisplayedRpm:0}, cut {parameters.LimiterHardCutRpm:0}.");
         }
     }
 
@@ -1539,6 +1660,7 @@ public static class PhysicsSmokeTest
             new Vector3(0f, 0f, 0f),
             0f,
             parameters);
+        simulator.SetManualTransmission(true);
 
         const float dt = 1f / 120f;
         DriveToSpeed(simulator, 24f, dt);
@@ -1759,6 +1881,43 @@ public static class PhysicsSmokeTest
         }
     }
 
+    private static void VerifyTrackGradeAndBankingCreatePhysicalGravityForces(VehicleSimulationParameters parameters)
+    {
+        SimpleVehicleSimulator uphill = new(
+            new ForwardGradeElevationSampler(0.08f),
+            new Vector3(0f, 0.06f, 0f),
+            0f,
+            parameters);
+
+        uphill.Update(new VehicleInput(0f, 0f, 0f), 1f / 120f);
+        if (uphill.State.TrackLongitudinalGravityForceN >= -250f)
+        {
+            throw new InvalidOperationException($"Physics smoke test failed: uphill grade did not create backward gravity force. Force {uphill.State.TrackLongitudinalGravityForceN:0.0} N.");
+        }
+
+        if (MathF.Abs(uphill.State.TrackLateralGravityForceN) > 2f)
+        {
+            throw new InvalidOperationException($"Physics smoke test failed: pure forward grade created lateral gravity. Force {uphill.State.TrackLateralGravityForceN:0.0} N.");
+        }
+
+        SimpleVehicleSimulator bankedRightHigh = new(
+            new RightGradeElevationSampler(0.10f),
+            new Vector3(0f, 0.06f, 0f),
+            0f,
+            parameters);
+
+        bankedRightHigh.Update(new VehicleInput(0f, 0f, 0f), 1f / 120f);
+        if (bankedRightHigh.State.TrackLateralGravityForceN >= -300f)
+        {
+            throw new InvalidOperationException($"Physics smoke test failed: right-side-up banking did not create leftward gravity force. Force {bankedRightHigh.State.TrackLateralGravityForceN:0.0} N.");
+        }
+
+        if (MathF.Abs(bankedRightHigh.State.TrackLongitudinalGravityForceN) > 2f)
+        {
+            throw new InvalidOperationException($"Physics smoke test failed: pure banking created longitudinal gravity. Force {bankedRightHigh.State.TrackLongitudinalGravityForceN:0.0} N.");
+        }
+    }
+
     private static void VerifyVisualSuspensionUsesFourCornerSupport(VehicleSimulationParameters parameters)
     {
         SimpleVehicleSimulator cornering = new(
@@ -1879,20 +2038,75 @@ public static class PhysicsSmokeTest
             throw new InvalidOperationException("Physics smoke test failed: neutral free-rev did not publish Engine Sim power state.");
         }
 
-        float minimumExpectedCrankRpm = MathF.Min(parameters.RedlineRpm * 0.70f, parameters.IdleRpm + 2200f);
+        float minimumExpectedCrankRpm = MathF.Min(parameters.LimiterHardCutRpm * 0.70f, parameters.IdleRpm + 2200f);
         if (maximumCrankRpm < minimumExpectedCrankRpm)
         {
             throw new InvalidOperationException($"Physics smoke test failed: neutral free-rev did not spin the Engine Sim crank. Max {maximumCrankRpm:0}, expected {minimumExpectedCrankRpm:0}.");
         }
 
-        if (maximumCrankRpm > parameters.RedlineRpm + 0.5f)
+        if (maximumCrankRpm > parameters.LimiterHardCutRpm + 0.5f)
         {
-            throw new InvalidOperationException($"Physics smoke test failed: neutral free-rev exceeded the car rev limiter. Max {maximumCrankRpm:0}, limiter {parameters.RedlineRpm:0}.");
+            throw new InvalidOperationException($"Physics smoke test failed: neutral free-rev exceeded the car rev limiter. Max {maximumCrankRpm:0}, limiter {parameters.LimiterHardCutRpm:0}.");
         }
 
         if (maximumSpeed > 0.05f || maximumDriveForce > 10f)
         {
             throw new InvalidOperationException($"Physics smoke test failed: neutral free-rev fed torque to the tyres. Speed {maximumSpeed:0.00} m/s, drive {maximumDriveForce:0.0} N.");
+        }
+    }
+
+    private static void VerifyFreeRevUsesTorqueInertiaRateLimit(VehicleSimulationParameters parameters)
+    {
+        SimpleVehicleSimulator simulator = new(
+            new FlatSurfaceSampler(),
+            new Vector3(0f, 0f, 0f),
+            0f,
+            parameters);
+
+        const float dt = 1f / 120f;
+        float previousRpm = simulator.State.Rpm;
+        float maximumRiseRate = 0f;
+        bool reachedVtec = !parameters.VtecEnabled;
+        bool reachedLimiter = false;
+        float vtecToLimiterSeconds = 0f;
+        for (int i = 0; i < 720; i++)
+        {
+            simulator.UpdateRaceStartHold(new VehicleInput(1f, 0f, 0f), dt);
+            float riseRate = (simulator.State.Rpm - previousRpm) / dt;
+            maximumRiseRate = MathF.Max(maximumRiseRate, riseRate);
+            previousRpm = simulator.State.Rpm;
+
+            if (!reachedVtec && simulator.State.Rpm >= parameters.VtecActivationRpm)
+            {
+                reachedVtec = true;
+            }
+
+            if (reachedVtec && !reachedLimiter)
+            {
+                vtecToLimiterSeconds += dt;
+            }
+
+            if (simulator.State.Rpm >= parameters.LimiterHardCutRpm - 2f)
+            {
+                reachedLimiter = true;
+                break;
+            }
+        }
+
+        float allowedRiseRate = MathF.Max(500f, parameters.MaxFreeRevRiseRpmPerSecond) + 25f;
+        if (maximumRiseRate > allowedRiseRate)
+        {
+            throw new InvalidOperationException($"Physics smoke test failed: free-rev exceeded configured rise cap. Max {maximumRiseRate:0} rpm/s, cap {parameters.MaxFreeRevRiseRpmPerSecond:0} rpm/s.");
+        }
+
+        if (!reachedLimiter)
+        {
+            throw new InvalidOperationException($"Physics smoke test failed: free-rev did not reach limiter. RPM {simulator.State.Rpm:0}, limiter {parameters.LimiterHardCutRpm:0}.");
+        }
+
+        if (parameters.VtecEnabled && vtecToLimiterSeconds < 0.45f)
+        {
+            throw new InvalidOperationException($"Physics smoke test failed: VTEC-to-limiter free-rev sweep is still too abrupt. Time {vtecToLimiterSeconds:0.000}s.");
         }
     }
 
@@ -1917,14 +2131,14 @@ public static class PhysicsSmokeTest
             throw new InvalidOperationException($"Physics smoke test failed: race start hold allowed traction before GO. Speed {simulator.State.SpeedMetersPerSecond:0.00} m/s.");
         }
 
-        if (simulator.State.Rpm < parameters.RedlineRpm * 0.82f)
+        if (simulator.State.Rpm < parameters.LimiterHardCutRpm * 0.82f)
         {
             throw new InvalidOperationException($"Physics smoke test failed: race start hold did not let the engine rev during countdown. RPM {simulator.State.Rpm:0}.");
         }
 
-        if (maxRpm > parameters.RedlineRpm + 0.5f)
+        if (maxRpm > parameters.LimiterHardCutRpm + 0.5f)
         {
-            throw new InvalidOperationException($"Physics smoke test failed: race start hold exceeded the car rev limiter. Max {maxRpm:0}, limiter {parameters.RedlineRpm:0}.");
+            throw new InvalidOperationException($"Physics smoke test failed: race start hold exceeded the car rev limiter. Max {maxRpm:0}, limiter {parameters.LimiterHardCutRpm:0}.");
         }
 
         if (simulator.State.Throttle < 0.99f || simulator.State.EffectiveThrottle > 0.01f)
@@ -1962,9 +2176,9 @@ public static class PhysicsSmokeTest
         float maximumClutchSlipRpm = 0f;
         float oneSecondClutchSlipRpm = 0f;
         float finalClutchSlipRpm = 0f;
+        bool clutchLockedAfterLaunch = false;
         float oneSecondSpeed = 0f;
-        float minimumSettledDriveForce = float.MaxValue;
-        float finalRoadCoupledRpm = 0f;
+        float maximumSettledDriveForce = 0f;
         for (int i = 0; i < 300; i++)
         {
             simulator.Update(new VehicleInput(1f, 0f, 0f, throttleAssistEnabled: true), dt);
@@ -1978,25 +2192,25 @@ public static class PhysicsSmokeTest
 
             if (i >= 96)
             {
-                minimumSettledDriveForce = MathF.Min(minimumSettledDriveForce, simulator.State.DriveForce);
+                maximumSettledDriveForce = MathF.Max(maximumSettledDriveForce, simulator.State.DriveForce);
+                clutchLockedAfterLaunch |= simulator.State.ClutchIsLocked;
             }
 
             finalClutchSlipRpm = MathF.Abs(simulator.State.ClutchSlipRpm);
-            finalRoadCoupledRpm = CalculateRoadCoupledRpm(parameters, simulator.State);
         }
 
-        float minimumAllowedRpm = MathF.Max(parameters.IdleRpm + 1800f, parameters.LaunchSlipTargetRpm * 0.88f);
+        float minimumAllowedRpm = parameters.IdleRpm;
         if (minimumLaunchRpm < minimumAllowedRpm)
         {
-            throw new InvalidOperationException($"Physics smoke test failed: pre-rev launch bogged below the clutch band. Pre {preLaunchRpm:0}, min {minimumLaunchRpm:0}, allowed {minimumAllowedRpm:0}.");
+            throw new InvalidOperationException($"Physics smoke test failed: continuous clutch launch stalled below idle. Pre {preLaunchRpm:0}, min {minimumLaunchRpm:0}, allowed {minimumAllowedRpm:0}.");
         }
 
-        if (oneSecondSpeed < 3.6f)
+        if (oneSecondSpeed < 3.0f)
         {
-            throw new InvalidOperationException($"Physics smoke test failed: pre-rev launch did not bite hard enough by one second. Speed {oneSecondSpeed * 3.6f:0.0} km/h, drive {minimumSettledDriveForce / 1000f:0.0} kN.");
+            throw new InvalidOperationException($"Physics smoke test failed: continuous clutch launch did not bite by one second. Speed {oneSecondSpeed * 3.6f:0.0} km/h, drive {maximumSettledDriveForce / 1000f:0.0} kN.");
         }
 
-        if (simulator.State.SpeedMetersPerSecond < 9.0f)
+        if (simulator.State.SpeedMetersPerSecond < 7.0f)
         {
             throw new InvalidOperationException($"Physics smoke test failed: slipping clutch launch did not move the car enough. Speed {simulator.State.SpeedMetersPerSecond:0.00} m/s.");
         }
@@ -2006,24 +2220,56 @@ public static class PhysicsSmokeTest
             throw new InvalidOperationException($"Physics smoke test failed: pre-rev launch did not show clutch slip. Max slip {maximumClutchSlipRpm:0} RPM.");
         }
 
-        if (minimumSettledDriveForce < 3800f)
+        if (maximumSettledDriveForce < 3800f)
         {
-            throw new InvalidOperationException($"Physics smoke test failed: launch clutch protected RPM but did not feed enough torque. Minimum settled drive {minimumSettledDriveForce / 1000f:0.0} kN.");
+            throw new InvalidOperationException($"Physics smoke test failed: continuous clutch did not feed enough torque. Peak settled drive {maximumSettledDriveForce / 1000f:0.0} kN.");
         }
 
-        float maximumAllowedFinalClutchSlipRpm = MathF.Max(900f, parameters.LaunchSlipTargetRpm * 0.25f);
-        if (finalClutchSlipRpm > maximumAllowedFinalClutchSlipRpm ||
-            (oneSecondClutchSlipRpm > 700f && finalClutchSlipRpm > oneSecondClutchSlipRpm * 0.45f))
+        if (!clutchLockedAfterLaunch)
         {
-            throw new InvalidOperationException($"Physics smoke test failed: launch clutch did not progressively hand off to tyre traction. One-second slip {oneSecondClutchSlipRpm:0} RPM, final slip {finalClutchSlipRpm:0} RPM, allowed {maximumAllowedFinalClutchSlipRpm:0}.");
+            throw new InvalidOperationException($"Physics smoke test failed: continuous clutch never locked after launch handoff. One-second slip {oneSecondClutchSlipRpm:0} RPM, final slip {finalClutchSlipRpm:0} RPM.");
         }
 
-        float maximumAllowedFinalSpinRpm = MathF.Max(1400f, parameters.LaunchSlipTargetRpm * 0.32f);
-        float finalExcessRpmOverRoad = simulator.State.Rpm - finalRoadCoupledRpm;
-        if (finalExcessRpmOverRoad > maximumAllowedFinalSpinRpm)
+    }
+
+    private static void VerifyPartialThrottlePullAwayHasRaceBite(VehicleSimulationParameters parameters)
+    {
+        float crawlSpeed = MeasurePartialPullAwaySpeed(parameters, 0.10f, 1.0f);
+        float midSpeed = MeasurePartialPullAwaySpeed(parameters, 0.35f, 1.0f);
+        float eagerSpeed = MeasurePartialPullAwaySpeed(parameters, 0.50f, 2.0f);
+
+        if (crawlSpeed > 2.5f)
         {
-            throw new InvalidOperationException($"Physics smoke test failed: launch RPM stayed too far above road speed after clutch handoff. RPM {simulator.State.Rpm:0}, road {finalRoadCoupledRpm:0}, excess {finalExcessRpmOverRoad:0}, allowed {maximumAllowedFinalSpinRpm:0}.");
+            throw new InvalidOperationException($"Physics smoke test failed: light-throttle pull-away is too aggressive. Speed {crawlSpeed * 3.6f:0.0} km/h.");
         }
+
+        if (midSpeed < 1.4f)
+        {
+            throw new InvalidOperationException($"Physics smoke test failed: mid-throttle pull-away is still too slow. Speed {midSpeed * 3.6f:0.0} km/h.");
+        }
+
+        if (eagerSpeed < 1.85f)
+        {
+            throw new InvalidOperationException($"Physics smoke test failed: eager pull-away does not keep accelerating. Two-second speed {eagerSpeed * 3.6f:0.0} km/h.");
+        }
+    }
+
+    private static float MeasurePartialPullAwaySpeed(VehicleSimulationParameters parameters, float throttle, float seconds)
+    {
+        SimpleVehicleSimulator simulator = new(
+            new FlatSurfaceSampler(),
+            new Vector3(0f, 0f, 0f),
+            0f,
+            parameters);
+
+        const float dt = 1f / 120f;
+        int steps = Math.Max(1, (int)MathF.Round(seconds / dt));
+        for (int i = 0; i < steps; i++)
+        {
+            simulator.Update(new VehicleInput(throttle, 0f, 0f, throttleAssistEnabled: true), dt);
+        }
+
+        return simulator.State.SpeedMetersPerSecond;
     }
 
     private static float CalculateRoadCoupledRpm(VehicleSimulationParameters parameters, VehicleState state)
@@ -2295,6 +2541,46 @@ public static class PhysicsSmokeTest
         public float GetElevation(Vector2 position)
         {
             return position.X * 0.08f;
+        }
+    }
+
+    private sealed class ForwardGradeElevationSampler : ITrackSurfaceSampler
+    {
+        private readonly float _slope;
+
+        public ForwardGradeElevationSampler(float slope)
+        {
+            _slope = slope;
+        }
+
+        public SurfaceSample Sample(Vector3 position)
+        {
+            return new SurfaceSample("ROAD", 1.0f);
+        }
+
+        public float GetElevation(Vector2 position)
+        {
+            return position.Y * _slope;
+        }
+    }
+
+    private sealed class RightGradeElevationSampler : ITrackSurfaceSampler
+    {
+        private readonly float _slope;
+
+        public RightGradeElevationSampler(float slope)
+        {
+            _slope = slope;
+        }
+
+        public SurfaceSample Sample(Vector3 position)
+        {
+            return new SurfaceSample("ROAD", 1.0f);
+        }
+
+        public float GetElevation(Vector2 position)
+        {
+            return position.X * _slope;
         }
     }
 

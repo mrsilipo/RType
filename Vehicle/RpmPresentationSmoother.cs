@@ -8,7 +8,7 @@ public static class RpmPresentationSmoother
     {
         float rawRpm = MathF.Max(300f, state.Rpm);
         float previousPhysicsRpm = MathF.Max(300f, state.PreviousPhysicsRpm);
-        float limiterHardCutRpm = MathF.Max(450f, state.LimiterHardCutRpm > 0f ? state.LimiterHardCutRpm : state.RedlineRpm);
+        float limiterHardCutRpm = MathF.Max(450f, state.LimiterHardCutRpm);
         float physicsAlpha = MathHelper.Clamp(state.PhysicsTickAlpha, 0f, 1f);
         float physicsRpmDelta = rawRpm - previousPhysicsRpm;
         float projectedRpm = !state.IsShifting && physicsRpmDelta > 0f

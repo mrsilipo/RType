@@ -6,13 +6,14 @@ namespace RType.Audio;
 
 internal readonly record struct EngineAudioFrame(
     float Rpm,
-    float RedlineRpm,
+    float LimiterHardCutRpm,
     float Throttle,
     float ShapedThrottle,
     float Load,
     float VtecBlend,
     float VtecKickIntensity,
     float Limiter,
+    bool HardLimiterActive,
     float LimiterBouncePhase,
     float Overrun,
     float Shock,
@@ -55,7 +56,7 @@ internal readonly record struct EngineAudioFrame(
         float deltaSeconds)
     {
         float pauseScale = paused ? 0f : 1f;
-        float limiterHardCutRpm = MathF.Max(450f, vehicle.LimiterHardCutRpm > 0f ? vehicle.LimiterHardCutRpm : vehicle.RedlineRpm);
+        float limiterHardCutRpm = MathF.Max(450f, vehicle.LimiterHardCutRpm);
         float throttle = MathHelper.Clamp(MathF.Max(vehicle.Throttle, vehicle.EffectiveThrottle), 0f, 1f);
         float shapedThrottle = MathF.Pow(throttle, MathF.Max(0.1f, parameters.RaceAudioThrottleGamma));
         float overrun = CalculateOverrun(throttle, rpm, limiterHardCutRpm, vehicle.SpeedMetersPerSecond);
@@ -99,6 +100,7 @@ internal readonly record struct EngineAudioFrame(
             vtecBlend,
             vtecKick,
             limiter,
+            vehicle.RevLimiterActive,
             vehicle.RevLimiterBouncePhase - MathF.Floor(vehicle.RevLimiterBouncePhase),
             overrun,
             shock,
@@ -160,10 +162,10 @@ internal readonly record struct EngineAudioFrame(
         return load;
     }
 
-    private static float CalculateOverrun(float throttle, float rpm, float redlineRpm, float speedMetersPerSecond)
+    private static float CalculateOverrun(float throttle, float rpm, float limiterHardCutRpm, float speedMetersPerSecond)
     {
         return (1f - SmoothStep(0.05f, 0.25f, throttle)) *
-               SmoothStep(2600f, MathF.Max(3200f, redlineRpm), rpm) *
+               SmoothStep(2600f, MathF.Max(3200f, limiterHardCutRpm), rpm) *
                SmoothStep(2f, 11f, speedMetersPerSecond);
     }
 

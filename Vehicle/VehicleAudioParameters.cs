@@ -22,7 +22,49 @@ public sealed class VehicleAudioParameters
 
     public string EngineAudioProfileId { get; init; } = string.Empty;
 
+    public string EngineAudioProfileEngineId { get; init; } = string.Empty;
+
+    public string EngineAudioProfileEngineFamily { get; init; } = string.Empty;
+
+    public bool EngineAudioFallbackAllowed { get; init; }
+
     public string EngineAudioSourceRecordingPath { get; init; } = string.Empty;
+
+    public string EngineAudioGeneratedSampleSetPath { get; init; } = string.Empty;
+
+    public string EngineAudioGenerationMethod { get; init; } = string.Empty;
+
+    public string EngineAudioDspId { get; init; } = string.Empty;
+
+    public string EngineAudioDspDisplayName { get; init; } = string.Empty;
+
+    public string EngineAudioSampleGenerationKey { get; init; } = string.Empty;
+
+    public string EngineAudioEngineId { get; init; } = string.Empty;
+
+    public string EngineAudioEngineCode { get; init; } = string.Empty;
+
+    public string EngineAudioEngineFamily { get; init; } = string.Empty;
+
+    public string EngineAudioEngineCombinationId { get; init; } = string.Empty;
+
+    public string EngineAudioBlockId { get; init; } = string.Empty;
+
+    public string EngineAudioHeadId { get; init; } = string.Empty;
+
+    public string EngineAudioValvetrain { get; init; } = string.Empty;
+
+    public string EngineAudioTuneId { get; init; } = string.Empty;
+
+    public string EngineAudioFuelId { get; init; } = string.Empty;
+
+    public float EngineAudioDisplacementCc { get; init; }
+
+    public float EngineAudioCompressionRatio { get; init; }
+
+    public bool EngineAudioVtecEnabled { get; init; }
+
+    public float EngineAudioVtecActivationRpm { get; init; }
 
     public float BaseSampleRpm { get; init; } = 3500f;
 
@@ -68,7 +110,7 @@ public sealed class VehicleAudioParameters
 
     public bool RTypeEngineEnabled { get; init; } = true;
 
-    public string RTypeEngineBuildPath { get; init; } = "Data/VehicleBuilds/ek9_showroom_stock.json";
+    public string RTypeEngineBuildPath { get; init; } = "Data/PurchaseCars/2000_Ek9_Stock.json";
 
     public string RTypeEngineProfilePath { get; init; } = string.Empty;
 

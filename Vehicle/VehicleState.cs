@@ -14,8 +14,15 @@ public sealed class VehicleState
 
     public float MaxGaugeRpm { get; set; } = 8000f;
 
-    // Compatibility alias retained while older call sites are migrated.
-    public float RedlineRpm { get; set; } = 6800f;
+    public DrivetrainLimits DrivetrainLimits => new(
+        Rpm,
+        PowerRedlineRpm,
+        LimiterHardCutRpm,
+        LimiterResumeRpm,
+        MaxGaugeRpm);
+
+    [Obsolete("Use PowerRedlineRpm for power/HUD redline and LimiterHardCutRpm for mechanical cut logic.")]
+    public float RedlineRpm => LimiterHardCutRpm;
 
     public Vector3 Position { get; set; }
 
@@ -61,6 +68,18 @@ public sealed class VehicleState
 
     public float ClutchSlipRpm { get; set; }
 
+    public float EngineOmegaRadiansPerSecond { get; set; }
+
+    public float GearboxInputOmegaRadiansPerSecond { get; set; }
+
+    public float ClutchSlipDeltaRadiansPerSecond { get; set; }
+
+    public bool ClutchIsLocked { get; set; }
+
+    public float ActiveClutchTorqueNm { get; set; }
+
+    public float ClutchEngagement { get; set; }
+
     public bool MechanicalOverRevActive { get; set; }
 
     public float MechanicalOverRevRpm { get; set; }
@@ -84,6 +103,14 @@ public sealed class VehicleState
     public float PhysicalLoadTransferLongitudinalAcceleration { get; set; }
 
     public float PhysicalLoadTransferLateralAcceleration { get; set; }
+
+    public float TrackPitchRadians { get; set; }
+
+    public float TrackRollRadians { get; set; }
+
+    public float TrackLongitudinalGravityForceN { get; set; }
+
+    public float TrackLateralGravityForceN { get; set; }
 
     public float VisualLoadTransferLateralAcceleration { get; set; }
 

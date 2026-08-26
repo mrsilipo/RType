@@ -21,13 +21,12 @@ public static class RaceEnginePresentationBridge
                 parameters.VtecActivationRpm + MathF.Max(1f, parameters.VtecTransitionWidthRpm),
                 rpm)
             : 0f;
-        bool limiter = state.RevLimiterActive || rpm >= limiterHardCut - 1f;
+        bool limiter = state.RevLimiterActive;
 
         state.PowerRedlineRpm = powerRedline;
         state.LimiterHardCutRpm = limiterHardCut;
         state.LimiterResumeRpm = parameters.RevLimiterResumeRpm;
         state.MaxGaugeRpm = MathF.Max(limiterHardCut, parameters.MaxGaugeRpm);
-        state.RedlineRpm = limiterHardCut;
         state.EnginePowerUnitActive = true;
         state.EnginePowerUnitCrankRpm = rpm;
         state.EnginePowerUnitVtecBlend = vtec;

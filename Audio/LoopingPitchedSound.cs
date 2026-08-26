@@ -260,15 +260,15 @@ internal sealed class LoopingPitchedSound : IDisposable
         float envelope;
         if (cycle < fade)
         {
-            envelope = SmoothStep(0f, fade, cycle) * 0.08f;
+            envelope = SmoothStep(0f, fade, cycle) * 0.005f;
         }
         else if (cycle < cutDuty - fade)
         {
-            envelope = 0.08f;
+            envelope = 0.005f;
         }
         else if (cycle < cutDuty + fade)
         {
-            envelope = MathHelper.Lerp(0.08f, 1f, SmoothStep(cutDuty - fade, cutDuty + fade, cycle));
+            envelope = MathHelper.Lerp(0.005f, 1f, SmoothStep(cutDuty - fade, cutDuty + fade, cycle));
         }
         else
         {

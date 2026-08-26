@@ -35,7 +35,6 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
     private float _downshiftOverRevBrakeDurationSeconds;
     private float _downshiftOverRevBrakeSeverity;
     private bool _revLimiterCutting;
-    private float _revLimiterPhaseSeconds;
     private float _revLimiterChatterPhaseSeconds;
     private float _idleCrankPhaseDegrees;
     private float _filteredSteerInput;
@@ -57,9 +56,6 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
     private readonly float[] _visualSuspensionVelocityMetersPerSecond = new float[4];
     private bool _digitalBrakeAssistActive;
     private float _recentBrakeSteeringBoostSeconds;
-    private float _launchClutchEngagement;
-    private float _launchClutchTimerSeconds;
-    private bool _preRevLaunchActive;
     private float _ffLsdCornerExitBite;
     private float _ffLsdInsideFrontMaxTorqueNm;
     private float _ffLsdOutsideFrontMaxTorqueNm;
@@ -101,12 +97,12 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             LimiterHardCutRpm = _parameters.LimiterHardCutRpm,
             LimiterResumeRpm = _parameters.RevLimiterResumeRpm,
             MaxGaugeRpm = _parameters.MaxGaugeRpm,
-            RedlineRpm = _parameters.RedlineRpm,
             Position = startPosition,
             HeadingRadians = startHeadingRadians,
             Gear = 1,
             Rpm = _parameters.IdleRpm,
             PreviousPhysicsRpm = _parameters.IdleRpm,
+            EngineOmegaRadiansPerSecond = RpmToOmega(_parameters.IdleRpm),
             DisplayedRpm = _parameters.IdleRpm,
             DisplayedRpmTarget = _parameters.IdleRpm,
             WheelContactCenterHeightMeters = startPosition.Y,
@@ -295,27 +291,8 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         driveThrottle = ApplyBrakeThrottlePriority(driveThrottle, MathF.Max(brake, input.Brake));
         float[] normalLoads = CalculateNormalLoads(forwardSpeed);
         ApplySurfaceLoadVibration(normalLoads, forward, right, MathF.Abs(forwardSpeed));
-        bool launchClutchActive = ShouldUseLaunchClutch(driveThrottle, forwardSpeed);
-        float totalDriveTorque;
-        if (launchClutchActive)
-        {
-            totalDriveTorque = CalculateLaunchClutchDriveTorque(driveThrottle, forwardSpeed, dt);
-            UpdateRevLimiter(throttle, dt);
-        }
-        else
-        {
-            if (_launchClutchTimerSeconds > 0f && driveThrottle > 0.55f && State.Gear > 0)
-            {
-                ApplyLaunchClutchHandoffWheelSpin(driveThrottle);
-            }
-
-            _launchClutchEngagement = 0f;
-            _launchClutchTimerSeconds = 0f;
-            _preRevLaunchActive = false;
-            UpdateRpm(input, forwardSpeed, dt);
-            UpdateRevLimiter(throttle, dt);
-            totalDriveTorque = CalculateTotalDriveTorque(driveThrottle, forwardSpeed, dt);
-        }
+        UpdateRevLimiter(throttle, dt);
+        float totalDriveTorque = CalculateContinuousClutchDriveTorque(input, driveThrottle, forwardSpeed, dt);
 
         float[] driveTorques = DistributeDriveTorque(totalDriveTorque, normalLoads, driveThrottle);
         SteeringAngles steeringAngles = CalculateSteeringAngles(
@@ -366,7 +343,8 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
                 dt);
             totalForceX += force.BodyForceX;
             totalForceZ += force.BodyForceZ;
-            yawTorque += wheel.LocalZ * force.BodyForceX - wheel.LocalX * force.BodyForceZ;
+            float wheelYawTorque = wheel.LocalZ * force.BodyForceX - wheel.LocalX * force.BodyForceZ;
+            yawTorque += wheelYawTorque * CalculateSurfaceYawContributionScale(wheel);
             slipRatioTotal += MathF.Abs(force.SlipRatio);
             slipAngleTotal += MathF.Abs(force.SlipAngleRadians);
             gripUsageTotal += force.GripUsage;
@@ -395,7 +373,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         }
 
         totalForceZ += CalculateAeroDrag(forwardSpeed);
-        AddGradeForces(forward, ref totalForceZ);
+        AddTrackGravityForces(forward, right, ref totalForceZ, ref totalForceX);
         _loadTransferLongitudinalAcceleration = totalForceZ / MathF.Max(1f, _parameters.MassKg);
         _loadTransferLateralAcceleration = totalForceX / MathF.Max(1f, _parameters.MassKg);
 
@@ -414,7 +392,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         Vector2 worldAcceleration = (right * totalForceX + forward * totalForceZ) / _parameters.MassKg;
         if (stabilityAssistAllowed)
         {
-            worldAcceleration += CalculateStabilityAssistAcceleration(
+            worldAcceleration += CalculateStabilityControlAcceleration(
                 right,
                 forwardSpeed,
                 lateralSpeed,
@@ -432,7 +410,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         float yawDampingRate = CalculateYawDampingRate(forwardSpeed, lateralSpeed, averageSlipAngle, averageGripUsage);
         if (stabilityAssistAllowed)
         {
-            yawDampingRate += CalculateStabilityYawDampingRate(
+            yawDampingRate += CalculateStabilityControlYawDampingRate(
                 forwardSpeed,
                 lateralSpeed,
                 averageSlipAngle,
@@ -605,9 +583,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         _shiftKickDurationSeconds = 0f;
         _shiftKickSeverity = 0f;
         _enginePowerShiftHandoffSmoothSeconds = 0f;
-        _launchClutchEngagement = 0f;
-        _launchClutchTimerSeconds = 0f;
-        _preRevLaunchActive = false;
+        PublishClutchState(0f, State.Rpm, 0f, false, 0f);
         State.SignedForwardSpeed = 0f;
         State.LateralSpeed = 0f;
         State.LongitudinalAcceleration = 0f;
@@ -715,19 +691,19 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             wheelLongitudinalVelocity,
             radius,
             _engineParameters.VehicleSafety.MinimumSlipSpeedMetersPerSecond);
-        float activeSurfaceMu = CalculateActiveSurfaceMu(surface, slipRatio);
+        float activeSurfaceMu = CalculateActiveSurfaceMu(surface, slipRatio, wheelLongitudinalVelocity);
         float slipAngle = MathHelper.Clamp(
             MathF.Atan2(wheelLateralVelocity, MathF.Max(1.5f, MathF.Abs(wheelLongitudinalVelocity))),
             -0.75f,
             0.75f);
 
-        float gripLimit = CalculateGripLimit(wheel, surface.StaticFrictionCoefficient);
+        float gripLimit = CalculateGripLimit(wheel, activeSurfaceMu);
         float wheelBrakeSign = SignWithFallback(wheel.AngularVelocityRadiansPerSecond, wheelLongitudinalVelocity);
         float effectiveBrakeTorqueNm = ApplyAbs(wheel, brakeTorqueNm, slipRatio, wheelLongitudinalVelocity, dt);
         float wheelRecoveryT = IsFrontWheel(wheel.Corner)
             ? counterSteerRecoveryT
             : counterSteerRecoveryT * 0.55f;
-        float tyreLongitudinalForce = CalculateLongitudinalTyreForce(wheel.Tyres, slipRatio, gripLimit);
+        float tyreLongitudinalForce = CalculateLongitudinalTyreForce(wheel.Tyres, surface, slipRatio, gripLimit);
         float effectiveSlipAngle = UpdateRelaxedSlipAngle(wheel, slipAngle, wheelLongitudinalVelocity, wheelRecoveryT, dt);
         float tyreLateralForce = CalculateLateralTyreForce(wheel.Tyres, effectiveSlipAngle, gripLimit, wheelRecoveryT);
         tyreLateralForce += CalculateCamberThrust(wheel, gripLimit);
@@ -750,15 +726,23 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             ref tyreLongitudinalForce,
             ref tyreLateralForce);
 
+        UpdateSurfaceDragScale(wheel, surface, dt);
+        float rollingResistanceForce =
+            wheel.Tyres.RollingResistanceCoefficient *
+            MathHelper.Lerp(1f, surface.RollingResistanceMultiplier, wheel.SurfaceDragScale) *
+            wheel.NormalLoadN;
+        float displacementDragForce =
+            wheel.NormalLoadN *
+            MathF.Max(0f, surface.DisplacementDragCoefficient) *
+            wheel.SurfaceDragScale;
         float passiveLongitudinalForce = CalculatePassiveSurfaceForce(
             wheelLongitudinalVelocity,
-            wheel.Tyres.RollingResistanceCoefficient * surface.RollingResistanceMultiplier * wheel.NormalLoadN +
-            wheel.NormalLoadN * MathF.Max(0f, surface.DisplacementDragCoefficient),
-            surface.LongitudinalDragCoefficient);
+            rollingResistanceForce + displacementDragForce,
+            surface.LongitudinalDragCoefficient * wheel.SurfaceDragScale);
         float passiveLateralForce = CalculatePassiveSurfaceForce(
             wheelLateralVelocity,
             0f,
-            surface.LateralDragCoefficient);
+            surface.LateralDragCoefficient * wheel.SurfaceDragScale);
         float scrubLongitudinalForce = CalculateTyreScrubForce(
             tyreLateralForce,
             wheelLateralVelocity,
@@ -768,7 +752,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         float wheelSurfaceSpeed = wheel.AngularVelocityRadiansPerSecond * radius;
         float wheelSpinDragTorque = CalculateWheelSpinDragTorque(
             wheelSurfaceSpeed - wheelLongitudinalVelocity,
-            surface.WheelSpinDragCoefficient,
+            surface.WheelSpinDragCoefficient * wheel.SurfaceDragScale,
             radius);
         float wheelTorque =
             driveTorqueNm -
@@ -849,7 +833,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         wheel.DynamicSurfaceMu = surface.DynamicFrictionCoefficient;
         wheel.OptimalSurfaceSlipRatio = surface.OptimalSlipRatio;
         wheel.ActiveSurfaceMu = activeSurfaceMu;
-        wheel.DisplacementDragForceN = wheel.NormalLoadN * MathF.Max(0f, surface.DisplacementDragCoefficient);
+        wheel.DisplacementDragForceN = displacementDragForce;
         wheel.SurfaceBlendWeight = surface.BlendWeight;
         wheel.SurfaceName = surface.Name;
         float bodyForceX = totalLongitudinalForce * sinSteer + totalLateralForce * cosSteer;
@@ -869,7 +853,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             surface.Name);
     }
 
-    private static float CalculateActiveSurfaceMu(SurfaceSample surface, float slipRatio)
+    private static float CalculateActiveSurfaceMu(SurfaceSample surface, float slipRatio, float wheelLongitudinalVelocity)
     {
         float staticMu = MathF.Max(0.01f, surface.StaticFrictionCoefficient);
         float dynamicMu = MathHelper.Clamp(surface.DynamicFrictionCoefficient, 0.01f, staticMu);
@@ -881,7 +865,46 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         }
 
         float slideT = MathHelper.Clamp((absSlip - optimalSlip) / 0.5f, 0f, 1f);
-        return MathHelper.Lerp(staticMu, dynamicMu, slideT);
+        float speedConfidence = SmoothStep(0.75f, 4.0f, MathF.Abs(wheelLongitudinalVelocity));
+        return MathHelper.Lerp(staticMu, MathHelper.Lerp(staticMu, dynamicMu, slideT), speedConfidence);
+    }
+
+    private static void UpdateSurfaceDragScale(WheelRuntimeState wheel, SurfaceSample surface, float dt)
+    {
+        float target = HasSurfaceDrag(surface) ? 1f : 0f;
+        float rate = target > wheel.SurfaceDragScale ? 2.2f : 8.0f;
+        float maxStep = MathF.Max(0f, dt) * rate;
+        wheel.SurfaceDragScale += MathHelper.Clamp(target - wheel.SurfaceDragScale, -maxStep, maxStep);
+        wheel.SurfaceDragScale = MathHelper.Clamp(wheel.SurfaceDragScale, 0f, 1f);
+    }
+
+    private static bool HasSurfaceDrag(SurfaceSample surface)
+    {
+        return surface.RollingResistanceMultiplier > 1.01f ||
+               surface.LongitudinalDragCoefficient > 0.001f ||
+               surface.LateralDragCoefficient > 0.001f ||
+               surface.WheelSpinDragCoefficient > 0.001f ||
+               surface.DisplacementDragCoefficient > 0.001f;
+    }
+
+    private static float CalculateSurfaceYawContributionScale(WheelRuntimeState wheel)
+    {
+        if (wheel.SurfaceName.Equals("CURB_GRASS", StringComparison.OrdinalIgnoreCase))
+        {
+            return MathHelper.Lerp(1f, 0.50f, wheel.SurfaceBlendWeight);
+        }
+
+        if (wheel.SurfaceName.Equals("GRASS", StringComparison.OrdinalIgnoreCase))
+        {
+            return 0.50f;
+        }
+
+        if (wheel.SurfaceName.Equals("DIRT", StringComparison.OrdinalIgnoreCase))
+        {
+            return 0.62f;
+        }
+
+        return 1f;
     }
 
     private static float CalculateSlipRatio(
@@ -1225,7 +1248,11 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         };
     }
 
-    private static float CalculateLongitudinalTyreForce(TyreAxleParameters tyres, float slipRatio, float gripLimit)
+    private static float CalculateLongitudinalTyreForce(
+        TyreAxleParameters tyres,
+        SurfaceSample surface,
+        float slipRatio,
+        float gripLimit)
     {
         if (MathF.Abs(slipRatio) <= 0.0001f || gripLimit <= 0f)
         {
@@ -1233,7 +1260,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         }
 
         float absSlip = MathF.Abs(slipRatio);
-        float peakSlip = MathF.Max(0.01f, tyres.LongitudinalPeakSlipRatio);
+        float peakSlip = MathF.Max(0.01f, surface.OptimalSlipRatio);
         float slideSlip = MathF.Max(peakSlip + 0.01f, tyres.LongitudinalSlideSlipRatio);
         float slidingGrip = MathHelper.Clamp(tyres.SlidingFrictionMultiplier, 0.25f, 1f);
 
@@ -1341,7 +1368,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         return (0.18f + speedT * 0.14f + slipT * gripT * 2.30f) * response;
     }
 
-    private Vector2 CalculateStabilityAssistAcceleration(
+    private Vector2 CalculateStabilityControlAcceleration(
         Vector2 right,
         float forwardSpeed,
         float lateralSpeed,
@@ -1386,7 +1413,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         return right * lateralAcceleration;
     }
 
-    private float CalculateStabilityYawDampingRate(
+    private float CalculateStabilityControlYawDampingRate(
         float forwardSpeed,
         float lateralSpeed,
         float averageSlipAngleRadians,
@@ -1866,7 +1893,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         float driveThrottle)
     {
         float throttleT = SmoothStep(0.18f, 0.85f, driveThrottle);
-        float rpmT = SmoothStep(4500f, MathF.Max(5000f, _parameters.RedlineRpm), State.Rpm);
+        float rpmT = SmoothStep(4500f, MathF.Max(5000f, _parameters.PowerRedlineRpm), State.Rpm);
         float vtecT = _parameters.VtecEnabled
             ? SmoothStep(_parameters.VtecActivationRpm - 300f, _parameters.VtecActivationRpm + 700f, State.Rpm)
             : 0f;
@@ -2146,25 +2173,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         float lockMultiplier = MathHelper.Lerp(1f, MathHelper.Clamp(_parameters.SteeringHighSpeedLockMultiplier, 0.1f, 1f), assistT);
         float assistedMaxAngle = mechanicalMaxAngle * lockMultiplier;
         float speedMatchedMaxAngle = CalculateSpeedMatchedSteeringAngle(mechanicalMaxAngle, speedMetersPerSecond);
-        speedMatchedMaxAngle = MathF.Min(
-            mechanicalMaxAngle,
-            speedMatchedMaxAngle * (1f + _ffLsdCornerExitBite * 0.18f));
         float inputFilteredMaxAngle = MathF.Min(assistedMaxAngle, speedMatchedMaxAngle);
-        float highSpeedLsdBiteT = SmoothStep(18f, 32f, speedMetersPerSecond);
-        float lsdSteeringAuthority = MathHelper.Lerp(0.22f, 0.88f, highSpeedLsdBiteT);
-        inputFilteredMaxAngle = MathF.Min(
-            mechanicalMaxAngle,
-            inputFilteredMaxAngle * (1f + _ffLsdCornerExitBite * lsdSteeringAuthority));
-        SteeringAssistParameters steeringAssist = _engineParameters.SteeringAssist;
-        float brakeAuthorityT =
-            SmoothStep(steeringAssist.BrakeAngleBoostBrakeStart, steeringAssist.BrakeAngleBoostBrakeEnd, brake) *
-            SmoothStep(
-                steeringAssist.BrakeAngleBoostSpeedStartMetersPerSecond,
-                steeringAssist.BrakeAngleBoostSpeedEndMetersPerSecond,
-                speedMetersPerSecond);
-        inputFilteredMaxAngle = MathF.Min(
-            mechanicalMaxAngle,
-            inputFilteredMaxAngle * MathHelper.Lerp(1f, steeringAssist.BrakeAngleBoostMultiplier, brakeAuthorityT));
         // With the current MonoGame camera/world convention, a visual right turn is negative yaw.
         float baseAngle = -steerInput * inputFilteredMaxAngle;
         if (MathF.Abs(baseAngle) < 0.0001f)
@@ -2391,7 +2400,10 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             return EnginePowerUnitPhase.Shifting;
         }
 
-        if (_launchClutchTimerSeconds > 0f)
+        if (State.Gear != 0 &&
+            !State.ClutchIsLocked &&
+            throttle > 0.01f &&
+            MathF.Abs(forwardSpeed) < _parameters.ClutchLowSpeedThresholdMetersPerSecond * 1.25f)
         {
             return EnginePowerUnitPhase.Launch;
         }
@@ -2408,10 +2420,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
     {
         return phase switch
         {
-            EnginePowerUnitPhase.Launch => MathHelper.Clamp(
-                _launchClutchTimerSeconds / (_preRevLaunchActive ? 2.85f : 2.05f),
-                0f,
-                1f),
+            EnginePowerUnitPhase.Launch => MathHelper.Clamp(State.ClutchEngagement, 0f, 1f),
             EnginePowerUnitPhase.Shifting => _shiftDurationSeconds > 0f
                 ? 1f - MathHelper.Clamp(_shiftTimerSeconds / _shiftDurationSeconds, 0f, 1f)
                 : 1f,
@@ -2422,7 +2431,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
     private float CalculateEnginePowerOverrun(float throttle, float rpm, float forwardSpeed)
     {
         return (1f - SmoothStep(0.05f, 0.25f, throttle)) *
-               SmoothStep(2600f, MathF.Max(3200f, _parameters.RedlineRpm), rpm) *
+               SmoothStep(2600f, MathF.Max(3200f, _parameters.PowerRedlineRpm), rpm) *
                SmoothStep(2f, 11f, MathF.Abs(forwardSpeed));
     }
 
@@ -2457,11 +2466,10 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             return;
         }
 
-        float ceiling = MathF.Max(_parameters.RedlineRpm, _parameters.IdleRpm + 1000f);
+        float ceiling = MathF.Max(_parameters.LimiterHardCutRpm, _parameters.IdleRpm + 1000f);
         float targetRpm = MathHelper.Clamp(enginePower.CrankRpm, 650f, ceiling);
         if (dt > 0f &&
             _enginePowerShiftHandoffSmoothSeconds > 0f &&
-            _launchClutchTimerSeconds <= 0f &&
             !State.MechanicalOverRevActive)
         {
             float maxDrop = 1600f * MathHelper.Clamp(dt, 0f, 0.05f);
@@ -2471,44 +2479,6 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
 
         State.Rpm = targetRpm;
         State.ClutchSlipRpm = State.Rpm - MathF.Max(0f, enginePower.TransmissionRpm);
-    }
-
-    private float CalculateTotalDriveTorque(float throttle, float forwardSpeed, float dt)
-    {
-        if (_shiftTimerSeconds > 0f)
-        {
-            AdvanceEnginePowerDuringShift(throttle, forwardSpeed, dt);
-            return 0f;
-        }
-
-        if (IsMechanicalOverRevForced(forwardSpeed) || throttle <= 0.01f)
-        {
-            return CalculateEngineBrakingTorque(forwardSpeed, dt);
-        }
-
-        if (State.Gear < 0 && forwardSpeed < -_engineParameters.VehicleSafety.MaximumReverseSpeedMetersPerSecond)
-        {
-            return 0f;
-        }
-
-        if (State.Gear > 0 && forwardSpeed > _engineParameters.VehicleSafety.MaximumForwardSpeedMetersPerSecond)
-        {
-            return 0f;
-        }
-
-        float ratio = GetCurrentGearRatio();
-        if (ratio <= 0.0001f)
-        {
-            return 0f;
-        }
-
-        float direction = State.Gear < 0 ? -1f : 1f;
-        float crankTorque = MathF.Min(
-            CalculateDriveCrankTorque(State.Rpm, throttle, forwardSpeed, dt),
-            _parameters.ClutchTorqueCapacityNm);
-        float shiftKickTorqueMultiplier = 1f + CalculateShiftKickEnvelope() * _shiftKickSeverity * 0.16f;
-        crankTorque *= shiftKickTorqueMultiplier;
-        return direction * crankTorque * ratio * _parameters.FinalDriveRatio * _parameters.DrivetrainEfficiency;
     }
 
     private void AdvanceEnginePowerDuringShift(float throttle, float forwardSpeed, float dt)
@@ -2527,267 +2497,259 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             clutchEngagement: 0f);
     }
 
-    private bool ShouldUseLaunchClutch(float throttle, float forwardSpeed)
+    private float CalculateContinuousClutchDriveTorque(VehicleInput input, float throttle, float forwardSpeed, float dt)
     {
-        if (_shiftTimerSeconds > 0f || State.Gear <= 0 || throttle <= 0.01f)
-        {
-            return false;
-        }
+        EnsureEngineOmegaInitialized();
 
-        float ratio = GetCurrentGearRatio();
-        if (ratio <= 0.0001f)
+        if (_shiftTimerSeconds > 0f)
         {
-            return false;
-        }
-
-        float speed = MathF.Abs(forwardSpeed);
-        bool launchAlreadyStarted = _launchClutchTimerSeconds > 0f;
-        float launchDurationLimit = _preRevLaunchActive ? 2.85f : 2.05f;
-        float launchSpeedLimit = _preRevLaunchActive ? 18.5f : 13.2f;
-        bool startingFromRest = speed < 1.2f;
-        if (!launchAlreadyStarted && !startingFromRest)
-        {
-            return false;
-        }
-
-        if (launchAlreadyStarted &&
-            (_launchClutchTimerSeconds > launchDurationLimit || speed > launchSpeedLimit))
-        {
-            return false;
-        }
-
-        float transmissionRpm = CalculateDrivenTransmissionRpm(ratio);
-        float launchTargetRpm = MathHelper.Clamp(_parameters.LaunchSlipTargetRpm, _parameters.IdleRpm + 400f, _parameters.RedlineRpm);
-        float launchPowerBandRpm = MathHelper.Clamp(
-            MathF.Max(launchTargetRpm, _parameters.RedlineRpm * 0.76f),
-            _parameters.IdleRpm + 1400f,
-            _parameters.RedlineRpm - 350f);
-        float drivenSlipRatio = CalculateDrivenAverageDriveSlipRatio();
-        if ((launchAlreadyStarted || startingFromRest) &&
-            throttle > 0.45f &&
-            speed < 13.6f &&
-            (_launchClutchTimerSeconds < 1.35f ||
-             (launchAlreadyStarted &&
-              _launchClutchTimerSeconds < launchDurationLimit &&
-               transmissionRpm < launchPowerBandRpm * 0.95f &&
-               drivenSlipRatio < 0.55f) ||
-             (launchAlreadyStarted &&
-              _launchClutchTimerSeconds < 1.75f &&
-              drivenSlipRatio > 0.18f) ||
-             (State.Rpm < launchTargetRpm * 0.72f &&
-              transmissionRpm < launchTargetRpm * 0.52f &&
-              _launchClutchTimerSeconds < 1.30f)))
-        {
-            return true;
-        }
-
-        if (throttle <= 0.45f)
-        {
-            return false;
-        }
-
-        float clutchSlipRpm = State.Rpm - transmissionRpm;
-        if (clutchSlipRpm <= 160f)
-        {
-            return false;
-        }
-
-        return speed < launchSpeedLimit && _launchClutchTimerSeconds < launchDurationLimit;
-    }
-
-    private float CalculateLaunchClutchDriveTorque(float throttle, float forwardSpeed, float dt)
-    {
-        float ratio = GetCurrentGearRatio();
-        if (ratio <= 0.0001f)
-        {
+            UpdateRpm(input, forwardSpeed, dt);
+            SyncEngineOmegaFromRpm();
+            AdvanceEnginePowerDuringShift(throttle, forwardSpeed, dt);
+            PublishClutchState(0f, 0f, 0f, false, 0f);
             return 0f;
         }
 
-        float rpm = MathF.Max(500f, State.Rpm);
-        float transmissionRpm = CalculateDrivenTransmissionRpm(ratio);
-        float clutchSlipRpm = rpm - transmissionRpm;
-        float launchTargetRpm = MathHelper.Clamp(_parameters.LaunchSlipTargetRpm, _parameters.IdleRpm + 400f, _parameters.RedlineRpm);
-        float launchPowerBandRpm = MathHelper.Clamp(
-            MathF.Max(launchTargetRpm, _parameters.RedlineRpm * 0.76f),
-            _parameters.IdleRpm + 1400f,
-            _parameters.RedlineRpm - 350f);
-        if (_launchClutchTimerSeconds <= 0.0001f)
+        if (IsMechanicalOverRevForced(forwardSpeed) || throttle <= 0.01f)
         {
-            _preRevLaunchActive = rpm > launchTargetRpm * 0.78f;
+            float brakingTorque = CalculateEngineBrakingTorque(forwardSpeed, dt);
+            float brakingGearRatio = GetCurrentGearRatio();
+            float brakingGearboxInputRpm = brakingGearRatio > 0.0001f ? CalculateDrivenTransmissionRpm(brakingGearRatio) : 0f;
+            bool clutchLocked = brakingGearRatio > 0f && MathF.Abs(forwardSpeed) > 0.8f;
+            if (clutchLocked)
+            {
+                State.Rpm = MathHelper.Clamp(brakingGearboxInputRpm, _parameters.IdleRpm, GetCurrentRpmCeiling());
+                SyncEngineOmegaFromRpm();
+            }
+            else
+            {
+                UpdateRpm(input, forwardSpeed, dt);
+                SyncEngineOmegaFromRpm();
+            }
+
+            PublishClutchState(brakingGearboxInputRpm, State.Rpm - brakingGearboxInputRpm, MathF.Abs(brakingTorque), clutchLocked, clutchLocked ? 1f : 0f);
+            return brakingTorque;
         }
 
-        float launchSyncT = SmoothStep(launchTargetRpm * 0.78f, launchTargetRpm * 1.02f, transmissionRpm);
-        float engagement = UpdateAutomaticLaunchClutchEngagement(throttle, forwardSpeed, rpm, transmissionRpm, dt);
-        float lockCapacityT = SmoothStep(0.20f, 0.92f, _launchClutchTimerSeconds);
-        float clutchCapacityNm = MathF.Max(0f, _parameters.ClutchTorqueCapacityNm) *
-                                 engagement *
-                                 MathHelper.Lerp(0.82f, 1.26f, lockCapacityT);
-        float drivenSlipRatio = CalculateDrivenAverageDriveSlipRatio();
-        float launchWheelSpinReliefT = SmoothStep(0.10f, 0.40f, drivenSlipRatio) *
-                                       (1f - SmoothStep(3.0f, 9.0f, MathF.Abs(forwardSpeed)));
-        clutchCapacityNm *= MathHelper.Lerp(1f, 0.42f, launchWheelSpinReliefT);
-
-        float slipDirection;
-        if (throttle > 0.05f && clutchSlipRpm <= 0f)
+        if (State.Gear < 0 && forwardSpeed < -_engineParameters.VehicleSafety.MaximumReverseSpeedMetersPerSecond)
         {
-            slipDirection = 0f;
+            PublishClutchState(0f, 0f, 0f, false, 0f);
+            return 0f;
         }
-        else if (MathF.Abs(clutchSlipRpm) < 280f)
+
+        if (State.Gear > 0 && forwardSpeed > _engineParameters.VehicleSafety.MaximumForwardSpeedMetersPerSecond)
         {
-            slipDirection = clutchSlipRpm / 280f;
+            PublishClutchState(0f, 0f, 0f, false, 0f);
+            return 0f;
+        }
+
+        float gearRatio = GetCurrentGearRatio();
+        if (gearRatio <= 0.0001f)
+        {
+            IntegrateFreeRevEngineOmega(throttle, forwardSpeed, dt, clutchLoadTorqueNm: 0f);
+            PublishClutchState(0f, 0f, 0f, false, 0f);
+            return 0f;
+        }
+
+        float gearboxInputRpm = CalculateDrivenTransmissionRpm(gearRatio);
+        float gearboxInputOmega = RpmToOmega(gearboxInputRpm);
+        float slipOmega = State.EngineOmegaRadiansPerSecond - gearboxInputOmega;
+        float speed = MathF.Abs(forwardSpeed);
+        float lowSpeedThreshold = MathF.Max(0.5f, _parameters.ClutchLowSpeedThresholdMetersPerSecond);
+        float speedFactor = MathHelper.Clamp(speed / lowSpeedThreshold, 0f, 1f);
+        float pedal = MathHelper.Clamp(throttle, 0f, 1f);
+        float bitePoint = MathHelper.Clamp(_parameters.ClutchEngagementPoint, 0.05f, 0.95f);
+        float biteStart = MathHelper.Clamp(
+            bitePoint * MathHelper.Clamp(_parameters.ClutchBiteInputStartMultiplier, 0.05f, 0.95f),
+            0.01f,
+            bitePoint - 0.001f);
+        float pedalBite = SmoothStep(biteStart, bitePoint, pedal);
+        float launchAssist = MathF.Pow(pedal, MathHelper.Clamp(_parameters.ClutchLaunchAssistExponent, 0.25f, 1.5f)) *
+                             MathHelper.Clamp(_parameters.ClutchLowSpeedAssistStrength, 0f, 1f);
+        float clampIntent = MathF.Max(speedFactor, MathF.Max(pedalBite, launchAssist));
+        float sharpness = MathF.Max(0.25f, _parameters.ClutchEngagementSharpness);
+        float clutchEngagement = 1f - MathF.Pow(1f - MathHelper.Clamp(clampIntent, 0f, 1f), sharpness);
+        float lowSpeedLaunchT = 1f - SmoothStep(lowSpeedThreshold * 0.45f, lowSpeedThreshold, speed);
+        float launchThrottle = MathF.Pow(pedal, MathHelper.Clamp(_parameters.ClutchLowSpeedThrottleGamma, 0.35f, 1.25f));
+        float engineThrottle = MathHelper.Lerp(pedal, MathHelper.Clamp(launchThrottle, pedal, 1f), lowSpeedLaunchT * (1f - speedFactor * 0.35f));
+        float pullAwayIntent = SmoothStep(0.015f, 0.35f, pedal) * (1f - SmoothStep(lowSpeedThreshold * 0.55f, lowSpeedThreshold, speed));
+        float lowSpeedThrottleAssist = MathHelper.Clamp(_parameters.ClutchLowSpeedThrottleAssist, 0f, 0.85f);
+        engineThrottle = MathHelper.Clamp(
+            engineThrottle + (1f - engineThrottle) * lowSpeedThrottleAssist * pullAwayIntent,
+            pedal,
+            1f);
+        float activeClutchCapacityNm = MathF.Max(0f, _parameters.ClutchTorqueCapacityNm) * clutchEngagement;
+        float absoluteSlipOmega = MathF.Abs(slipOmega);
+        float lockSlip = MathF.Max(0.2f, _parameters.ClutchLockSlipRadiansPerSecond);
+        float unlockSlip = MathF.Max(lockSlip + 0.1f, _parameters.ClutchUnlockSlipRadiansPerSecond);
+        float rollingLockSpeed = MathF.Max(0.2f, _parameters.ClutchRollingLockSpeedMetersPerSecond);
+        float rollingLockSlip = MathF.Max(lockSlip, _parameters.ClutchRollingLockSlipRadiansPerSecond);
+
+        if (State.ClutchIsLocked)
+        {
+            if (absoluteSlipOmega > unlockSlip || speed < 0.65f)
+            {
+                State.ClutchIsLocked = false;
+            }
+        }
+        else if ((absoluteSlipOmega < lockSlip && speed > 1.8f) ||
+                 (pedal > 0.14f && speed > rollingLockSpeed && absoluteSlipOmega < rollingLockSlip))
+        {
+            State.ClutchIsLocked = true;
+        }
+
+        float direction = State.Gear < 0 ? -1f : 1f;
+        float rpm = MathHelper.Clamp(OmegaToRpm(State.EngineOmegaRadiansPerSecond), _parameters.IdleRpm, GetCurrentRpmCeiling());
+        EnginePowerUnitState enginePower = AdvanceEnginePower(
+            rpm,
+            engineThrottle,
+            forwardSpeed,
+            dt,
+            clutchEngagement,
+            transmissionRpm: gearboxInputRpm);
+        float crankTorqueNm = enginePower.Enabled
+            ? enginePower.DriveTorqueNm
+            : _parameters.TorqueAtRpm(rpm) * engineThrottle * State.LimiterTorqueMultiplier;
+        if (!State.RevLimiterActive && pullAwayIntent > 0f)
+        {
+            float idleAssistWindowRpm = MathHelper.Clamp(_parameters.IdleRpm + 1650f, _parameters.IdleRpm + 300f, _parameters.PowerRedlineRpm);
+            float nearIdleT = 1f - SmoothStep(_parameters.IdleRpm + 80f, idleAssistWindowRpm, rpm);
+            crankTorqueNm += MathF.Max(0f, _parameters.ClutchLowSpeedTorqueAssistNm) * pullAwayIntent * nearIdleT;
+        }
+        float shiftKickTorqueMultiplier = 1f + CalculateShiftKickEnvelope() * _shiftKickSeverity * 0.16f;
+        crankTorqueNm *= shiftKickTorqueMultiplier;
+
+        float clutchTorqueNm;
+        float totalDriveTorque;
+        if (State.ClutchIsLocked)
+        {
+            State.EngineOmegaRadiansPerSecond = gearboxInputOmega;
+            State.Rpm = MathHelper.Clamp(gearboxInputRpm, _parameters.IdleRpm, GetCurrentRpmCeiling());
+            clutchTorqueNm = MathF.Min(MathF.Abs(crankTorqueNm), activeClutchCapacityNm);
+            totalDriveTorque = direction * crankTorqueNm * gearRatio * _parameters.FinalDriveRatio * _parameters.DrivetrainEfficiency;
         }
         else
         {
-            slipDirection = MathF.Sign(clutchSlipRpm);
+            float damping = MathF.Max(0.05f, _parameters.ClutchSlipDamping);
+            float slipCapacityT = SmoothStep(lockSlip * 0.12f, lockSlip, absoluteSlipOmega * damping);
+            clutchTorqueNm = activeClutchCapacityNm * slipCapacityT;
+            float slipDirection = absoluteSlipOmega > 0.0001f
+                ? MathF.Sign(slipOmega)
+                : 1f;
+            float idleOmegaTarget = RpmToOmega(_parameters.IdleRpm);
+            float idleControlTorqueNm = 0f;
+            if (State.EngineOmegaRadiansPerSecond < idleOmegaTarget)
+            {
+                float idleError = idleOmegaTarget - State.EngineOmegaRadiansPerSecond;
+                idleControlTorqueNm = MathHelper.Clamp(
+                    idleError * MathF.Max(0f, _parameters.IdleControlSensitivityNmPerRadPerSecond),
+                    0f,
+                    _parameters.ClutchTorqueCapacityNm * 0.55f);
+            }
+
+            float frictionTorqueNm = CalculateEngineInternalDragTorque(rpm, throttle, 0.82f);
+            float netFlywheelTorqueNm = crankTorqueNm + idleControlTorqueNm - frictionTorqueNm - clutchTorqueNm * slipDirection;
+            float engineOmegaDelta = netFlywheelTorqueNm / MathF.Max(0.05f, _parameters.EngineRotationalInertiaKgM2) * dt;
+            State.EngineOmegaRadiansPerSecond += engineOmegaDelta;
+            State.EngineOmegaRadiansPerSecond = MathHelper.Clamp(
+                State.EngineOmegaRadiansPerSecond,
+                idleOmegaTarget,
+                RpmToOmega(_parameters.LimiterHardCutRpm));
+            State.Rpm = OmegaToRpm(State.EngineOmegaRadiansPerSecond);
+            totalDriveTorque = direction * clutchTorqueNm * gearRatio * _parameters.FinalDriveRatio * _parameters.DrivetrainEfficiency;
         }
 
-        float solverClutchEngagement = engagement;
-        if (_enginePowerUnit.OwnsDriveline && _preRevLaunchActive)
+        State.PowertrainShockIntensity = MathHelper.Clamp(
+            MathF.Max(State.ShiftKickIntensity, MathHelper.Clamp(clutchTorqueNm / MathF.Max(1f, _parameters.ClutchTorqueCapacityNm), 0f, 1f) * SmoothStep(0.2f, 1f, MathF.Abs(State.ClutchSlipRpm) / 1800f) * 0.18f),
+            0f,
+            1f);
+        PublishClutchState(gearboxInputRpm, State.Rpm - gearboxInputRpm, clutchTorqueNm, State.ClutchIsLocked, clutchEngagement);
+        UpdateMechanicalOverRevState(MathF.Max(State.Rpm, CalculateRoadSpeedRpmForGear(State.Gear, forwardSpeed, GetMechanicalOverRevCeiling())));
+        return totalDriveTorque;
+    }
+
+    private void EnsureEngineOmegaInitialized()
+    {
+        if (State.EngineOmegaRadiansPerSecond <= 0.0001f)
         {
-            float rpmHealthT = SmoothStep(launchTargetRpm * 0.94f, launchTargetRpm * 1.08f, rpm);
-            float transmissionHealthT = SmoothStep(launchTargetRpm * 0.55f, launchTargetRpm * 1.00f, transmissionRpm);
-            float rpmOnlyAllowanceT = rpmHealthT * SmoothStep(launchTargetRpm * 0.35f, launchTargetRpm * 0.70f, transmissionRpm);
-            float highRpmBiteT = SmoothStep(launchTargetRpm * 1.02f, _parameters.RedlineRpm * 0.94f, rpm);
-            float timedBiteT = SmoothStep(0.32f, 0.95f, _launchClutchTimerSeconds);
-            float antiBogReleaseT = MathF.Max(MathF.Max(highRpmBiteT, timedBiteT), MathF.Max(rpmOnlyAllowanceT, transmissionHealthT));
-            solverClutchEngagement *= MathHelper.Lerp(0.50f, 1f, antiBogReleaseT);
+            SyncEngineOmegaFromRpm();
         }
+    }
+
+    private void SyncEngineOmegaFromRpm()
+    {
+        State.EngineOmegaRadiansPerSecond = RpmToOmega(MathF.Max(_parameters.IdleRpm, State.Rpm));
+    }
+
+    private void PublishClutchState(float gearboxInputRpm, float clutchSlipRpm, float clutchTorqueNm, bool locked, float engagement)
+    {
+        State.GearboxInputOmegaRadiansPerSecond = RpmToOmega(MathF.Max(0f, gearboxInputRpm));
+        State.ClutchSlipDeltaRadiansPerSecond = RpmToOmega(clutchSlipRpm);
+        State.ClutchSlipRpm = clutchSlipRpm;
+        State.ActiveClutchTorqueNm = MathF.Max(0f, clutchTorqueNm);
+        State.ClutchIsLocked = locked;
+        State.ClutchEngagement = MathHelper.Clamp(engagement, 0f, 1f);
+    }
+
+    private void IntegrateFreeRevEngineOmega(float throttle, float forwardSpeed, float dt, float clutchLoadTorqueNm)
+    {
+        EnsureEngineOmegaInitialized();
+
+        float clampedDt = MathHelper.Clamp(dt, 0f, 1f / 20f);
+        if (clampedDt <= 0f)
+        {
+            return;
+        }
+
+        float currentRpm = MathHelper.Clamp(
+            OmegaToRpm(State.EngineOmegaRadiansPerSecond),
+            _parameters.IdleRpm,
+            GetCurrentRpmCeiling());
+        throttle = MathHelper.Clamp(throttle, 0f, 1f);
 
         EnginePowerUnitState enginePower = AdvanceEnginePower(
-            rpm,
+            currentRpm,
             throttle,
             forwardSpeed,
-            dt,
-            solverClutchEngagement,
-            transmissionRpm: transmissionRpm);
-        if (enginePower.Enabled && enginePower.OwnsDriveline)
-        {
-            ApplyEnginePowerCrankState(enginePower);
-            if (_preRevLaunchActive &&
-                throttle > 0.45f &&
-                _launchClutchTimerSeconds < 2.85f &&
-                transmissionRpm < launchPowerBandRpm * 1.02f)
-            {
-                float floorReleaseT = MathF.Max(
-                    SmoothStep(0.60f, 1.55f, _launchClutchTimerSeconds) * 0.85f,
-                    SmoothStep(launchTargetRpm * 0.34f, launchTargetRpm * 0.82f, transmissionRpm));
-                float protectiveFloorRpm = launchTargetRpm * MathHelper.Lerp(0.90f, 0.66f, floorReleaseT);
-                float roadCatchupFloorRpm = transmissionRpm + MathHelper.Lerp(2200f, 450f, floorReleaseT);
-                float launchFloorRpm = MathHelper.Clamp(
-                    MathF.Max(protectiveFloorRpm, roadCatchupFloorRpm),
-                    launchTargetRpm * 0.92f,
-                    launchPowerBandRpm);
-                float launchFloorTextureT = throttle *
-                                            SmoothStep(0.18f, 0.72f, _launchClutchTimerSeconds) *
-                                            (1f - SmoothStep(1.55f, 2.45f, _launchClutchTimerSeconds)) *
-                                            SmoothStep(0.10f, 0.65f, drivenSlipRatio);
-                float launchFloorTextureRpm = (MathF.Sin(_launchClutchTimerSeconds * 54f) +
-                                               MathF.Sin(_launchClutchTimerSeconds * 113f + 0.7f) * 0.45f) *
-                                              55f *
-                                              launchFloorTextureT;
-                State.Rpm = MathF.Max(State.Rpm, launchFloorRpm + launchFloorTextureRpm);
-                State.ClutchSlipRpm = State.Rpm - transmissionRpm;
-            }
+            clampedDt,
+            clutchEngagement: 0f,
+            forceNeutral: true);
 
-            float coupledLowSpeedT = 1f - SmoothStep(4.0f, 12.0f, MathF.Abs(forwardSpeed));
-            float coupledSlipT = SmoothStep(0.22f, 0.95f, State.AverageSlipRatio);
-            float coupledRpmDeficitT = 1f - SmoothStep(launchTargetRpm * 0.78f, launchTargetRpm * 1.02f, State.Rpm);
-            float coupledLaunchShock = throttle *
-                                       coupledLowSpeedT *
-                                       MathF.Max(coupledSlipT, coupledRpmDeficitT * 0.38f) *
-                                       SmoothStep(0.12f, 0.68f, _launchClutchEngagement) *
-                                       0.30f;
-            State.PowertrainShockIntensity = MathHelper.Clamp(MathF.Max(State.ShiftKickIntensity, coupledLaunchShock), 0f, 1f);
-            if (_preRevLaunchActive &&
-                throttle > 0.55f &&
-                _launchClutchTimerSeconds > 0.24f &&
-                _launchClutchTimerSeconds < 1.35f &&
-                MathF.Abs(State.ClutchSlipRpm) > 1200f &&
-                CalculateDrivenAverageDriveSlipRatio() < 0.52f)
-            {
-                ApplyLaunchClutchHandoffWheelSpin(throttle, 0.22f);
-            }
-
-            float coupledDirection = State.Gear < 0 ? -1f : 1f;
-            return coupledDirection * enginePower.DriveTorqueNm * ratio * _parameters.FinalDriveRatio * _parameters.DrivetrainEfficiency;
-        }
-
-        float engineTorqueNm = enginePower.Enabled
+        float crankTorqueNm = enginePower.Enabled
             ? enginePower.DriveTorqueNm
-            : _parameters.TorqueAtRpm(rpm) * throttle * State.LimiterTorqueMultiplier;
-        float idleControlTorqueNm = rpm < _parameters.IdleRpm + 120f
-            ? MathHelper.Clamp((_parameters.IdleRpm + 120f - rpm) * 0.08f, 0f, 34f)
-            : 0f;
-        float frictionTorqueNm = CalculateEngineInternalDragTorque(rpm, throttle, 0.82f);
-        float clutchTorqueNm = clutchCapacityNm * MathHelper.Clamp(slipDirection, -1f, 1f);
-        if (clutchTorqueNm > 0f)
+            : _parameters.TorqueAtRpm(currentRpm) * throttle * State.LimiterTorqueMultiplier;
+        if (State.RevLimiterActive)
         {
-            float antiBogStartRpm = MathHelper.Clamp(launchTargetRpm * 0.82f, _parameters.IdleRpm + 900f, launchTargetRpm * 0.92f);
-            float antiBogEndRpm = MathHelper.Clamp(MathF.Max(launchTargetRpm * 1.04f, launchPowerBandRpm), antiBogStartRpm + 1f, _parameters.RedlineRpm);
-            float bogProtectionT = 1f - SmoothStep(antiBogStartRpm, antiBogEndRpm, rpm);
-            float reserveTorqueNm = MathHelper.Lerp(18f, 2f, SmoothStep(antiBogStartRpm, antiBogEndRpm, rpm));
-            float protectedTorqueNm = MathF.Min(
-                clutchTorqueNm,
-                MathF.Max(0f, engineTorqueNm + idleControlTorqueNm - frictionTorqueNm - reserveTorqueNm));
-            clutchTorqueNm = MathHelper.Lerp(clutchTorqueNm, protectedTorqueNm, bogProtectionT * MathHelper.Lerp(0.72f, 1f, launchWheelSpinReliefT));
-
-            float tyreBiteDemandT = (1f - SmoothStep(0.05f, 0.14f, drivenSlipRatio)) *
-                                    SmoothStep(0.28f, 0.68f, _launchClutchTimerSeconds) *
-                                    (1f - launchSyncT) *
-                                    MathHelper.Clamp(throttle, 0f, 1f);
-            float biteTorqueNm = MathF.Min(
-                clutchCapacityNm,
-                MathF.Max(clutchTorqueNm, engineTorqueNm * MathHelper.Lerp(0.72f, 0.92f, tyreBiteDemandT)));
-            clutchTorqueNm = MathHelper.Lerp(clutchTorqueNm, biteTorqueNm, tyreBiteDemandT * 0.42f);
+            crankTorqueNm = 0f;
         }
 
-        float netEngineTorqueNm = engineTorqueNm + idleControlTorqueNm - frictionTorqueNm - clutchTorqueNm;
-        float launchHopT = throttle *
-                           SmoothStep(0.12f, 0.42f, drivenSlipRatio) *
-                           SmoothStep(900f, 4800f, MathF.Max(0f, clutchSlipRpm)) *
-                           (1f - SmoothStep(1.55f, 2.20f, _launchClutchTimerSeconds));
-        if (launchHopT > 0.001f)
+        float idleOmegaTarget = RpmToOmega(_parameters.IdleRpm);
+        float idleControlTorqueNm = 0f;
+        if (State.EngineOmegaRadiansPerSecond < idleOmegaTarget || (throttle <= 0.02f && currentRpm < _parameters.IdleRpm + 120f))
         {
-            float hopTorqueNm = (MathF.Sin(_launchClutchTimerSeconds * 78f) +
-                                 MathF.Sin(_launchClutchTimerSeconds * 143f + 0.8f) * 0.55f) *
-                                18f *
-                                launchHopT;
-            netEngineTorqueNm += hopTorqueNm;
+            float idleError = idleOmegaTarget - State.EngineOmegaRadiansPerSecond;
+            idleControlTorqueNm = MathHelper.Clamp(
+                idleError * MathF.Max(0f, _parameters.IdleControlSensitivityNmPerRadPerSecond),
+                0f,
+                MathF.Max(20f, _parameters.ClutchTorqueCapacityNm * 0.40f));
         }
 
-        float rpmDelta = netEngineTorqueNm / MathF.Max(0.05f, _parameters.EngineRotationalInertiaKgM2) * (60f / MathF.Tau) * dt;
-        float maximumRpm = _parameters.RedlineRpm;
-        float minimumRpm = 650f;
-        if (throttle > 0.45f &&
-            _launchClutchTimerSeconds > 0f &&
-            _launchClutchTimerSeconds < 2.05f &&
-            transmissionRpm < launchPowerBandRpm * 1.02f)
-        {
-            float speedReleaseT = SmoothStep(7.0f, 13.2f, MathF.Abs(forwardSpeed));
-            float timeReleaseT = SmoothStep(1.35f, 2.05f, _launchClutchTimerSeconds);
-            float releaseT = MathF.Max(timeReleaseT, speedReleaseT);
-            float powerBandFloorRpm = launchPowerBandRpm * MathHelper.Lerp(1.02f, 0.96f, releaseT);
-            float roadCoupledRpm = CalculateRoadSpeedRpmForGear(State.Gear, forwardSpeed, _parameters.RedlineRpm);
-            float roadCatchupFloorRpm = MathF.Min(
-                _parameters.RedlineRpm - 120f,
-                roadCoupledRpm + MathHelper.Lerp(2800f, 900f, releaseT));
-            minimumRpm = MathF.Max(minimumRpm, MathF.Max(powerBandFloorRpm, roadCatchupFloorRpm));
-        }
+        float frictionTorqueNm = CalculateEngineInternalDragTorque(currentRpm, throttle, 0.92f);
+        float netTorqueNm = crankTorqueNm + idleControlTorqueNm - frictionTorqueNm - MathF.Max(0f, clutchLoadTorqueNm);
+        float inertia = MathF.Max(0.05f, _parameters.EngineRotationalInertiaKgM2);
+        float rpmDelta = netTorqueNm / inertia * (60f / MathF.Tau) * clampedDt;
+        float maxRise = MathF.Max(500f, _parameters.MaxFreeRevRiseRpmPerSecond) * clampedDt;
+        float maxFall = MathF.Max(500f, _parameters.MaxFreeRevFallRpmPerSecond) * clampedDt;
+        rpmDelta = MathHelper.Clamp(rpmDelta, -maxFall, maxRise);
 
-        State.Rpm = MathHelper.Clamp(rpm + rpmDelta, minimumRpm, maximumRpm);
-        State.ClutchSlipRpm = State.Rpm - transmissionRpm;
-        float lowSpeedT = 1f - SmoothStep(4.0f, 12.0f, MathF.Abs(forwardSpeed));
-        float slipT = SmoothStep(0.22f, 0.95f, State.AverageSlipRatio);
-        float rpmDeficitT = 1f - SmoothStep(launchTargetRpm * 0.78f, launchTargetRpm * 1.02f, State.Rpm);
-        float launchShock = throttle *
-                            lowSpeedT *
-                            MathF.Max(MathF.Max(slipT, launchHopT), rpmDeficitT * 0.45f) *
-                            SmoothStep(0.12f, 0.68f, _launchClutchEngagement) *
-                            0.30f;
-        State.PowertrainShockIntensity = MathHelper.Clamp(MathF.Max(State.ShiftKickIntensity, launchShock), 0f, 1f);
-
-        float direction = State.Gear < 0 ? -1f : 1f;
-        return direction * clutchTorqueNm * ratio * _parameters.FinalDriveRatio * _parameters.DrivetrainEfficiency;
+        float nextRpm = MathHelper.Clamp(
+            currentRpm + rpmDelta,
+            _parameters.IdleRpm,
+            _parameters.LimiterHardCutRpm);
+        State.Rpm = nextRpm;
+        State.EngineOmegaRadiansPerSecond = RpmToOmega(nextRpm);
+        State.ClutchSlipRpm = 0f;
+        UpdateMechanicalOverRevState(nextRpm);
     }
 
     private float CalculateDrivenAverageDriveSlipRatio()
@@ -2809,113 +2771,6 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         return drivenCount > 0
             ? slipTotal / drivenCount
             : MathF.Max(0f, State.AverageSlipRatio);
-    }
-
-    private void ApplyLaunchClutchHandoffWheelSpin(float throttle, float intensityScale = 1f)
-    {
-        float gearRatio = GetCurrentGearRatio();
-        float drivelineRatio = MathF.Abs(gearRatio * _parameters.FinalDriveRatio);
-        if (drivelineRatio <= 0.001f || State.Rpm <= _parameters.IdleRpm + 300f)
-        {
-            return;
-        }
-
-        float clutchSlipT = SmoothStep(500f, 2200f, MathF.Max(0f, State.ClutchSlipRpm));
-        float handoffT = SmoothStep(0.22f, 0.62f, _launchClutchTimerSeconds);
-        float impulseT = MathHelper.Clamp(throttle, 0f, 1f) *
-                         MathHelper.Clamp(_launchClutchEngagement, 0f, 1f) *
-                         clutchSlipT *
-                         handoffT *
-                         MathHelper.Clamp(intensityScale, 0f, 1f);
-        if (impulseT <= 0.001f)
-        {
-            return;
-        }
-
-        float direction = State.Gear < 0 ? -1f : 1f;
-        float engineMatchedWheelAngularVelocity = State.Rpm / drivelineRatio * (MathF.Tau / 60f);
-        float targetAngularVelocity = engineMatchedWheelAngularVelocity * MathHelper.Lerp(0.60f, 0.78f, impulseT);
-        foreach (WheelRuntimeState wheel in _wheels)
-        {
-            if (!_parameters.DrivenWheels.IsDriven(wheel.Corner))
-            {
-                continue;
-            }
-
-            float signedAngularVelocity = wheel.AngularVelocityRadiansPerSecond * direction;
-            if (signedAngularVelocity < targetAngularVelocity)
-            {
-                float boostedAngularVelocity = MathHelper.Lerp(signedAngularVelocity, targetAngularVelocity, MathHelper.Lerp(0.08f, 0.32f, impulseT));
-                wheel.AngularVelocityRadiansPerSecond = boostedAngularVelocity * direction;
-            }
-        }
-
-        State.PowertrainShockIntensity = MathHelper.Clamp(
-            MathF.Max(State.PowertrainShockIntensity, impulseT * 0.30f),
-            0f,
-            1f);
-    }
-
-    private float UpdateAutomaticLaunchClutchEngagement(
-        float throttle,
-        float forwardSpeed,
-        float engineRpm,
-        float transmissionRpm,
-        float dt)
-    {
-        _launchClutchTimerSeconds += dt;
-        float speed = MathF.Abs(forwardSpeed);
-        float speedT = SmoothStep(0.25f, 5.0f, speed);
-        float timeT = SmoothStep(0.04f, 0.42f, _launchClutchTimerSeconds);
-        float launchTargetRpm = MathHelper.Clamp(_parameters.LaunchSlipTargetRpm, _parameters.IdleRpm + 400f, _parameters.RedlineRpm);
-        float launchSyncT = SmoothStep(launchTargetRpm * 0.58f, launchTargetRpm * 0.90f, transmissionRpm);
-        float timeLockT = SmoothStep(0.18f, 1.38f, _launchClutchTimerSeconds);
-        float lockT = MathF.Max(launchSyncT, timeLockT);
-        float rpmHealthT = SmoothStep(_parameters.IdleRpm + 800f, launchTargetRpm * 0.96f, engineRpm);
-        float bitePoint = MathHelper.Clamp(_parameters.ClutchEngagementPoint, 0.25f, 0.85f);
-        float initialBite = bitePoint * MathHelper.Lerp(1.06f, 1.30f, rpmHealthT);
-        initialBite = MathHelper.Clamp(initialBite, 0.52f, 0.84f);
-        float targetEngagement = MathHelper.Lerp(initialBite, 1f, lockT);
-        if (_preRevLaunchActive && throttle > 0.75f && _launchClutchTimerSeconds < 0.85f)
-        {
-            float preRevDumpT = SmoothStep(launchTargetRpm * 1.03f, _parameters.RedlineRpm * 0.98f, engineRpm);
-            targetEngagement = MathF.Max(targetEngagement, MathHelper.Lerp(0.82f, 0.96f, preRevDumpT));
-        }
-
-        float slipRpm = engineRpm - transmissionRpm;
-        if (slipRpm < 420f && transmissionRpm >= launchTargetRpm * 0.74f)
-        {
-            float nearSyncT = 1f - SmoothStep(-120f, 420f, slipRpm);
-            targetEngagement = MathHelper.Lerp(targetEngagement, 1f, nearSyncT);
-        }
-
-        float bogFloorRpm = MathHelper.Clamp(launchTargetRpm * 0.84f, _parameters.IdleRpm + 1100f, launchTargetRpm * 0.92f);
-        if (engineRpm < bogFloorRpm && _launchClutchTimerSeconds < 1.05f)
-        {
-            float bogProtectionT = 1f - SmoothStep(launchTargetRpm * 0.72f, bogFloorRpm, engineRpm);
-            targetEngagement *= MathHelper.Lerp(0.58f, 1f, 1f - bogProtectionT);
-        }
-
-        float drivenSlipRatio = CalculateDrivenAverageDriveSlipRatio();
-        float wheelSpinReliefT = SmoothStep(0.18f, 0.72f, drivenSlipRatio) *
-                                 (1f - SmoothStep(4.0f, 11.5f, speed));
-        targetEngagement *= MathHelper.Lerp(1f, 0.66f, wheelSpinReliefT);
-
-        targetEngagement *= MathHelper.Lerp(0.86f, 1f, MathHelper.Clamp(throttle, 0f, 1f));
-        targetEngagement = MathHelper.Clamp(targetEngagement, 0.05f, 1f);
-
-        if (_launchClutchEngagement <= 0.001f)
-        {
-            _launchClutchEngagement = targetEngagement;
-            return _launchClutchEngagement;
-        }
-
-        float engageRate = targetEngagement > _launchClutchEngagement
-            ? MathHelper.Lerp(12.0f, 24.0f, MathF.Max(speedT, timeT))
-            : 18.0f;
-        float maxStep = engageRate * dt;
-        _launchClutchEngagement += MathHelper.Clamp(targetEngagement - _launchClutchEngagement, -maxStep, maxStep);
-        return MathHelper.Clamp(_launchClutchEngagement, 0f, 1f);
     }
 
     private float CalculateDrivenTransmissionRpm(float gearRatio)
@@ -2957,9 +2812,14 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             return 0f;
         }
 
-        float coupledRpm = MathF.Max(
-            State.Rpm,
-            CalculateRoadSpeedRpmForGear(State.Gear, forwardSpeed, GetMechanicalOverRevCeiling()));
+        float roadCoupledRpm = CalculateRoadSpeedRpmForGear(State.Gear, forwardSpeed, GetMechanicalOverRevCeiling());
+        bool downshiftOverRevArmed =
+            _pendingDownshiftOverRevSeverity > 0f ||
+            _downshiftOverRevBrakeSeconds > 0f ||
+            State.MechanicalOverRevActive;
+        float coupledRpm = downshiftOverRevArmed
+            ? MathF.Max(State.Rpm, roadCoupledRpm)
+            : roadCoupledRpm;
         EnginePowerUnitState enginePower = AdvanceEnginePower(coupledRpm, 0f, forwardSpeed, dt);
         ApplyEnginePowerCrankState(enginePower, true, dt);
         float crankBrakeTorque = enginePower.Enabled
@@ -3004,7 +2864,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         }
 
         float coupledRpm = CalculateRoadSpeedRpmForGear(State.Gear, forwardSpeed, GetMechanicalOverRevCeiling());
-        return coupledRpm > _parameters.RedlineRpm + 25f || _downshiftOverRevBrakeSeconds > 0f;
+        return coupledRpm > _parameters.LimiterHardCutRpm + 25f || _downshiftOverRevBrakeSeconds > 0f;
     }
 
     private float CalculateAeroDrag(float forwardSpeed)
@@ -3017,14 +2877,24 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         return -MathF.Sign(forwardSpeed) * _parameters.AeroDragFactor * forwardSpeed * forwardSpeed;
     }
 
-    private void AddGradeForces(Vector2 forward, ref float totalForceZ)
+    private void AddTrackGravityForces(Vector2 forward, Vector2 right, ref float totalForceZ, ref float totalForceX)
     {
         Vector2 position = new(State.Position.X, State.Position.Z);
         const float sampleDistance = 3.0f;
         float forwardSlope = SampleSlope(position, forward, sampleDistance);
+        float rightSlope = SampleSlope(position, right, sampleDistance);
+        float trackPitchRadians = MathF.Atan(forwardSlope);
+        float trackRollRadians = MathF.Atan(rightSlope);
         float weight = _parameters.MassKg * Gravity;
+        float longitudinalGravityForce = -weight * MathF.Sin(trackPitchRadians);
+        float lateralGravityForce = -weight * MathF.Sin(trackRollRadians);
 
-        totalForceZ -= weight * forwardSlope;
+        totalForceZ += longitudinalGravityForce;
+        totalForceX += lateralGravityForce;
+        State.TrackPitchRadians = trackPitchRadians;
+        State.TrackRollRadians = trackRollRadians;
+        State.TrackLongitudinalGravityForceN = longitudinalGravityForce;
+        State.TrackLateralGravityForceN = lateralGravityForce;
     }
 
     private float SampleSlope(Vector2 position, Vector2 direction, float sampleDistance)
@@ -3250,7 +3120,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         }
 
         float predictedRpm = CalculateRoadSpeedRpmForGearUnclamped(targetGear, forwardSpeed);
-        return predictedRpm > _parameters.RedlineRpm + _parameters.DownshiftOverRevToleranceRpm;
+        return predictedRpm > _parameters.LimiterHardCutRpm + _parameters.DownshiftOverRevToleranceRpm;
     }
 
     private float CalculateRoadSpeedRpmForGear(int gear, float forwardSpeed, float rpmCeiling)
@@ -3272,6 +3142,16 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
                          MathF.Tau *
                          60f;
         return wheelRpm * ratio * _parameters.FinalDriveRatio;
+    }
+
+    private static float RpmToOmega(float rpm)
+    {
+        return rpm * (MathF.Tau / 60f);
+    }
+
+    private static float OmegaToRpm(float omegaRadiansPerSecond)
+    {
+        return omegaRadiansPerSecond * (60f / MathF.Tau);
     }
 
     private void UpdateRpm(VehicleInput input, float forwardSpeed, float dt)
@@ -3333,7 +3213,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             _pendingDownshiftOverRevSeverity > 0f ||
             _downshiftOverRevBrakeSeconds > 0f ||
             State.MechanicalOverRevActive;
-        bool mechanicalLimiterContact = downshiftOverRevArmed && roadSpeedRpm > _parameters.RedlineRpm;
+        bool mechanicalLimiterContact = downshiftOverRevArmed && roadSpeedRpm > _parameters.LimiterHardCutRpm;
         float roadCoupledTargetRpm = CalculateRoadSpeedRpmForGear(State.Gear, forwardSpeed, limiterCeiling);
         float targetRpm = mechanicalLimiterContact
             ? CalculateMechanicalLimiterBounceRpm(CalculateMechanicalLimiterContactIntensity(roadSpeedRpm))
@@ -3364,12 +3244,6 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
 
             float drivenSlipT = SmoothStep(0.05f, 0.20f, CalculateDrivenAverageDriveSlipRatio());
             targetRpm = MathF.Max(targetRpm, MathHelper.Lerp(targetRpm, drivenTransmissionRpm, drivenSlipT));
-        }
-
-        if (_shiftTimerSeconds <= 0f && State.SpeedMetersPerSecond < 0.8f)
-        {
-            float launchTarget = MathHelper.Clamp(_parameters.LaunchSlipTargetRpm, _parameters.IdleRpm, limiterCeiling);
-            targetRpm = MathHelper.Lerp(targetRpm, launchTarget, pedal * MathHelper.Clamp(_parameters.LaunchSlipBlend, 0f, 1f));
         }
 
         if (_shiftTimerSeconds <= 0f &&
@@ -3489,6 +3363,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         if (enginePower.Enabled && enginePower.OwnsDriveline)
         {
             ApplyEnginePowerCrankState(enginePower);
+            SyncEngineOmegaFromRpm();
             UpdateMechanicalOverRevState(State.Rpm);
             return;
         }
@@ -3502,7 +3377,11 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             : 0f;
         float netTorque = crankTorque + idleControlTorque - frictionTorque;
         float rpmDelta = netTorque / inertia * (60f / MathF.Tau) * dt;
-        float maximumRpm = _parameters.RedlineRpm;
+        rpmDelta = MathHelper.Clamp(
+            rpmDelta,
+            -MathF.Max(500f, _parameters.MaxFreeRevFallRpmPerSecond) * MathHelper.Clamp(dt, 0f, 1f / 20f),
+            MathF.Max(500f, _parameters.MaxFreeRevRiseRpmPerSecond) * MathHelper.Clamp(dt, 0f, 1f / 20f));
+        float maximumRpm = _parameters.LimiterHardCutRpm;
         float newRpm = MathHelper.Clamp(rpm + rpmDelta, 650f, maximumRpm);
 
         if (throttle <= 0.001f && newRpm < _parameters.IdleRpm)
@@ -3512,6 +3391,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
 
         State.ClutchSlipRpm = newRpm - State.Rpm;
         State.Rpm = newRpm;
+        SyncEngineOmegaFromRpm();
         UpdateMechanicalOverRevState(newRpm);
     }
 
@@ -3520,7 +3400,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         EnginePowerUnitState enginePower = _enginePowerUnit.State;
         if (enginePower.Enabled)
         {
-            float simRpmT = SmoothStep(_parameters.IdleRpm, _parameters.RedlineRpm, rpm);
+            float simRpmT = SmoothStep(_parameters.IdleRpm, _parameters.LimiterHardCutRpm, rpm);
             float simClosedThrottleTorque = MathHelper.Lerp(
                 14f,
                 enginePower.EngineBrakeTorqueNm * closedThrottleMultiplier,
@@ -3533,7 +3413,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             return MathHelper.Lerp(simClosedThrottleTorque, simPoweredTorque, simThrottleT);
         }
 
-        float rpmT = SmoothStep(_parameters.IdleRpm, _parameters.RedlineRpm, rpm);
+        float rpmT = SmoothStep(_parameters.IdleRpm, _parameters.LimiterHardCutRpm, rpm);
         float closedThrottleTorque = MathHelper.Lerp(
             14f,
             _parameters.EngineBrakeTorqueAtRpm(rpm) * closedThrottleMultiplier,
@@ -3549,33 +3429,18 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
     private void UpdateRevLimiter(float throttle, float dt)
     {
         bool mechanicalLimiterContact = State.MechanicalOverRevActive && State.MechanicalOverRevRpm > 25f;
-        if (throttle <= 0.05f || State.Rpm < _parameters.RevLimiterResumeRpm)
+        if (throttle <= 0.05f || State.Rpm <= _parameters.RevLimiterResumeRpm)
         {
             _revLimiterCutting = false;
-            _revLimiterPhaseSeconds = 0f;
         }
-        else if (_revLimiterCutting)
-        {
-            _revLimiterPhaseSeconds -= dt;
-            if (_revLimiterPhaseSeconds <= 0f)
-            {
-                _revLimiterCutting = false;
-                _revLimiterPhaseSeconds = _parameters.RevLimiterRestoreSeconds;
-            }
-        }
-        else if (State.Rpm >= _parameters.RedlineRpm - MathF.Max(1f, _parameters.RevLimiterBounceRpm * 0.1f))
+        else if (State.Rpm >= _parameters.LimiterHardCutRpm - 0.5f)
         {
             _revLimiterCutting = true;
-            _revLimiterPhaseSeconds = _parameters.RevLimiterFuelCutSeconds;
-        }
-        else if (_revLimiterPhaseSeconds > 0f)
-        {
-            _revLimiterPhaseSeconds -= dt;
         }
 
         State.RevLimiterActive = _revLimiterCutting || mechanicalLimiterContact;
-        State.LimiterTorqueMultiplier = _revLimiterCutting
-            ? MathHelper.Clamp(_parameters.RevLimiterCutTorqueMultiplier, 0f, 1f)
+        State.LimiterTorqueMultiplier = State.RevLimiterActive
+            ? 0f
             : 1f;
         UpdateRevLimiterBounceIntensity(throttle, dt);
     }
@@ -3584,10 +3449,10 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
     {
         float bounceRpm = MathF.Max(80f, _parameters.RevLimiterBounceRpm);
         bool throttleLimiterRegion = throttle > 0.05f &&
-                                     State.Rpm >= _parameters.RedlineRpm - bounceRpm * 1.45f &&
+                                     State.Rpm >= _parameters.LimiterHardCutRpm - bounceRpm * 1.45f &&
                                      State.Rpm >= _parameters.RevLimiterResumeRpm;
         float mechanicalLimiterStress = State.MechanicalOverRevActive
-            ? CalculateMechanicalLimiterContactIntensity(_parameters.RedlineRpm + State.MechanicalOverRevRpm)
+            ? CalculateMechanicalLimiterContactIntensity(_parameters.LimiterHardCutRpm + State.MechanicalOverRevRpm)
             : 0f;
         if (!throttleLimiterRegion && mechanicalLimiterStress <= 0f)
         {
@@ -3599,14 +3464,14 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
 
         float throttleProximity = throttleLimiterRegion
             ? SmoothStep(
-                _parameters.RedlineRpm - bounceRpm * 1.45f,
-                _parameters.RedlineRpm - bounceRpm * 0.08f,
+                _parameters.LimiterHardCutRpm - bounceRpm * 1.45f,
+                _parameters.LimiterHardCutRpm - bounceRpm * 0.08f,
                 State.Rpm)
             : 0f;
         float proximity = MathF.Max(throttleProximity, mechanicalLimiterStress);
         _revLimiterChatterPhaseSeconds = RevLimiterPresentationRules.AdvanceBouncePhase(
             _revLimiterChatterPhaseSeconds,
-            _parameters.RedlineRpm,
+            _parameters.LimiterHardCutRpm,
             dt);
         float cycle = _revLimiterChatterPhaseSeconds;
         State.RevLimiterBouncePhase = cycle;
@@ -3671,26 +3536,26 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
     private float GetCurrentRpmCeiling()
     {
         return _revLimiterCutting
-            ? MathF.Max(_parameters.IdleRpm, _parameters.RedlineRpm - _parameters.RevLimiterBounceRpm)
-            : _parameters.RedlineRpm;
+            ? MathF.Max(_parameters.IdleRpm, _parameters.LimiterHardCutRpm - _parameters.RevLimiterBounceRpm)
+            : _parameters.LimiterHardCutRpm;
     }
 
     private float GetShiftRpmCeiling()
     {
-        return _parameters.RedlineRpm;
+        return _parameters.LimiterHardCutRpm;
     }
 
     private float GetMechanicalOverRevCeiling()
     {
         float configuredLimit = _parameters.DownshiftMechanicalOverRevLimitRpm;
-        float fallbackLimit = _parameters.RedlineRpm + MathF.Max(900f, _parameters.RedlineRpm * 0.22f);
-        float minimumLimit = _parameters.RedlineRpm + MathF.Max(300f, _parameters.DownshiftOverRevToleranceRpm);
+        float fallbackLimit = _parameters.LimiterHardCutRpm + MathF.Max(900f, _parameters.LimiterHardCutRpm * 0.22f);
+        float minimumLimit = _parameters.LimiterHardCutRpm + MathF.Max(300f, _parameters.DownshiftOverRevToleranceRpm);
         return MathF.Max(minimumLimit, configuredLimit > 0f ? configuredLimit : fallbackLimit);
     }
 
     private float CalculateMechanicalOverRevSeverity(float coupledRpm)
     {
-        float startRpm = _parameters.RedlineRpm + MathF.Max(0f, _parameters.DownshiftOverRevToleranceRpm);
+        float startRpm = _parameters.LimiterHardCutRpm + MathF.Max(0f, _parameters.DownshiftOverRevToleranceRpm);
         float limitRpm = GetMechanicalOverRevCeiling();
         if (coupledRpm <= startRpm || limitRpm <= startRpm + 1f)
         {
@@ -3702,7 +3567,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
 
     private float CalculateMechanicalLimiterContactIntensity(float coupledRpm)
     {
-        float excessRpm = coupledRpm - _parameters.RedlineRpm;
+        float excessRpm = coupledRpm - _parameters.LimiterHardCutRpm;
         if (excessRpm <= 25f)
         {
             return 0f;
@@ -3711,8 +3576,8 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         float warningRange = MathF.Max(160f, _parameters.DownshiftOverRevToleranceRpm + 550f);
         return MathHelper.Clamp(
             0.35f + SmoothStep(
-                _parameters.RedlineRpm + 25f,
-                _parameters.RedlineRpm + warningRange,
+                _parameters.LimiterHardCutRpm + 25f,
+                _parameters.LimiterHardCutRpm + warningRange,
                 coupledRpm) * 0.65f,
             0f,
             1f);
@@ -3729,9 +3594,9 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         float bounceDepthRpm = MathF.Max(150f, _parameters.RevLimiterBounceRpm * 1.45f);
         float dip = MathF.Max(cutPulse, secondaryCutPulse) * MathHelper.Clamp(contactIntensity, 0f, 1f);
         return MathHelper.Clamp(
-            _parameters.RedlineRpm - bounceDepthRpm * dip,
+            _parameters.LimiterHardCutRpm - bounceDepthRpm * dip,
             _parameters.RevLimiterResumeRpm,
-            _parameters.RedlineRpm);
+            _parameters.LimiterHardCutRpm);
     }
 
     private float CalculateShiftKickSeverity(
@@ -3755,7 +3620,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
 
         float rpmDelta = MathF.Abs(MathF.Max(targetRpm, forcedTargetRpm) - currentRpm);
         float rpmDeltaT = SmoothStep(650f, 2600f, rpmDelta);
-        float highRpmT = SmoothStep(_parameters.RedlineRpm * 0.54f, _parameters.RedlineRpm * 0.96f, currentRpm);
+        float highRpmT = SmoothStep(_parameters.PowerRedlineRpm * 0.54f, _parameters.PowerRedlineRpm * 0.96f, currentRpm);
         float gearStepT = MathHelper.Clamp(MathF.Abs(targetGear - previousGear) / 2f, 0.45f, 1f);
         bool upshift = targetGear > previousGear;
         float directionScale = upshift ? 1f : 0.72f;
@@ -3821,7 +3686,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         _downshiftOverRevBrakeSeconds = MathF.Max(_downshiftOverRevBrakeSeconds, duration);
         _downshiftOverRevBrakeSeverity = MathF.Max(_downshiftOverRevBrakeSeverity, _pendingDownshiftOverRevSeverity);
         State.MechanicalOverRevActive = true;
-        State.MechanicalOverRevRpm = MathF.Max(State.MechanicalOverRevRpm, _pendingDownshiftOverRevRpm - _parameters.RedlineRpm);
+        State.MechanicalOverRevRpm = MathF.Max(State.MechanicalOverRevRpm, _pendingDownshiftOverRevRpm - _parameters.LimiterHardCutRpm);
         State.MechanicalOverRevSeverity = MathF.Max(State.MechanicalOverRevSeverity, _pendingDownshiftOverRevSeverity);
     }
 
@@ -3853,7 +3718,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
 
     private void UpdateMechanicalOverRevState(float coupledRpm)
     {
-        float overRevRpm = MathF.Max(0f, coupledRpm - _parameters.RedlineRpm);
+        float overRevRpm = MathF.Max(0f, coupledRpm - _parameters.LimiterHardCutRpm);
         float mechanicalSeverity = CalculateMechanicalOverRevSeverity(coupledRpm);
         float shockSeverity = CalculateDownshiftOverRevShockEnvelope() * _downshiftOverRevBrakeSeverity;
         float shiftKickSeverity = CalculateShiftKickEnvelope() * _shiftKickSeverity;
@@ -4422,6 +4287,8 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         public float CurbLoadMultiplier { get; set; } = 1f;
 
         public float SurfaceLoadMultiplier { get; set; } = 1f;
+
+        public float SurfaceDragScale { get; set; }
 
         public float SurfaceBlendWeight { get; set; }
 

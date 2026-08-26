@@ -34,7 +34,10 @@ public sealed class RacingGame : Game
         1f);
     private static readonly CarMenuOption[] CarOptions =
     [
-        new("EK9 SHOWROOM STOCK", "Data/VehicleBuilds/ek9_showroom_stock.json")
+        new("EK9 SHOWROOM STOCK", "Data/PurchaseCars/2000_Ek9_Stock.json"),
+        new("EK9 K20A K-SWAP", "Data/Garage/OwnedVehicles/vehicle_0003_k20a_swap_ek9.json"),
+        new("EK9 B20/VTEC CLUB", "Data/Garage/OwnedVehicles/vehicle_0004_b20vtec_ek9.json"),
+        new("EK9 K24/K20 PRO", "Data/Garage/OwnedVehicles/vehicle_0005_k24_k20_pro_ek9.json")
     ];
 
     private readonly GraphicsDeviceManager _graphics;
@@ -96,7 +99,7 @@ public sealed class RacingGame : Game
         _surfaceLibrary = SurfaceLibraryLoader.Load(_launchOptions.SurfaceDefinitionPath);
         _simulationEngine = SimulationEngineDefinitionLoader.Load(_launchOptions.SimulationEngineDefinitionPath);
         _trackOptions = TrackDefinitionFileLoader.LoadCatalog(TrackDefinitionFileLoader.DefaultTrackDirectory, TrackCatalog.All);
-        _carSelection = FindCarSelection(_launchOptions.VehicleDefinitionPath);
+        _carSelection = FindCarSelection(_launchOptions.VehiclePath);
         _transmissionSelection = _launchOptions.StartInManualTransmission ? 1 : 0;
         _graphics = new GraphicsDeviceManager(this)
         {
@@ -132,7 +135,7 @@ public sealed class RacingGame : Game
         _menu = new MenuRenderer(GraphicsDevice);
         _menuSounds = new MenuSoundSystem();
         _vehicleAudio = new VehicleAudioSystem();
-        _engineRoom = new RTypeEngineRoomScreen(GraphicsDevice);
+        _engineRoom = new RTypeEngineRoomScreen(GraphicsDevice, _launchOptions);
     }
 
     protected override void UnloadContent()
@@ -541,7 +544,7 @@ public sealed class RacingGame : Game
         bool reverse = _directionSelection == 1;
         _track = TrackScene.Create(GraphicsDevice, _textures, trackDefinition, reverse, _surfaceLibrary);
 
-        VehicleSimulationParameters parameters = VehicleBuildDefinitionLoader.LoadSimulationParameters(CarOptions[_carSelection].BuildPath);
+        VehicleSimulationParameters parameters = LoadSelectedRaceParameters();
         _vehicle = new SimpleVehicleSimulator(_track, _track.StartPosition, _track.StartHeadingRadians, parameters, _simulationEngine);
         _vehicle.SetManualTransmission(_transmissionSelection == 1);
         RpmPresentationSmoother.Update(_vehicle.State, 0f);
@@ -940,12 +943,12 @@ public sealed class RacingGame : Game
         return start * (inverse * inverse) + control * (2f * inverse * t) + end * (t * t);
     }
 
-    private static int FindCarSelection(string vehicleDefinitionPath)
+    private static int FindCarSelection(string vehiclePath)
     {
         for (int i = 0; i < CarOptions.Length; i++)
         {
-            if (PathsMatch(CarOptions[i].BuildPath, vehicleDefinitionPath) ||
-                PathsMatch("Data/Vehicles/ek9_reference_2000.json", vehicleDefinitionPath))
+            if (PathsMatch(CarOptions[i].BuildPath, vehiclePath) ||
+                VehiclePathMigration.IsLegacyStockEk9VehicleDefinitionPath(vehiclePath))
             {
                 return i;
             }
@@ -987,6 +990,20 @@ public sealed class RacingGame : Game
         PreRace,
         Racing,
         Results
+    }
+
+    private VehicleSimulationParameters LoadSelectedRaceParameters()
+    {
+        if (!string.IsNullOrWhiteSpace(_launchOptions.GarageProfilePath))
+        {
+            GarageRuntimeVehicleSelection selected = GarageRuntimeVehicleResolver.Resolve(
+                _launchOptions.GarageProfilePath,
+                _launchOptions.GarageVehicleIdOrPath,
+                _launchOptions.GarageSetupIdOrPath);
+            return selected.Parameters;
+        }
+
+        return VehicleBuildDefinitionLoader.LoadSimulationParameters(CarOptions[_carSelection].BuildPath);
     }
 
     private sealed record CarMenuOption(string Label, string BuildPath);

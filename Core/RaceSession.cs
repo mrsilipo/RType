@@ -126,6 +126,7 @@ public sealed class RaceSession
         State.CompletedLaps++;
         State.LastLapTime = lapTime;
         State.LastLapWasValid = !State.CurrentLapInvalid;
+        State.AddCompletedLapTime(lapTime);
 
         if (!State.CurrentLapInvalid &&
             (State.BestLapTime is null || lapTime < State.BestLapTime))
@@ -188,10 +189,16 @@ public sealed class RaceSession
             return true;
         }
 
-        return IsWheelOffTrack(vehicle.FrontLeftSurfaceName, vehicle.FrontLeftSurfaceBlend) ||
-               IsWheelOffTrack(vehicle.FrontRightSurfaceName, vehicle.FrontRightSurfaceBlend) ||
-               IsWheelOffTrack(vehicle.RearLeftSurfaceName, vehicle.RearLeftSurfaceBlend) ||
-               IsWheelOffTrack(vehicle.RearRightSurfaceName, vehicle.RearRightSurfaceBlend);
+        int offTrackWheels = 0;
+        if (IsWheelOffTrack(vehicle.FrontLeftSurfaceName, vehicle.FrontLeftSurfaceBlend)) offTrackWheels++;
+        if (IsWheelOffTrack(vehicle.FrontRightSurfaceName, vehicle.FrontRightSurfaceBlend)) offTrackWheels++;
+        if (IsWheelOffTrack(vehicle.RearLeftSurfaceName, vehicle.RearLeftSurfaceBlend)) offTrackWheels++;
+        if (IsWheelOffTrack(vehicle.RearRightSurfaceName, vehicle.RearRightSurfaceBlend)) offTrackWheels++;
+
+        // Time-attack track limits follow the normal racing interpretation:
+        // curbs are legal, a fringe/one-wheel excursion is not a cut, and a
+        // lap is invalid only once the full car has left the legal surface.
+        return offTrackWheels >= 4;
     }
 
     private static bool IsWheelOffTrack(string surfaceName, float blendWeight)
@@ -204,7 +211,7 @@ public sealed class RaceSession
 
         if (surfaceName.Equals("CURB_GRASS", StringComparison.OrdinalIgnoreCase))
         {
-            return blendWeight >= 0.5f;
+            return blendWeight >= 0.85f;
         }
 
         return true;
@@ -273,6 +280,8 @@ public sealed class RaceSessionState
 
     public TimeSpan? BestLapTime { get; set; }
 
+    public IReadOnlyList<TimeSpan> CompletedLapTimes => _completedLapTimes;
+
     public TimeSpan? LastSectorTime { get; set; }
 
     public TimeSpan?[] CurrentSectorTimes { get; } = new TimeSpan?[3];
@@ -290,4 +299,15 @@ public sealed class RaceSessionState
     public bool Finished { get; set; }
 
     public float ProgressPercent { get; set; }
+
+    private readonly List<TimeSpan> _completedLapTimes = [];
+
+    internal void AddCompletedLapTime(TimeSpan lapTime)
+    {
+        _completedLapTimes.Insert(0, lapTime);
+        if (_completedLapTimes.Count > 5)
+        {
+            _completedLapTimes.RemoveRange(5, _completedLapTimes.Count - 5);
+        }
+    }
 }

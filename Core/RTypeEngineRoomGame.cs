@@ -8,13 +8,15 @@ public sealed class RTypeEngineRoomGame : Game
 {
     private readonly GraphicsDeviceManager _graphics;
     private readonly int? _autoExitMilliseconds;
+    private readonly GameLaunchOptions _launchOptions;
     private SpriteBatch? _spriteBatch;
     private RTypeEngineRoomScreen? _screen;
     private TimeSpan _elapsed;
 
-    private RTypeEngineRoomGame(int? autoExitMilliseconds)
+    private RTypeEngineRoomGame(GameLaunchOptions launchOptions)
     {
-        _autoExitMilliseconds = autoExitMilliseconds;
+        _launchOptions = launchOptions;
+        _autoExitMilliseconds = launchOptions.AutoExitMilliseconds;
         _graphics = new GraphicsDeviceManager(this)
         {
             PreferredBackBufferWidth = UiLayout.Width,
@@ -31,25 +33,13 @@ public sealed class RTypeEngineRoomGame : Game
 
     public static RTypeEngineRoomGame CreateFromArgs(string[] args)
     {
-        int? autoExitMilliseconds = null;
-        for (int i = 0; i < args.Length; i++)
-        {
-            if (args[i].Equals("--auto-exit-ms", StringComparison.OrdinalIgnoreCase) &&
-                i + 1 < args.Length &&
-                int.TryParse(args[i + 1], out int parsed))
-            {
-                autoExitMilliseconds = Math.Max(1, parsed);
-                i++;
-            }
-        }
-
-        return new RTypeEngineRoomGame(autoExitMilliseconds);
+        return new RTypeEngineRoomGame(GameLaunchOptions.FromArgs(args));
     }
 
     protected override void LoadContent()
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
-        _screen = new RTypeEngineRoomScreen(GraphicsDevice);
+        _screen = new RTypeEngineRoomScreen(GraphicsDevice, _launchOptions);
     }
 
     protected override void UnloadContent()
