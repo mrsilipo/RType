@@ -12,7 +12,7 @@ public sealed class TrackScene : ITrackSurfaceSampler, ITrackProgressSampler, ID
     private const float DefaultGrassWidthMeters = 26.0f;
     private const float CurbInnerOffsetFromRoadEdgeMeters = 0.20f;
     private const float CurbOuterOffsetFromRoadEdgeMeters = 1.10f;
-    private const float CurbGrassBlendZoneMeters = 0.25f;
+    private const float CurbGrassBlendZoneMeters = 0.75f;
     private static readonly ProfilePoint[] LakesideBankProfileDegrees =
     [
         new(0.00f, 0.0f),
@@ -96,6 +96,17 @@ public sealed class TrackScene : ITrackSurfaceSampler, ITrackProgressSampler, ID
         float minY = centerLine.Min(point => point.Y);
         float maxY = centerLine.Max(point => point.Y);
         return new TrackGeometryMetrics(length, maxY - minY, maxX - minX, maxZ - minZ);
+    }
+
+    public static TrackStartMetrics MeasureStart(TrackDefinition definition)
+    {
+        Vector3[] centerLine = BuildCenterLine(definition);
+        float[] cumulativeDistances = CalculateCumulativeDistancesXZ(centerLine);
+        int startIndex = GetStartIndex(definition.Layout, centerLine);
+        return new TrackStartMetrics(
+            centerLine[startIndex],
+            GetTangent(centerLine, startIndex),
+            cumulativeDistances[startIndex]);
     }
 
     public static TrackScene Create(GraphicsDevice graphicsDevice, GeneratedTextures textures)
@@ -353,10 +364,10 @@ public sealed class TrackScene : ITrackSurfaceSampler, ITrackProgressSampler, ID
 
         return definition.Layout switch
         {
+            TrackLayout.HighSpeedRing => BuildHighSpeedRingCenterLine(definition.LengthMeters),
             TrackLayout.LakesidePark => BuildLakesideParkCenterLine(definition.LengthMeters, definition.ElevationDifferenceMeters),
-            TrackLayout.VelocityLoop => BuildVelocityLoopCenterLine(),
-            TrackLayout.CustomSpline => BuildHighSpeedRingInspiredCenterLine(definition.LengthMeters, definition.ElevationDifferenceMeters),
-            _ => BuildHighSpeedRingInspiredCenterLine(definition.LengthMeters, definition.ElevationDifferenceMeters)
+            TrackLayout.CustomSpline => BuildHighSpeedRingCenterLine(definition.LengthMeters),
+            _ => BuildHighSpeedRingCenterLine(definition.LengthMeters)
         };
     }
 
@@ -557,64 +568,106 @@ public sealed class TrackScene : ITrackSurfaceSampler, ITrackProgressSampler, ID
             rightWall);
     }
 
-    private static Vector3[] BuildHighSpeedRingInspiredCenterLine(float targetLengthMeters, float elevationDifferenceMeters)
+    private static Vector3[] BuildHighSpeedRingCenterLine(float targetLengthMeters)
     {
-        Vector2[] controls =
-        [
-            new(-535f, 330f),
-            new(-260f, 330f),
-            new(120f, 330f),
-            new(550f, 330f),
-            new(675f, 300f),
-            new(755f, 220f),
-            new(720f, 145f),
-            new(585f, 125f),
-            new(505f, 55f),
-            new(430f, -120f),
-            new(330f, -265f),
-            new(215f, -282f),
-            new(135f, -238f),
-            new(110f, -145f),
-            new(42f, -92f),
-            new(-70f, -146f),
-            new(-245f, -330f),
-            new(-420f, -575f),
-            new(-560f, -552f),
-            new(-720f, -235f),
-            new(-835f, 45f),
-            new(-835f, 230f),
-            new(-730f, 315f)
-        ];
-
-        Vector2[] points = BuildCatmullRomLoop(controls, 20);
-        ScaleToTargetLength(points, targetLengthMeters);
-        return AddElevation(points, elevationDifferenceMeters);
-    }
-
-    private static Vector3[] BuildVelocityLoopCenterLine()
-    {
-        Vector2[] controls =
-        [
-            new(-86f, -18f),
-            new(-66f, -45f),
-            new(-12f, -54f),
-            new(58f, -48f),
-            new(94f, -24f),
-            new(92f, 14f),
-            new(58f, 38f),
-            new(-8f, 44f),
-            new(-72f, 36f),
-            new(-96f, 12f)
-        ];
-
-        Vector2[] points = BuildCatmullRomLoop(controls, 14);
-        Vector3[] centerLine = new Vector3[points.Length];
-        for (int i = 0; i < points.Length; i++)
+        const float sourcePathLengthSvgUnits = 3317.401749462f;
+        const float defaultTargetLengthMeters = 3100.0f;
+        const float defaultMetresPerSvgUnit = 0.934466258271f;
+        const float finalSpacingMeters = 1.0f;
+        float scale = targetLengthMeters > 0.001f
+            ? targetLengthMeters / sourcePathLengthSvgUnits
+            : defaultMetresPerSvgUnit;
+        if (MathF.Abs((targetLengthMeters <= 0.001f ? defaultTargetLengthMeters : targetLengthMeters) - defaultTargetLengthMeters) < 0.01f)
         {
-            centerLine[i] = new Vector3(points[i].X, 0f, points[i].Y);
+            scale = defaultMetresPerSvgUnit;
         }
 
-        return centerLine;
+        List<Vector2> dense = BuildHighSpeedRingDensePolyline(scale);
+        float[] denseDistances = CalculateCumulativeDistances(dense);
+        float loopLength = denseDistances[^1];
+        float requestedLength = targetLengthMeters > 0.001f ? targetLengthMeters : defaultTargetLengthMeters;
+        int sampleCount = Math.Max(16, (int)MathF.Round(requestedLength / finalSpacingMeters));
+        float startDistance = FindDistanceAlongPolyline(dense, denseDistances, HighSpeedRingStartWorldXZ(scale));
+        Vector3[] result = new Vector3[sampleCount];
+
+        for (int i = 0; i < result.Length; i++)
+        {
+            float distanceFromStart = i / (float)result.Length * loopLength;
+            Vector2 point = SamplePolylineAtDistance(dense, denseDistances, startDistance - distanceFromStart);
+            result[i] = new Vector3(point.X, 0f, point.Y);
+        }
+
+        return result;
+    }
+
+    private static List<Vector2> BuildHighSpeedRingDensePolyline(float metresPerSvgUnit)
+    {
+        HighSpeedRingPathSegment[] segments = BuildHighSpeedRingSourceSegments();
+        List<Vector2> points = [];
+        foreach (HighSpeedRingPathSegment segment in segments)
+        {
+            int sampleCount = segment.Kind == HighSpeedRingPathSegmentKind.Line
+                ? Math.Max(1, (int)MathF.Ceiling(Vector2.Distance(segment.P0, segment.P3) / 4f))
+                : 220;
+
+            if (points.Count == 0)
+            {
+                points.Add(segment.P0 * metresPerSvgUnit);
+            }
+
+            for (int sample = 1; sample <= sampleCount; sample++)
+            {
+                float t = sample / (float)sampleCount;
+                points.Add(EvaluateHighSpeedRingSegment(segment, t) * metresPerSvgUnit);
+            }
+        }
+
+        if (points.Count > 1 && Vector2.DistanceSquared(points[0], points[^1]) < 0.0001f)
+        {
+            points.RemoveAt(points.Count - 1);
+        }
+
+        return points;
+    }
+
+    private static HighSpeedRingPathSegment[] BuildHighSpeedRingSourceSegments()
+    {
+        return
+        [
+            HighSpeedRingPathSegment.Line(new(1468.98f, 396.56f), new(1444.65f, 396.56f)),
+            HighSpeedRingPathSegment.Cubic(new(1444.65f, 396.56f), new(1351.46f, 396.56f), new(1266.12f, 448.73f), new(1223.62f, 531.66f)),
+            HighSpeedRingPathSegment.Line(new(1223.62f, 531.66f), new(1112.45f, 748.62f)),
+            HighSpeedRingPathSegment.Cubic(new(1112.45f, 748.62f), new(1080.78f, 810.42f), new(988.71f, 796.58f), new(976.62f, 728.20f)),
+            HighSpeedRingPathSegment.Line(new(976.62f, 728.20f), new(968.21f, 680.68f)),
+            HighSpeedRingPathSegment.Cubic(new(968.21f, 680.68f), new(957.01f, 617.38f), new(876.57f, 596.60f), new(836.11f, 646.55f)),
+            HighSpeedRingPathSegment.Line(new(836.11f, 646.55f), new(680.53f, 838.68f)),
+            HighSpeedRingPathSegment.Cubic(new(680.53f, 838.68f), new(636.29f, 893.31f), new(549.68f, 880.52f), new(523.11f, 815.44f)),
+            HighSpeedRingPathSegment.Line(new(523.11f, 815.44f), new(402.85f, 520.79f)),
+            HighSpeedRingPathSegment.Cubic(new(402.85f, 520.79f), new(340.09f, 367.03f), new(453.20f, 198.69f), new(619.28f, 198.69f)),
+            HighSpeedRingPathSegment.Line(new(619.28f, 198.69f), new(1468.98f, 198.69f)),
+            HighSpeedRingPathSegment.Cubic(new(1468.98f, 198.69f), new(1523.62f, 198.69f), new(1567.92f, 242.98f), new(1567.92f, 297.63f)),
+            HighSpeedRingPathSegment.Cubic(new(1567.92f, 297.63f), new(1567.91f, 352.27f), new(1523.62f, 396.56f), new(1468.98f, 396.56f))
+        ];
+    }
+
+    private static Vector2 HighSpeedRingStartWorldXZ(float metresPerSvgUnit)
+    {
+        return new Vector2(1109.0f, 198.69f) * metresPerSvgUnit;
+    }
+
+    private static Vector2 EvaluateHighSpeedRingSegment(HighSpeedRingPathSegment segment, float t)
+    {
+        t = MathHelper.Clamp(t, 0f, 1f);
+        if (segment.Kind == HighSpeedRingPathSegmentKind.Line)
+        {
+            return Vector2.Lerp(segment.P0, segment.P3, t);
+        }
+
+        float inverse = 1f - t;
+        return inverse * inverse * inverse * segment.P0 +
+               3f * inverse * inverse * t * segment.P1 +
+               3f * inverse * t * t * segment.P2 +
+               t * t * t * segment.P3;
     }
 
     private static Vector3[] BuildLakesideParkCenterLine(float targetLengthMeters, float elevationDifferenceMeters)
@@ -856,6 +909,62 @@ public sealed class TrackScene : ITrackSurfaceSampler, ITrackProgressSampler, ID
         return distances;
     }
 
+    private static float FindDistanceAlongPolyline(IReadOnlyList<Vector2> points, IReadOnlyList<float> cumulativeDistances, Vector2 target)
+    {
+        float bestDistance = 0f;
+        float bestError = float.MaxValue;
+        for (int i = 0; i < points.Count; i++)
+        {
+            Vector2 a = points[i];
+            Vector2 b = points[(i + 1) % points.Count];
+            SegmentProjection projection = ProjectPointToSegment(target, a, b);
+            if (projection.Distance >= bestError)
+            {
+                continue;
+            }
+
+            bestError = projection.Distance;
+            bestDistance = cumulativeDistances[i] + Vector2.Distance(a, b) * projection.T;
+        }
+
+        return bestDistance;
+    }
+
+    private static Vector2 SamplePolylineAtDistance(IReadOnlyList<Vector2> points, IReadOnlyList<float> cumulativeDistances, float distance)
+    {
+        if (points.Count == 0)
+        {
+            return Vector2.Zero;
+        }
+
+        float loopLength = cumulativeDistances[^1];
+        if (loopLength <= 0.001f)
+        {
+            return points[0];
+        }
+
+        distance %= loopLength;
+        if (distance < 0f)
+        {
+            distance += loopLength;
+        }
+
+        int segmentIndex = 0;
+        for (int i = 0; i < points.Count; i++)
+        {
+            if (distance <= cumulativeDistances[i + 1])
+            {
+                segmentIndex = i;
+                break;
+            }
+        }
+
+        float segmentStart = cumulativeDistances[segmentIndex];
+        float segmentEnd = cumulativeDistances[segmentIndex + 1];
+        float t = MathHelper.Clamp((distance - segmentStart) / MathF.Max(0.001f, segmentEnd - segmentStart), 0f, 1f);
+        return Vector2.Lerp(points[segmentIndex], points[(segmentIndex + 1) % points.Count], t);
+    }
+
     private static float[] CalculateCumulativeDistancesXZ(IReadOnlyList<Vector3> points)
     {
         float[] distances = new float[points.Count + 1];
@@ -990,18 +1099,18 @@ public sealed class TrackScene : ITrackSurfaceSampler, ITrackProgressSampler, ID
             return lakesideBestIndex;
         }
 
-        if (layout != TrackLayout.HighSpeedRingInspired)
+        if (layout != TrackLayout.HighSpeedRing)
         {
             return centerLine.Count * 3 / 4;
         }
 
-        float topZ = centerLine.Max(point => point.Z);
+        Vector2 start = HighSpeedRingStartWorldXZ(0.934466258271f);
         int bestIndex = 0;
         float bestScore = float.MaxValue;
         for (int i = 0; i < centerLine.Count; i++)
         {
             Vector3 point = centerLine[i];
-            float score = MathF.Abs(point.X) + MathF.Abs(topZ - point.Z) * 8f;
+            float score = Vector2.DistanceSquared(new Vector2(point.X, point.Z), start);
             if (score < bestScore)
             {
                 bestScore = score;
@@ -1081,6 +1190,30 @@ public sealed class TrackScene : ITrackSurfaceSampler, ITrackProgressSampler, ID
     private readonly record struct SegmentProjection(float Distance, float T, Vector2 Point);
 
     private readonly record struct ProfilePoint(float Progress, float Value);
+
+    private enum HighSpeedRingPathSegmentKind
+    {
+        Line,
+        Cubic
+    }
+
+    private readonly record struct HighSpeedRingPathSegment(
+        HighSpeedRingPathSegmentKind Kind,
+        Vector2 P0,
+        Vector2 P1,
+        Vector2 P2,
+        Vector2 P3)
+    {
+        public static HighSpeedRingPathSegment Line(Vector2 start, Vector2 end)
+        {
+            return new HighSpeedRingPathSegment(HighSpeedRingPathSegmentKind.Line, start, start, end, end);
+        }
+
+        public static HighSpeedRingPathSegment Cubic(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3)
+        {
+            return new HighSpeedRingPathSegment(HighSpeedRingPathSegmentKind.Cubic, p0, p1, p2, p3);
+        }
+    }
 
     private readonly record struct TrackWidthSample(
         float LeftRoadWidthMeters,

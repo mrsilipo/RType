@@ -1,9 +1,10 @@
+using Microsoft.Xna.Framework;
+
 namespace RType.World;
 
 public enum TrackLayout
 {
-    HighSpeedRingInspired,
-    VelocityLoop,
+    HighSpeedRing,
     LakesidePark,
     CustomSpline
 }
@@ -55,8 +56,24 @@ public readonly record struct TrackGeometryMetrics(
     float WidthMeters,
     float DepthMeters);
 
+public readonly record struct TrackStartMetrics(
+    Vector3 Position,
+    Vector2 Tangent,
+    float DistanceAlongTrackMeters);
+
 public static class TrackCatalog
 {
+    public static readonly TrackDefinition HighSpeedRing = new(
+        "high_speed_ring",
+        "High Speed Ring",
+        TrackLayout.HighSpeedRing,
+        9.0f,
+        1220f,
+        760f,
+        3100,
+        794,
+        0.0f);
+
     public static readonly TrackDefinition LakesidePark = new(
         "lakeside_park",
         "Lakeside Park",
@@ -70,32 +87,9 @@ public static class TrackCatalog
         0.36f,
         0.74f);
 
-    public static readonly TrackDefinition VelocityRing = new(
-        "velocity_ring",
-        "Velocity Ring",
-        TrackLayout.HighSpeedRingInspired,
-        8.0f,
-        1720f,
-        1040f,
-        4345,
-        1060,
-        8.5f);
-
-    public static readonly TrackDefinition VelocityLoop = new(
-        "velocity_loop",
-        "Velocity Loop",
-        TrackLayout.VelocityLoop,
-        8.4f,
-        250f,
-        180f,
-        485,
-        104,
-        0.0f);
-
     public static readonly TrackDefinition[] All =
     [
-        LakesidePark,
-        VelocityRing,
-        VelocityLoop
+        HighSpeedRing,
+        LakesidePark
     ];
 }

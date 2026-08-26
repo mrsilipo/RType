@@ -271,6 +271,12 @@ public static class TrackDefinitionFileLoader
         }
 
         string normalized = value.Replace("_", string.Empty, StringComparison.Ordinal).Replace("-", string.Empty, StringComparison.Ordinal);
+        if (string.Equals(normalized, "velocityloop", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(normalized, "highspeedringinspired", StringComparison.OrdinalIgnoreCase))
+        {
+            return TrackLayout.HighSpeedRing;
+        }
+
         foreach (TrackLayout layout in Enum.GetValues<TrackLayout>())
         {
             if (string.Equals(layout.ToString(), normalized, StringComparison.OrdinalIgnoreCase))
@@ -289,7 +295,8 @@ public static class TrackDefinitionFileLoader
             return TrackSegmentShapeKind.Curve;
         }
 
-        return value.Replace("_", string.Empty, StringComparison.Ordinal).Replace("-", string.Empty, StringComparison.Ordinal) switch
+        string normalized = value.Replace("_", string.Empty, StringComparison.Ordinal).Replace("-", string.Empty, StringComparison.Ordinal);
+        return normalized switch
         {
             string shape when string.Equals(shape, "straight", StringComparison.OrdinalIgnoreCase) => TrackSegmentShapeKind.Straight,
             string shape when string.Equals(shape, "line", StringComparison.OrdinalIgnoreCase) => TrackSegmentShapeKind.Straight,
@@ -303,8 +310,7 @@ public static class TrackDefinitionFileLoader
     {
         return layout switch
         {
-            TrackLayout.HighSpeedRingInspired => "highSpeedRingInspired",
-            TrackLayout.VelocityLoop => "velocityLoop",
+            TrackLayout.HighSpeedRing => "highSpeedRing",
             TrackLayout.LakesidePark => "lakesidePark",
             _ => "customSpline"
         };

@@ -8,8 +8,7 @@
     "id",
     "displayName",
     "roadWidthMeters",
-    "lengthMeters",
-    "controlPoints"
+    "lengthMeters"
   ],
   "properties": {
     "formatVersion": { "type": "integer", "const": 1 },
@@ -18,7 +17,7 @@
     "displayName": { "type": "string", "minLength": 1 },
     "layout": {
       "type": "string",
-      "enum": ["customSpline", "lakesidePark", "highSpeedRingInspired", "velocityLoop"]
+      "enum": ["customSpline", "lakesidePark", "highSpeedRing", "highSpeedRingInspired", "velocityLoop"]
     },
     "roadWidthMeters": { "type": "number", "exclusiveMinimum": 0 },
     "terrainWidthMeters": { "type": "number", "exclusiveMinimum": 0 },

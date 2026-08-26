@@ -1,0 +1,18 @@
+{
+  "$schema": "../Schemas/track_definition_v1.json",
+  "formatVersion": 1,
+  "sortOrder": -10,
+  "id": "high_speed_ring",
+  "displayName": "High Speed Ring",
+  "layout": "highSpeedRing",
+  "roadWidthMeters": 18.0,
+  "terrainWidthMeters": 1220,
+  "terrainDepthMeters": 760,
+  "lengthMeters": 3100,
+  "longestStraightMeters": 794,
+  "elevationDifferenceMeters": 0,
+  "sectorMarkers": [
+    0.33333334,
+    0.6666667
+  ]
+}
