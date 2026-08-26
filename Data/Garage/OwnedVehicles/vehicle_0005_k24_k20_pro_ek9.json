@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "id": "vehicle_0005_k24_k20_pro_ek9",
+  "displayName": "EK9 K24/K20 Pro",
+  "role": "owned_vehicle",
+  "template": {
+    "sourcePurchaseCar": "Data/PurchaseCars/2000_Ek9_Stock.json",
+    "purchaseCarId": "2000_Ek9_Stock"
+  },
+  "ownership": {
+    "source": "player_garage",
+    "playerOwned": true,
+    "ownerProfileId": "dev_profile",
+    "garageSlot": 5,
+    "purchaseState": "owned"
+  },
+  "assembly": {
+    "chassis": {
+      "chassisId": "chassis_2000_ek9",
+      "chassisCode": "EK9",
+      "drivetrainLayout": "FF",
+      "bodyShell": "pro_racing_stripped_caged_ek9_body_shell"
+    },
+    "engine": {
+      "engineId": "engine_k24a3",
+      "combinationId": "combo_k24a3_block_k20a_head",
+      "blockId": "block_k24a3",
+      "headId": "head_k20a_vtec",
+      "tuneId": "tune_k24_k20_pro_racing_e85",
+      "fuel": {
+        "default": "fuel_98ron",
+        "selected": "fuel_e85",
+        "allowed": [
+          "fuel_98ron",
+          "fuel_e85"
+        ]
+      },
+      "installedParts": {
+        "blockUpgrade": "block_upgrade_billet_aluminum",
+        "headUpgrade": "head_upgrade_billet_aluminum",
+        "cams": "cam_set_pro_racing",
+        "displacement": "displacement_pro_k24a3_high_comp",
+        "portPolishing": "ports_pro_racing",
+        "throttleBody": "throttle_pro_racing",
+        "intake": "intake_pro_racing",
+        "intakeRunnerLength": "intake_length_pro_race",
+        "valveSprings": "valve_springs_pro_racing",
+        "headers": "header_pro_racing",
+        "exhaust": "exhaust_pro_racing",
+        "flywheel": "flywheel_pro_racing",
+        "clutch": "clutch_pro_racing",
+        "engineAudioDsp": "engine_audio_stock"
+      }
+    },
+    "drivetrain": {
+      "gearbox": "pro_racing_k_series_dogbox_6_speed",
+      "finalDrive": "pro_racing_k_series_5_06_final_drive",
+      "differential": "pro_racing_k_series_plate_lsd"
+    },
+    "swapKits": {
+      "engineMounts": "ek9_k_series_engine_mounts",
+      "wiringLoom": "ek9_k_series_wiring_loom",
+      "driveshafts": "ek9_k_series_driveshafts",
+      "shiftLinkage": "ek9_k_series_shift_linkage"
+    },
+    "suspension": {
+      "front": "pro_racing_front_suspension",
+      "rear": "pro_racing_rear_suspension",
+      "alignment": "pro_racing_alignment"
+    },
+    "brakes": {
+      "front": "pro_racing_front_brakes",
+      "rear": "pro_racing_rear_brakes",
+      "system": "pro_racing_brake_system"
+    },
+    "tyres": {
+      "frontCompound": "semi_slick_reference",
+      "rearCompound": "semi_slick_reference",
+      "frontModel": "semi_slick_aggressive_model",
+      "rearModel": "semi_slick_aggressive_model"
+    },
+    "wheels": {
+      "front": "pro_racing_15x8_forged_wheel",
+      "rear": "pro_racing_15x8_forged_wheel"
+    },
+    "aero": {
+      "package": "pro_racing_aero_package"
+    },
+    "tuning": {
+      "steering": "pro_racing_steering_setup",
+      "handling": "pro_racing_arcade_handling_setup"
+    }
+  },
+  "notes": [
+    "Max-upgrade EK9 K-series development build: K24A3 bottom end, K20A head, pro E85 tune, pro engine hardware, pro driveline, pro chassis/brake/suspension/tyre package.",
+    "Uses the current B16B sample-loop audio recipe through engine_audio_stock until dedicated K24/K20 samples are authored."
+  ]
+}

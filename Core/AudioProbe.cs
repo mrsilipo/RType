@@ -15,7 +15,7 @@ public static class AudioProbe
 
     public static void Run()
     {
-        ProbeVehicleBuild("Data/VehicleBuilds/ek9_showroom_stock.json");
+        ProbeVehicleBuild("Data/PurchaseCars/2000_Ek9_Stock.json");
         ProbeLoop("Generic tyres", "wheelspin", "Assets/Sounds/Generic/TyreScreech_001.wav");
         ProbeLoopSlice("Generic tyres", "wheelspin-sustain-loop", "Assets/Sounds/Generic/TyreScreech_001.wav", TyreSpinLoopStartRatio, TyreSpinLoopEndRatio);
         ProbeLoopSlice("Generic tyres", "wheelspin-chirp-loop", "Assets/Sounds/Generic/TyreScreech_001.wav", TyreChirpLoopStartRatio, TyreChirpLoopEndRatio);
@@ -39,6 +39,16 @@ public static class AudioProbe
         VehicleAudioParameters audio = parameters.Audio;
         Console.WriteLine(
             $"{parameters.DisplayName} race sample engine: profile {audio.EngineAudioProfileId}, samples {audio.EngineSamples.Length}, engineVolume {audio.EngineVolume:0.00}, sampleVolume {audio.EngineSampleVolume:0.00}");
+        Console.WriteLine(
+            $"  generation: key {audio.EngineAudioSampleGenerationKey}, dsp {audio.EngineAudioDspId}, method {audio.EngineAudioGenerationMethod}, sampleSet {audio.EngineAudioGeneratedSampleSetPath}");
+        Console.WriteLine(
+            $"  source engine: {audio.EngineAudioEngineCode} {audio.EngineAudioDisplacementCc:0}cc, {audio.EngineAudioBlockId}/{audio.EngineAudioHeadId}, tune {audio.EngineAudioTuneId}, fuel {audio.EngineAudioFuelId}, VTEC {audio.EngineAudioVtecEnabled}");
+        if (!string.IsNullOrWhiteSpace(audio.EngineAudioProfileEngineId) &&
+            !audio.EngineAudioProfileEngineId.Equals(audio.EngineAudioEngineId, StringComparison.OrdinalIgnoreCase))
+        {
+            Console.WriteLine(
+                $"  fallback audio source: {audio.EngineAudioProfileEngineId}/{audio.EngineAudioProfileEngineFamily}, allowed {audio.EngineAudioFallbackAllowed}");
+        }
         for (int i = 0; i < audio.EngineSamples.Length; i++)
         {
             EngineAudioSampleParameters sample = audio.EngineSamples[i];

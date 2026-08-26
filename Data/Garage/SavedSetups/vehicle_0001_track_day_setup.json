@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "vehicle_0001_track_day_setup",
+  "displayName": "EK9 Track Day Setup",
+  "ownerProfileId": "dev_profile",
+  "vehicleId": "vehicle_0001",
+  "setupType": "saved_setup",
+  "overrides": {
+    "engine": {
+      "tuneId": "tune_b16b_factory",
+      "fuelSelected": "fuel_98ron"
+    },
+    "suspension": {
+      "alignment": "street_sport_alignment"
+    },
+    "tuning": {
+      "steering": "street_quick_steering_setup",
+      "handling": "street_arcade_handling_setup"
+    }
+  },
+  "notes": [
+    "First saved setup fixture. It changes tune-like selected setup ids only and must not install permanent hardware."
+  ]
+}

@@ -199,8 +199,6 @@
     "simulation.currentPrototype.automaticMinimumUpshiftSpeedKph",
     "simulation.currentPrototype.automaticDownshiftRpm",
     "simulation.currentPrototype.engineFreeRevResponseRate",
-    "simulation.currentPrototype.launchSlipTargetRpm",
-    "simulation.currentPrototype.launchSlipBlend",
     "simulation.currentPrototype.arcadeHandling.pseudoLateralTransferScale",
     "simulation.currentPrototype.arcadeHandling.pseudoLateralTransferBlend",
     "simulation.currentPrototype.arcadeHandling.drivenGripAllowance",

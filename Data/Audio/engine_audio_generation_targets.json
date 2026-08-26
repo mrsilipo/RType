@@ -1,0 +1,338 @@
+{
+  "schemaVersion": 1,
+  "description": "Planned race-engine sample generation targets. These do not claim samples exist; they define the resolved engine assemblies that need exact audio profiles.",
+  "targets": [
+    {
+      "id": "audio_target_engine_b16b_factory",
+      "targetType": "factory_engine",
+      "priority": 1,
+      "status": "covered_exact",
+      "desiredProfileId": "ek9_b16b_5zigen_reference",
+      "targetProfilePath": "Data/Audio/EngineAudioProfiles/ek9_b16b_5zigen_reference.json",
+      "targetSampleSetPath": "Assets/Sounds/Honda",
+      "expectedGenerationKey": "engine_b16b__factory__block_b16b__head_b16b_type_r__tune_b16b_factory__fuel_98ron__block_upgrade_stock_cast__head_upgrade_stock_cast__displacement_stock__ports_stock__throttle_stock__cam_set_stock__intake_stock__intake_length_stock__valve_springs_stock__header_stock__exhaust_stock__flywheel_stock__clutch_stock__engine_audio_stock",
+      "requiredSampleRoles": ["idle", "normal", "vtec"],
+      "engine": {
+        "engineId": "engine_b16b",
+        "blockId": "block_b16b",
+        "headId": "head_b16b_type_r",
+        "tuneId": "tune_b16b_factory",
+        "fuel": { "selected": "fuel_98ron" },
+        "installedParts": {}
+      }
+    },
+    {
+      "id": "audio_target_engine_b16b_club_e85",
+      "targetType": "engine_build",
+      "priority": 1,
+      "status": "needs_generation",
+      "desiredProfileId": "b16b_club_e85_reference",
+      "targetProfilePath": "Data/Audio/EngineAudioProfiles/b16b_club_e85_reference.json",
+      "targetSampleSetPath": "Assets/Sounds/Generated/Honda/B16B/ClubE85",
+      "expectedGenerationKey": "engine_b16b__factory__block_b16b__head_b16b_type_r__tune_b16b_club_sport_e85__fuel_e85__block_upgrade_billet_aluminum__head_upgrade_billet_aluminum__displacement_pro_high_comp__ports_club_sport__throttle_club_sport__cam_set_club_sport__intake_club_sport__intake_length_short_club__valve_springs_club_sport__header_club_sport__exhaust_club_sport__flywheel_club_sport__clutch_club_sport__engine_audio_stock",
+      "requiredSampleRoles": ["idle", "normal", "vtec"],
+      "engine": {
+        "engineId": "engine_b16b",
+        "blockId": "block_b16b",
+        "headId": "head_b16b_type_r",
+        "tuneId": "tune_b16b_club_sport_e85",
+        "fuel": { "selected": "fuel_e85" },
+        "installedParts": {
+          "blockUpgrade": "block_upgrade_billet_aluminum",
+          "headUpgrade": "head_upgrade_billet_aluminum",
+          "cams": "cam_set_club_sport",
+          "displacement": "displacement_pro_high_comp",
+          "portPolishing": "ports_club_sport",
+          "throttleBody": "throttle_club_sport",
+          "intake": "intake_club_sport",
+          "intakeRunnerLength": "intake_length_short_club",
+          "valveSprings": "valve_springs_club_sport",
+          "headers": "header_club_sport",
+          "exhaust": "exhaust_club_sport",
+          "flywheel": "flywheel_club_sport",
+          "clutch": "clutch_club_sport",
+          "engineAudioDsp": "engine_audio_stock"
+        }
+      }
+    },
+    {
+      "id": "audio_target_engine_b16a_factory",
+      "targetType": "factory_engine",
+      "priority": 2,
+      "status": "needs_generation",
+      "desiredProfileId": "b16a_factory_reference",
+      "targetProfilePath": "Data/Audio/EngineAudioProfiles/b16a_factory_reference.json",
+      "targetSampleSetPath": "Assets/Sounds/Generated/Honda/B16A/Factory",
+      "expectedGenerationKey": "engine_b16a__factory__block_b16a__head_b16a_vtec__tune_b16a_factory__fuel_98ron__block_upgrade_stock_cast__head_upgrade_stock_cast__displacement_stock_b16a__ports_stock__throttle_stock__cam_set_stock__intake_stock__intake_length_stock__valve_springs_stock__header_stock__exhaust_stock__flywheel_stock__clutch_stock__engine_audio_stock",
+      "requiredSampleRoles": ["idle", "normal", "vtec"],
+      "engine": {
+        "engineId": "engine_b16a",
+        "blockId": "block_b16a",
+        "headId": "head_b16a_vtec",
+        "tuneId": "tune_b16a_factory",
+        "fuel": { "selected": "fuel_98ron" },
+        "installedParts": {}
+      }
+    },
+    {
+      "id": "audio_target_engine_b18c_factory",
+      "targetType": "factory_engine",
+      "priority": 2,
+      "status": "needs_generation",
+      "desiredProfileId": "b18c_factory_reference",
+      "targetProfilePath": "Data/Audio/EngineAudioProfiles/b18c_factory_reference.json",
+      "targetSampleSetPath": "Assets/Sounds/Generated/Honda/B18C/Factory",
+      "expectedGenerationKey": "engine_b18c__factory__block_b18c__head_b18c_vtec__tune_b18c_factory__fuel_98ron__block_upgrade_stock_cast__head_upgrade_stock_cast__displacement_stock_b18c__ports_stock__throttle_stock__cam_set_stock__intake_stock__intake_length_stock__valve_springs_stock_b18c_k20a__header_stock__exhaust_stock__flywheel_stock_b18c__clutch_stock__engine_audio_stock",
+      "requiredSampleRoles": ["idle", "normal", "vtec"],
+      "engine": {
+        "engineId": "engine_b18c",
+        "blockId": "block_b18c",
+        "headId": "head_b18c_vtec",
+        "tuneId": "tune_b18c_factory",
+        "fuel": { "selected": "fuel_98ron" },
+        "installedParts": {}
+      }
+    },
+    {
+      "id": "audio_target_engine_b18a_factory",
+      "targetType": "factory_engine",
+      "priority": 3,
+      "status": "needs_generation",
+      "desiredProfileId": "b18a_factory_reference",
+      "targetProfilePath": "Data/Audio/EngineAudioProfiles/b18a_factory_reference.json",
+      "targetSampleSetPath": "Assets/Sounds/Generated/Honda/B18A/Factory",
+      "expectedGenerationKey": "engine_b18a__factory__block_b18a__head_b18a_non_vtec__tune_b18a_factory__fuel_98ron__block_upgrade_stock_cast__head_upgrade_stock_cast__displacement_stock_b18a__ports_stock__throttle_stock__cam_set_stock_non_vtec__intake_stock__intake_length_stock__valve_springs_stock_b18a_b18b_d16__header_stock__exhaust_stock__flywheel_stock_b18a_b18b__clutch_stock__engine_audio_stock",
+      "requiredSampleRoles": ["idle", "normal"],
+      "engine": {
+        "engineId": "engine_b18a",
+        "blockId": "block_b18a",
+        "headId": "head_b18a_non_vtec",
+        "tuneId": "tune_b18a_factory",
+        "fuel": { "selected": "fuel_98ron" },
+        "installedParts": {}
+      }
+    },
+    {
+      "id": "audio_target_engine_b18b_factory",
+      "targetType": "factory_engine",
+      "priority": 3,
+      "status": "needs_generation",
+      "desiredProfileId": "b18b_factory_reference",
+      "targetProfilePath": "Data/Audio/EngineAudioProfiles/b18b_factory_reference.json",
+      "targetSampleSetPath": "Assets/Sounds/Generated/Honda/B18B/Factory",
+      "expectedGenerationKey": "engine_b18b__factory__block_b18b__head_b18b_non_vtec__tune_b18b_factory__fuel_98ron__block_upgrade_stock_cast__head_upgrade_stock_cast__displacement_stock_b18b__ports_stock__throttle_stock__cam_set_stock_non_vtec__intake_stock__intake_length_stock__valve_springs_stock_b18a_b18b_d16__header_stock__exhaust_stock__flywheel_stock_b18a_b18b__clutch_stock__engine_audio_stock",
+      "requiredSampleRoles": ["idle", "normal"],
+      "engine": {
+        "engineId": "engine_b18b",
+        "blockId": "block_b18b",
+        "headId": "head_b18b_non_vtec",
+        "tuneId": "tune_b18b_factory",
+        "fuel": { "selected": "fuel_98ron" },
+        "installedParts": {}
+      }
+    },
+    {
+      "id": "audio_target_engine_b20b_factory",
+      "targetType": "factory_engine",
+      "priority": 3,
+      "status": "needs_generation",
+      "desiredProfileId": "b20b_factory_reference",
+      "targetProfilePath": "Data/Audio/EngineAudioProfiles/b20b_factory_reference.json",
+      "targetSampleSetPath": "Assets/Sounds/Generated/Honda/B20B/Factory",
+      "expectedGenerationKey": "engine_b20b__factory__block_b20b__head_b18b_non_vtec__tune_b20b_factory__fuel_98ron__block_upgrade_stock_cast__head_upgrade_stock_cast__displacement_stock_b20b__ports_stock__throttle_stock__cam_set_stock_non_vtec__intake_stock__intake_length_stock__valve_springs_stock_b18a_b18b_d16__header_stock__exhaust_stock__flywheel_stock_b18a_b18b__clutch_stock__engine_audio_stock",
+      "requiredSampleRoles": ["idle", "normal"],
+      "engine": {
+        "engineId": "engine_b20b",
+        "blockId": "block_b20b",
+        "headId": "head_b18b_non_vtec",
+        "tuneId": "tune_b20b_factory",
+        "fuel": { "selected": "fuel_98ron" },
+        "installedParts": {}
+      }
+    },
+    {
+      "id": "audio_target_engine_d16y4_factory",
+      "targetType": "factory_engine",
+      "priority": 4,
+      "status": "needs_generation",
+      "desiredProfileId": "d16y4_factory_reference",
+      "targetProfilePath": "Data/Audio/EngineAudioProfiles/d16y4_factory_reference.json",
+      "targetSampleSetPath": "Assets/Sounds/Generated/Honda/D16Y4/Factory",
+      "expectedGenerationKey": "engine_d16y4__factory__block_d16y4__head_d16y4_non_vtec__tune_d16y4_factory__fuel_98ron__block_upgrade_stock_cast__head_upgrade_stock_cast__displacement_stock_d16y4__ports_stock__throttle_stock__cam_set_stock_non_vtec__intake_stock__intake_length_stock__valve_springs_stock_b18a_b18b_d16__header_stock__exhaust_stock__flywheel_stock_d16__clutch_stock__engine_audio_stock",
+      "requiredSampleRoles": ["idle", "normal"],
+      "engine": {
+        "engineId": "engine_d16y4",
+        "blockId": "block_d16y4",
+        "headId": "head_d16y4_non_vtec",
+        "tuneId": "tune_d16y4_factory",
+        "fuel": { "selected": "fuel_98ron" },
+        "installedParts": {}
+      }
+    },
+    {
+      "id": "audio_target_engine_d16y8_factory",
+      "targetType": "factory_engine",
+      "priority": 4,
+      "status": "needs_generation",
+      "desiredProfileId": "d16y8_factory_reference",
+      "targetProfilePath": "Data/Audio/EngineAudioProfiles/d16y8_factory_reference.json",
+      "targetSampleSetPath": "Assets/Sounds/Generated/Honda/D16Y8/Factory",
+      "expectedGenerationKey": "engine_d16y8__factory__block_d16y8__head_d16y8_vtec__tune_d16y8_factory__fuel_98ron__block_upgrade_stock_cast__head_upgrade_stock_cast__displacement_stock_d16y8__ports_stock__throttle_stock__cam_set_stock__intake_stock__intake_length_stock__valve_springs_stock_d16y8__header_stock__exhaust_stock__flywheel_stock_d16__clutch_stock__engine_audio_stock",
+      "requiredSampleRoles": ["idle", "normal", "vtec"],
+      "engine": {
+        "engineId": "engine_d16y8",
+        "blockId": "block_d16y8",
+        "headId": "head_d16y8_vtec",
+        "tuneId": "tune_d16y8_factory",
+        "fuel": { "selected": "fuel_98ron" },
+        "installedParts": {}
+      }
+    },
+    {
+      "id": "audio_target_engine_k20a_factory",
+      "targetType": "factory_engine",
+      "priority": 2,
+      "status": "needs_generation",
+      "desiredProfileId": "k20a_factory_reference",
+      "targetProfilePath": "Data/Audio/EngineAudioProfiles/k20a_factory_reference.json",
+      "targetSampleSetPath": "Assets/Sounds/Generated/Honda/K20A/Factory",
+      "expectedGenerationKey": "engine_k20a__factory__block_k20a__head_k20a_vtec__tune_k20a_factory__fuel_98ron__block_upgrade_stock_cast__head_upgrade_stock_cast__displacement_stock_k20a__ports_stock__throttle_stock__cam_set_stock__intake_stock__intake_length_stock__valve_springs_stock_b18c_k20a__header_stock__exhaust_stock__flywheel_stock_k20a__clutch_stock__engine_audio_stock",
+      "requiredSampleRoles": ["idle", "normal", "vtec"],
+      "engine": {
+        "engineId": "engine_k20a",
+        "blockId": "block_k20a",
+        "headId": "head_k20a_vtec",
+        "tuneId": "tune_k20a_factory",
+        "fuel": { "selected": "fuel_98ron" },
+        "installedParts": {}
+      }
+    },
+    {
+      "id": "audio_target_engine_k24a3_factory",
+      "targetType": "factory_engine",
+      "priority": 3,
+      "status": "needs_generation",
+      "desiredProfileId": "k24a3_factory_reference",
+      "targetProfilePath": "Data/Audio/EngineAudioProfiles/k24a3_factory_reference.json",
+      "targetSampleSetPath": "Assets/Sounds/Generated/Honda/K24A3/Factory",
+      "expectedGenerationKey": "engine_k24a3__factory__block_k24a3__head_k24a3_vtec__tune_k24a3_factory__fuel_98ron__block_upgrade_stock_cast__head_upgrade_stock_cast__displacement_stock_k24a3__ports_stock__throttle_stock__cam_set_stock__intake_stock__intake_length_stock__valve_springs_stock_k24a3__header_stock__exhaust_stock__flywheel_stock_k24a3__clutch_stock__engine_audio_stock",
+      "requiredSampleRoles": ["idle", "normal", "vtec"],
+      "engine": {
+        "engineId": "engine_k24a3",
+        "blockId": "block_k24a3",
+        "headId": "head_k24a3_vtec",
+        "tuneId": "tune_k24a3_factory",
+        "fuel": { "selected": "fuel_98ron" },
+        "installedParts": {}
+      }
+    },
+    {
+      "id": "audio_target_combo_k24a3_block_k20a_head",
+      "targetType": "authored_combination",
+      "priority": 2,
+      "status": "needs_generation",
+      "desiredProfileId": "k24a3_k20a_head_reference",
+      "targetProfilePath": "Data/Audio/EngineAudioProfiles/k24a3_k20a_head_reference.json",
+      "targetSampleSetPath": "Assets/Sounds/Generated/Honda/K24A3_K20A/Factory",
+      "expectedGenerationKey": "engine_k24a3__combo_k24a3_block_k20a_head__block_k24a3__head_k20a_vtec__tune_k24a3_factory__fuel_98ron__block_upgrade_stock_cast__head_upgrade_stock_cast__displacement_stock_k24a3__ports_stock__throttle_stock__cam_set_stock__intake_stock__intake_length_stock__valve_springs_stock_k24a3__header_stock__exhaust_stock__flywheel_stock_k24a3__clutch_stock__engine_audio_stock",
+      "requiredSampleRoles": ["idle", "normal", "vtec"],
+      "engine": {
+        "engineId": "engine_k24a3",
+        "combinationId": "combo_k24a3_block_k20a_head",
+        "blockId": "block_k24a3",
+        "headId": "head_k20a_vtec",
+        "tuneId": "tune_k24a3_factory",
+        "fuel": { "selected": "fuel_98ron" },
+        "installedParts": {}
+      }
+    },
+    {
+      "id": "audio_target_combo_k24a3_block_k20a_head_pro_e85",
+      "targetType": "authored_combination",
+      "priority": 1,
+      "status": "needs_generation",
+      "desiredProfileId": "k24a3_k20a_head_pro_e85_reference",
+      "targetProfilePath": "Data/Audio/EngineAudioProfiles/k24a3_k20a_head_pro_e85_reference.json",
+      "targetSampleSetPath": "Assets/Sounds/Generated/Honda/K24A3_K20A/ProE85",
+      "expectedGenerationKey": "engine_k24a3__combo_k24a3_block_k20a_head__block_k24a3__head_k20a_vtec__tune_k24_k20_pro_racing_e85__fuel_e85__block_upgrade_billet_aluminum__head_upgrade_billet_aluminum__displacement_pro_k24a3_high_comp__ports_pro_racing__throttle_pro_racing__cam_set_pro_racing__intake_pro_racing__intake_length_pro_race__valve_springs_pro_racing__header_pro_racing__exhaust_pro_racing__flywheel_pro_racing__clutch_pro_racing__engine_audio_stock",
+      "requiredSampleRoles": ["idle", "normal", "vtec"],
+      "engine": {
+        "engineId": "engine_k24a3",
+        "combinationId": "combo_k24a3_block_k20a_head",
+        "blockId": "block_k24a3",
+        "headId": "head_k20a_vtec",
+        "tuneId": "tune_k24_k20_pro_racing_e85",
+        "fuel": { "selected": "fuel_e85" },
+        "installedParts": {
+          "blockUpgrade": "block_upgrade_billet_aluminum",
+          "headUpgrade": "head_upgrade_billet_aluminum",
+          "cams": "cam_set_pro_racing",
+          "displacement": "displacement_pro_k24a3_high_comp",
+          "portPolishing": "ports_pro_racing",
+          "throttleBody": "throttle_pro_racing",
+          "intake": "intake_pro_racing",
+          "intakeRunnerLength": "intake_length_pro_race",
+          "valveSprings": "valve_springs_pro_racing",
+          "headers": "header_pro_racing",
+          "exhaust": "exhaust_pro_racing",
+          "flywheel": "flywheel_pro_racing",
+          "clutch": "clutch_pro_racing",
+          "engineAudioDsp": "engine_audio_stock"
+        }
+      }
+    },
+    {
+      "id": "audio_target_combo_b18b_block_b16b_head_lsvtec",
+      "targetType": "authored_combination",
+      "priority": 2,
+      "status": "needs_generation",
+      "desiredProfileId": "b18b_b16b_lsvtec_club_e85_reference",
+      "targetProfilePath": "Data/Audio/EngineAudioProfiles/b18b_b16b_lsvtec_club_e85_reference.json",
+      "targetSampleSetPath": "Assets/Sounds/Generated/Honda/B18B_B16B_LSVTEC/ClubE85",
+      "expectedGenerationKey": "engine_b18b__combo_b18b_block_b16b_head_lsvtec__block_b18b__head_b16b_type_r__tune_b16b_club_sport_e85__fuel_e85__block_upgrade_stock_cast__head_upgrade_stock_cast__displacement_stock_b18b__ports_stock__throttle_stock__cam_set_club_sport__intake_stock__intake_length_stock__valve_springs_club_sport__header_stock__exhaust_stock__flywheel_stock_b18a_b18b__clutch_stock__engine_audio_stock",
+      "requiredSampleRoles": ["idle", "normal", "vtec"],
+      "engine": {
+        "engineId": "engine_b18b",
+        "combinationId": "combo_b18b_block_b16b_head_lsvtec",
+        "blockId": "block_b18b",
+        "headId": "head_b16b_type_r",
+        "tuneId": "tune_b16b_club_sport_e85",
+        "fuel": { "selected": "fuel_e85" },
+        "installedParts": {
+          "cams": "cam_set_club_sport",
+          "valveSprings": "valve_springs_club_sport"
+        }
+      }
+    },
+    {
+      "id": "audio_target_combo_b20b_block_b16b_head_vtec",
+      "targetType": "authored_combination",
+      "priority": 1,
+      "status": "needs_generation",
+      "desiredProfileId": "b20b_b16b_b20vtec_club_e85_reference",
+      "targetProfilePath": "Data/Audio/EngineAudioProfiles/b20b_b16b_b20vtec_club_e85_reference.json",
+      "targetSampleSetPath": "Assets/Sounds/Generated/Honda/B20B_B16B_B20VTEC/ClubE85",
+      "expectedGenerationKey": "engine_b20b__combo_b20b_block_b16b_head_vtec__block_b20b__head_b16b_type_r__tune_b20vtec_club_sport_e85__fuel_e85__block_upgrade_stock_cast__head_upgrade_stock_cast__displacement_stock_b20b__ports_pro_racing__throttle_club_sport__cam_set_club_sport__intake_stock__intake_length_short_club__valve_springs_club_sport__header_club_sport__exhaust_club_sport__flywheel_club_sport__clutch_club_sport__engine_audio_stock",
+      "requiredSampleRoles": ["idle", "normal", "vtec"],
+      "engine": {
+        "engineId": "engine_b20b",
+        "combinationId": "combo_b20b_block_b16b_head_vtec",
+        "blockId": "block_b20b",
+        "headId": "head_b16b_type_r",
+        "tuneId": "tune_b20vtec_club_sport_e85",
+        "fuel": { "selected": "fuel_e85" },
+        "installedParts": {
+          "cams": "cam_set_club_sport",
+          "portPolishing": "ports_pro_racing",
+          "throttleBody": "throttle_club_sport",
+          "intakeRunnerLength": "intake_length_short_club",
+          "valveSprings": "valve_springs_club_sport",
+          "headers": "header_club_sport",
+          "exhaust": "exhaust_club_sport",
+          "flywheel": "flywheel_club_sport",
+          "clutch": "clutch_club_sport"
+        }
+      }
+    }
+  ]
+}

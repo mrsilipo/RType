@@ -1,0 +1,40 @@
+{
+  "id": "rtype_engine_fuels",
+  "displayName": "RType Engine Fuel Catalog",
+  "fuels": [
+    {
+      "id": "fuel_98ron",
+      "displayName": "98 RON Pump Fuel",
+      "grade": "pump_premium",
+      "data": {
+        "octaneRon": 98.0,
+        "ethanolContent": 0.0,
+        "basePowerMultiplier": 1.0,
+        "highCompressionPowerMultiplier": 1.0,
+        "highCompressionStartsAt": 12.0,
+        "safeCompressionRatio": 11.8,
+        "requiresRetune": false
+      }
+    },
+    {
+      "id": "fuel_e85",
+      "displayName": "E85 Ethanol",
+      "grade": "ethanol_race",
+      "data": {
+        "octaneRon": 108.0,
+        "ethanolContent": 0.85,
+        "basePowerMultiplier": 1.0,
+        "highCompressionPowerMultiplier": 1.08,
+        "highCompressionStartsAt": 12.0,
+        "safeCompressionRatio": 13.5,
+        "requiresRetune": true,
+        "benefits": [
+          "high_compression",
+          "aggressive_cams",
+          "forced_induction",
+          "adjustable_cam_gears"
+        ]
+      }
+    }
+  ]
+}

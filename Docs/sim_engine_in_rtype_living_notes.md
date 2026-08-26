@@ -43,7 +43,7 @@ Current EK9 race values:
 
 - rev limiter/redline: 8400 RPM from `Data/Vehicles/ek9_reference_2000.json`
 - VTEC activation: 5800 RPM
-- active build path: `Data/VehicleBuilds/ek9_showroom_stock.json`
+- active build path: `Data/PurchaseCars/2000_Ek9_Stock.json`
 
 ## Active Runtime Code
 
@@ -68,6 +68,17 @@ Vehicle/build data still used by race:
 - `Vehicle/VehicleAudioParameters.cs`
 - `Vehicle/VehicleSimulationParameters.cs`
 
+Universal launch/drivetrain state now lives in:
+
+- `Vehicle/SimpleVehicleSimulator.cs`
+- `Vehicle/VehicleState.cs`
+- `Vehicle/VehicleSimulationParameters.cs`
+- `Data/EngineAssemblyResolver.cs`
+- `Data/ResolvedVehicleAssembly.cs`
+- `Data/VehicleBuildDefinitionLoader.cs`
+
+The active launch model is no longer the old timed `ShouldUseLaunchClutch()` path. Race start, low-speed takeoff, reverse takeoff, and recovery from a stop now feed a continuous clutch/flywheel state: engine omega, gearbox input omega, clutch slip delta, clutch lock state, active clutch torque, and clutch engagement. Clutch capacity, bite, coupling, engagement sharpness, and slip damping come from the installed clutch catalog entry.
+
 Important note: some data properties still contain old `EngineSimulator*` names. They are legacy schema names and should be migrated later, but they are not evidence that the old procedural audio runtime is active.
 
 ## Disconnected Legacy Code
@@ -89,7 +100,26 @@ Also retained as reference/offline material:
 - `Assets/Sounds/engine-sim-v0.1.14a`
 - `ReferenceSource/engine-sim`
 - `Data/Legacy`
-- `Data/RTypeEngineProfiles`
+
+## Free-Rev RPM Model
+
+Neutral/open-clutch free revving now uses the same race-oriented torque/inertia concept as the current drivetrain direction: crank torque from the resolved vehicle torque curve, minus internal drag/load, integrated through `EngineRotationalInertiaKgM2`. The old direct target-RPM slider behavior has been removed from the race neutral path and from the Engine Room bench path.
+
+The readable tach sweep is protected by data-driven caps:
+
+- `MaxFreeRevRiseRpmPerSecond`
+- `MaxFreeRevFallRpmPerSecond`
+
+These currently live in handling setup data because they describe controller/readability feel on top of the physical engine/flywheel setup. The active default is `4600 rpm/s` rise and `7600 rpm/s` fall. This keeps pro lightweight flywheels sharp without letting VTEC-to-limiter look like a teleport.
+
+Validation command:
+
+```powershell
+dotnet run --no-build --project RType.csproj -- --free-rev-probe
+dotnet run --no-build --project RType.csproj -- --free-rev-probe --garage-profile Data/Garage/Profiles/dev_profile.json --garage-vehicle vehicle_0005_k24_k20_pro_ek9
+```
+
+Latest K24/K20 pro diagnostic: max free-rev rise `4600 rpm/s`, VTEC-to-limiter `0.575s`, limiter torque cuts to zero at hard cut.
 
 ## Current Validation Commands
 
@@ -100,6 +130,7 @@ dotnet build RType.csproj -c Release --no-restore
 dotnet run --project RType.csproj -c Release --no-build -- --audio-probe
 dotnet run --project RType.csproj -c Release --no-build -- --audio-diagnostics-smoke
 dotnet run --project RType.csproj -c Release --no-build -- --rtype-engine-room --auto-exit-ms 1000
+dotnet run --no-build --project RType.csproj -- --free-rev-probe
 ```
 
 Current known-good validation from 2026-08-25:
@@ -116,6 +147,7 @@ Short term:
 - migrate remaining `EngineSimulator*` data names to neutral race-audio/drivetrain names
 - add a focused race-audio probe that sweeps RPM and reports active sample weights at idle, 3500, VTEC, and limiter
 - drive-test the sample recipe on track and adjust only volumes/crossfades/sample choices, not procedural engine code
+- manually drive-test the continuous clutch/flywheel launch model across standing starts, reverse, hill recovery, grass recovery, and split-surface launches
 
 Long term:
 

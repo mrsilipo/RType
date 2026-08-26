@@ -75,7 +75,7 @@ Still missing before physics authority:
 
 ## Data Catalogs
 
-The first pass generic part catalogs live in `Data/RTypeEngineProfiles/PartCatalogs/`.
+The first pass generic part catalogs live in `Data/Parts/Engine/`.
 
 Each catalog contains four tiers:
 

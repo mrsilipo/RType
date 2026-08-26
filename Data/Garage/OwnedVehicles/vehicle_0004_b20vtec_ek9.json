@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "id": "vehicle_0004_b20vtec_ek9",
+  "displayName": "EK9 B20/VTEC Club",
+  "role": "owned_vehicle",
+  "template": {
+    "sourcePurchaseCar": "Data/PurchaseCars/2000_Ek9_Stock.json",
+    "purchaseCarId": "2000_Ek9_Stock"
+  },
+  "ownership": {
+    "source": "player_garage",
+    "playerOwned": true,
+    "ownerProfileId": "dev_profile",
+    "garageSlot": 4,
+    "purchaseState": "owned"
+  },
+  "assembly": {
+    "chassis": {
+      "chassisId": "chassis_2000_ek9",
+      "chassisCode": "EK9",
+      "drivetrainLayout": "FF",
+      "bodyShell": "club_sport_seam_welded_ek9_body_shell"
+    },
+    "engine": {
+      "engineId": "engine_b20b",
+      "combinationId": "combo_b20b_block_b16b_head_vtec",
+      "blockId": "block_b20b",
+      "headId": "head_b16b_type_r",
+      "tuneId": "tune_b20vtec_club_sport_e85",
+      "fuel": {
+        "default": "fuel_98ron",
+        "selected": "fuel_e85",
+        "allowed": [
+          "fuel_98ron",
+          "fuel_e85"
+        ]
+      },
+      "installedParts": {
+        "blockUpgrade": "block_upgrade_stock_cast",
+        "headUpgrade": "head_upgrade_stock_cast",
+        "cams": "cam_set_club_sport",
+        "displacement": "displacement_stock_b20b",
+        "portPolishing": "ports_pro_racing",
+        "throttleBody": "throttle_club_sport",
+        "intake": "intake_stock",
+        "intakeRunnerLength": "intake_length_short_club",
+        "valveSprings": "valve_springs_club_sport",
+        "headers": "header_club_sport",
+        "exhaust": "exhaust_club_sport",
+        "flywheel": "flywheel_club_sport",
+        "clutch": "clutch_club_sport",
+        "engineAudioDsp": "engine_audio_stock"
+      }
+    },
+    "drivetrain": {
+      "gearbox": "club_sport_close_ratio_5_speed",
+      "finalDrive": "club_sport_4_93_final_drive",
+      "differential": "club_sport_plate_lsd"
+    },
+    "suspension": {
+      "front": "street_sport_front_suspension",
+      "rear": "street_sport_rear_suspension",
+      "alignment": "stock_ek9_alignment"
+    },
+    "brakes": {
+      "front": "stock_ek9_front_brakes",
+      "rear": "stock_ek9_rear_brakes",
+      "system": "stock_ek9_brake_system"
+    },
+    "tyres": {
+      "frontCompound": "sports_hard_reference",
+      "rearCompound": "sports_hard_reference",
+      "frontModel": "sports_hard_ek9_front_model",
+      "rearModel": "sports_hard_ek9_rear_model"
+    },
+    "wheels": {
+      "front": "stock_ek9_15x6_wheel",
+      "rear": "stock_ek9_15x6_wheel"
+    },
+    "aero": {
+      "package": "stock_ek9_aero_package"
+    },
+    "tuning": {
+      "steering": "stock_ek9_steering_setup",
+      "handling": "stock_ek9_arcade_handling_setup"
+    }
+  },
+  "notes": [
+    "Development B20/VTEC EK9: B20B bottom end, B16B Type R head, E85 club tune, club sport bolt-ons, pro port work, light flywheel, and club clutch.",
+    "Uses the current B16B sample-loop audio recipe through engine_audio_stock until dedicated B20/VTEC samples are authored."
+  ]
+}

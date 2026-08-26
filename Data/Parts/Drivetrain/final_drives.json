@@ -6,6 +6,8 @@
     { "id": "stock_ek9_final_drive", "displayName": "Stock EK9 Final Drive", "tier": "stock", "compatibility": ["honda_b_series", "ff_transverse"], "weightKg": 4.8, "data": { "ratio": 4.400 }, "durability": { "rating": 0.88, "safeTorqueMultiplier": 1.00 } },
     { "id": "street_4_70_final_drive", "displayName": "Street 4.70 Final Drive", "tier": "street", "compatibility": ["honda_b_series", "ff_transverse"], "weightKg": 4.9, "data": { "ratio": 4.700 }, "durability": { "rating": 0.90, "safeTorqueMultiplier": 1.16 } },
     { "id": "club_sport_4_93_final_drive", "displayName": "Club Sport 4.93 Final Drive", "tier": "clubSport", "compatibility": ["honda_b_series", "ff_transverse"], "weightKg": 5.0, "data": { "ratio": 4.929 }, "durability": { "rating": 0.92, "safeTorqueMultiplier": 1.32 } },
-    { "id": "pro_racing_5_15_final_drive", "displayName": "Pro Racing 5.15 Final Drive", "tier": "proRacing", "compatibility": ["honda_b_series", "ff_transverse"], "weightKg": 4.7, "data": { "ratio": 5.150 }, "durability": { "rating": 0.94, "safeTorqueMultiplier": 1.58 } }
+    { "id": "pro_racing_5_15_final_drive", "displayName": "Pro Racing 5.15 Final Drive", "tier": "proRacing", "compatibility": ["honda_b_series", "ff_transverse"], "weightKg": 4.7, "data": { "ratio": 5.150 }, "durability": { "rating": 0.94, "safeTorqueMultiplier": 1.58 } },
+    { "id": "stock_k20a_final_drive", "displayName": "Stock K20A Final Drive", "tier": "stock", "compatibility": ["honda_k_series", "ff_transverse"], "weightKg": 5.1, "data": { "ratio": 4.764 }, "durability": { "rating": 0.88, "safeTorqueMultiplier": 1.00 } },
+    { "id": "pro_racing_k_series_5_06_final_drive", "displayName": "Pro Racing K-Series 5.06 Final Drive", "tier": "proRacing", "compatibility": ["honda_k_series", "ff_transverse"], "weightKg": 4.9, "data": { "ratio": 5.062 }, "durability": { "rating": 0.94, "safeTorqueMultiplier": 1.58 } }
   ]
 }

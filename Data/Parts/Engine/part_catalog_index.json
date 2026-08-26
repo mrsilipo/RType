@@ -1,0 +1,24 @@
+{
+  "id": "rtype_engine_part_catalog_index",
+  "displayName": "RType Engine Part Catalog Index",
+  "catalogs": [
+    { "slot": "engineBlock", "path": "Data/Parts/Engine/engine_blocks.json" },
+    { "slot": "engineHead", "path": "Data/Parts/Engine/engine_heads.json" },
+    { "slot": "engine", "path": "Data/Parts/Engine/engines.json" },
+    { "slot": "engineCombination", "path": "Data/Parts/Engine/engine_combinations.json" },
+    { "slot": "blockUpgrade", "path": "Data/Parts/Engine/block_upgrades.json" },
+    { "slot": "headUpgrade", "path": "Data/Parts/Engine/head_upgrades.json" },
+    { "slot": "cams", "path": "Data/Parts/Engine/cam_sets.json" },
+    { "slot": "rotatingAssembly", "path": "Data/Parts/Engine/displacement_kits.json" },
+    { "slot": "headWork", "path": "Data/Parts/Engine/port_polishing.json" },
+    { "slot": "throttleBody", "path": "Data/Parts/Engine/throttle_bodies.json" },
+    { "slot": "intake", "path": "Data/Parts/Engine/intakes.json" },
+    { "slot": "intakeRunnerLength", "path": "Data/Parts/Engine/intake_lengths.json" },
+    { "slot": "valveSpringSet", "path": "Data/Parts/Engine/valve_springs.json" },
+    { "slot": "header", "path": "Data/Parts/Engine/headers.json" },
+    { "slot": "exhaust", "path": "Data/Parts/Engine/exhausts.json" },
+    { "slot": "flywheel", "path": "Data/Parts/Engine/flywheels.json" },
+    { "slot": "clutch", "path": "Data/Parts/Engine/clutches.json" },
+    { "slot": "engineAudioDsp", "path": "Data/Parts/Engine/engine_audio_dsp.json" }
+  ]
+}

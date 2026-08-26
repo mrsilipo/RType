@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "currency": "credits",
+  "prices": [
+    {
+      "purchaseCarId": "2000_Ek9_Stock",
+      "path": "Data/PurchaseCars/2000_Ek9_Stock.json",
+      "price": 18500
+    }
+  ],
+  "notes": [
+    "Temporary first-pass vehicle price table. Purchase-car JSON owns the assembled showroom car; this file owns economy pricing."
+  ]
+}

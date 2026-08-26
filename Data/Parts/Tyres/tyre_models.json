@@ -11,6 +11,8 @@
       "compatibility": ["sports_hard_reference"],
       "data": {
         "loadSensitivity": 0.12,
+        "corneringStiffnessNPerRad": 76000,
+        "longitudinalStiffnessN": 93000,
         "lateralPeakSlipAngleDegrees": 9.4,
         "lateralSlideSlipAngleDegrees": 20,
         "lateralForceRiseShape": 3.5,
@@ -35,6 +37,8 @@
       "compatibility": ["sports_hard_reference"],
       "data": {
         "loadSensitivity": 0.12,
+        "corneringStiffnessNPerRad": 70500,
+        "longitudinalStiffnessN": 88500,
         "lateralPeakSlipAngleDegrees": 8.2,
         "lateralSlideSlipAngleDegrees": 19,
         "lateralForceRiseShape": 3.0,
@@ -59,6 +63,8 @@
       "compatibility": ["sports_medium_reference"],
       "data": {
         "loadSensitivity": 0.115,
+        "corneringStiffnessNPerRad": 79000,
+        "longitudinalStiffnessN": 98000,
         "lateralPeakSlipAngleDegrees": 8.4,
         "lateralSlideSlipAngleDegrees": 18,
         "lateralForceRiseShape": 3.4,
@@ -83,6 +89,8 @@
       "compatibility": ["semi_slick_reference"],
       "data": {
         "loadSensitivity": 0.10,
+        "corneringStiffnessNPerRad": 132000,
+        "longitudinalStiffnessN": 168000,
         "lateralPeakSlipAngleDegrees": 7.2,
         "lateralSlideSlipAngleDegrees": 16,
         "lateralForceRiseShape": 3.8,

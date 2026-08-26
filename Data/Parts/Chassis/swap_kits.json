@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "catalog": "swapKits",
+  "slot": "swapKit",
+  "parts": [
+    {
+      "id": "ek9_k_series_engine_mounts",
+      "displayName": "EK9 K-Series Engine Mount Kit",
+      "tier": "street",
+      "compatibility": ["ek9", "honda_k_series", "ff_transverse", "engineMounts"],
+      "weightKg": 6.8,
+      "data": {
+        "slot": "engineMounts",
+        "sourceChassis": "EK9",
+        "targetEngineFamily": "honda_k_series",
+        "orientation": "transverse",
+        "cgHeightDeltaMeters": 0.002,
+        "notes": "Mounts a transverse K-series engine in an EK9 bay. Future versions should split bracket stiffness and bushing durometer."
+      },
+      "durability": {
+        "rating": 0.88,
+        "fatigueResistance": 0.86,
+        "safeTorqueMultiplier": 1.15
+      }
+    },
+    {
+      "id": "ek9_k_series_wiring_loom",
+      "displayName": "EK9 K-Series Wiring Loom And ECU Adapter",
+      "tier": "street",
+      "compatibility": ["ek9", "honda_k_series", "ff_transverse", "wiringLoom"],
+      "weightKg": 2.4,
+      "data": {
+        "slot": "wiringLoom",
+        "sourceChassis": "EK9",
+        "targetEngineFamily": "honda_k_series",
+        "supportsVtec": true,
+        "supportsDriveByWire": false,
+        "notes": "Lets the chassis electronics run a K-series engine in the current FF-first model."
+      },
+      "durability": {
+        "rating": 0.86,
+        "heatTolerance": 0.82,
+        "safePowerMultiplier": 1.10
+      }
+    },
+    {
+      "id": "ek9_k_series_driveshafts",
+      "displayName": "EK9 K-Series Driveshaft Set",
+      "tier": "street",
+      "compatibility": ["ek9", "honda_k_series", "ff_transverse", "driveshafts"],
+      "weightKg": 11.6,
+      "data": {
+        "slot": "driveshafts",
+        "sourceChassis": "EK9",
+        "targetEngineFamily": "honda_k_series",
+        "safeTorqueNm": 260,
+        "notes": "Hybrid-length shafts for a transverse K-series gearbox in an EK9 chassis."
+      },
+      "durability": {
+        "rating": 0.84,
+        "fatigueResistance": 0.84,
+        "safeTorqueMultiplier": 1.05
+      }
+    },
+    {
+      "id": "ek9_k_series_shift_linkage",
+      "displayName": "EK9 K-Series Shift Linkage",
+      "tier": "street",
+      "compatibility": ["ek9", "honda_k_series", "ff_transverse", "shiftLinkage"],
+      "weightKg": 3.1,
+      "data": {
+        "slot": "shiftLinkage",
+        "sourceChassis": "EK9",
+        "targetEngineFamily": "honda_k_series",
+        "notes": "Connects the EK9 cabin controls to a K-series manual gearbox."
+      },
+      "durability": {
+        "rating": 0.87,
+        "fatigueResistance": 0.86
+      }
+    }
+  ]
+}

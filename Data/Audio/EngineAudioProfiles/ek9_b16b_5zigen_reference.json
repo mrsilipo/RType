@@ -13,6 +13,39 @@
   ],
   "engineLoop": "Assets/Sounds/Honda/normal_3500.wav",
   "highRpmLoop": "Assets/Sounds/Honda/vtec_6200.wav",
+  "engineVolume": {
+    "value": 1.0
+  },
+  "idleVolume": {
+    "value": 0.0
+  },
+  "throttleVolume": {
+    "value": 0.0
+  },
+  "overrunVolume": {
+    "value": 0.0
+  },
+  "engineBrakeVolume": {
+    "value": 0.0
+  },
+  "shiftKickVolume": {
+    "value": 0.0
+  },
+  "highRpmBlendInRpm": {
+    "value": 5550
+  },
+  "highRpmBlendWidthRpm": {
+    "value": 250
+  },
+  "highRpmMinimumThrottle": {
+    "value": 0.3
+  },
+  "highRpmMinimumSpeedMetersPerSecond": {
+    "value": 4.4704
+  },
+  "highRpmVolumeBoost": {
+    "value": 0.0
+  },
   "baseSampleRpm": {
     "value": 3500
   },

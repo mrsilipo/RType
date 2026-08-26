@@ -18,8 +18,8 @@
         "automaticMinimumUpshiftSpeedKph": 28,
         "automaticDownshiftRpm": 4300,
         "engineFreeRevResponseRate": 9.5,
-        "launchSlipTargetRpm": 6000,
-        "launchSlipBlend": 0.22,
+        "maxFreeRevRiseRpmPerSecond": 4600,
+        "maxFreeRevFallRpmPerSecond": 7600,
         "wallCollisionPointRadiusMeters": 0.08,
         "wallCollisionRestitution": 0.05,
         "wallImpactFriction": 0.14,
@@ -54,40 +54,37 @@
     {
       "id": "street_arcade_handling_setup",
       "displayName": "Street Arcade Handling Setup",
+      "inherits": "stock_ek9_arcade_handling_setup",
       "tier": "street",
       "compatibility": ["ek9"],
       "data": {
         "drivetrainEfficiency": 0.91,
         "closedThrottleEngineBrakeTorqueNm": 72,
-        "lateralGripResponse": 10.8,
-        "launchSlipTargetRpm": 6200,
-        "launchSlipBlend": 0.20
+        "lateralGripResponse": 10.8
       }
     },
     {
       "id": "club_sport_arcade_handling_setup",
       "displayName": "Club Sport Arcade Handling Setup",
+      "inherits": "stock_ek9_arcade_handling_setup",
       "tier": "clubSport",
       "compatibility": ["ek9"],
       "data": {
         "drivetrainEfficiency": 0.92,
         "closedThrottleEngineBrakeTorqueNm": 78,
-        "lateralGripResponse": 11.4,
-        "launchSlipTargetRpm": 6600,
-        "launchSlipBlend": 0.18
+        "lateralGripResponse": 11.4
       }
     },
     {
       "id": "pro_racing_arcade_handling_setup",
       "displayName": "Pro Racing Arcade Handling Setup",
+      "inherits": "stock_ek9_arcade_handling_setup",
       "tier": "proRacing",
       "compatibility": ["ek9"],
       "data": {
         "drivetrainEfficiency": 0.93,
         "closedThrottleEngineBrakeTorqueNm": 84,
-        "lateralGripResponse": 12.2,
-        "launchSlipTargetRpm": 7200,
-        "launchSlipBlend": 0.14
+        "lateralGripResponse": 12.2
       }
     }
   ]

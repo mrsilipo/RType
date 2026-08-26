@@ -1,0 +1,102 @@
+{
+  "catalog": "engineCombinations",
+  "slot": "engineCombination",
+  "description": "Authored non-factory block/head combinations. These records mark deliberate Frankenstein engines so the resolver can distinguish supported builds from accidental mismatches.",
+  "combinations": [
+    {
+      "id": "combo_k24a3_block_k20a_head",
+      "displayName": "K24A3 Block / K20A Head Frank",
+      "family": "honda_k_series",
+      "baseEngineId": "engine_k24a3",
+      "blockId": "block_k24a3",
+      "headId": "head_k20a_vtec",
+      "vtec": true,
+      "category": "frankenstein",
+      "tier": "proRacing",
+      "supportLevel": "supported",
+      "compatibility": ["honda_k_series", "dohc_i_vtec"],
+      "recommendedTuneIds": ["tune_k24_k20_pro_racing_e85"],
+      "requirements": {
+        "minimumTuneTier": "clubSport",
+        "recommendedFuelIds": ["fuel_e85"]
+      },
+      "modifies": {
+        "vtec": {
+          "enabled": true,
+          "activationRpm": 6400,
+          "transitionWidthRpm": 220
+        },
+        "engine": {
+          "compressionRatio": 12.8,
+          "redlineRpm": 8800,
+          "limiterRpm": 9000,
+          "limiterResumeRpm": 8800
+        }
+      },
+      "notes": "Known K-series hybrid path. Uses the K24A3 bottom end with the higher-flow K20A head as an authored, supported future upgrade path."
+    },
+    {
+      "id": "combo_b18b_block_b16b_head_lsvtec",
+      "displayName": "B18B Block / B16B Type R Head LS/VTEC",
+      "family": "honda_b_series",
+      "baseEngineId": "engine_b18b",
+      "blockId": "block_b18b",
+      "headId": "head_b16b_type_r",
+      "vtec": true,
+      "category": "frankenstein",
+      "tier": "clubSport",
+      "supportLevel": "supported",
+      "compatibility": ["honda_b_series", "dohc_vtec"],
+      "recommendedTuneIds": ["tune_b16b_club_sport_e85"],
+      "requirements": {
+        "minimumTuneTier": "clubSport",
+        "recommendedFuelIds": ["fuel_e85"]
+      },
+      "modifies": {
+        "vtec": {
+          "enabled": true,
+          "activationRpm": 5800,
+          "transitionWidthRpm": 350
+        },
+        "engine": {
+          "redlineRpm": 8200,
+          "limiterRpm": 8400,
+          "limiterResumeRpm": 8250
+        }
+      },
+      "notes": "Deliberate B-series LS/VTEC style hybrid. It should be offered through known mod paths with correct tune/fuel guidance instead of treated as random block/head mixing."
+    },
+    {
+      "id": "combo_b20b_block_b16b_head_vtec",
+      "displayName": "B20B Block / B16B Type R Head B20/VTEC",
+      "family": "honda_b_series",
+      "baseEngineId": "engine_b20b",
+      "blockId": "block_b20b",
+      "headId": "head_b16b_type_r",
+      "vtec": true,
+      "category": "frankenstein",
+      "tier": "clubSport",
+      "supportLevel": "supported",
+      "compatibility": ["honda_b_series", "dohc_vtec"],
+      "recommendedTuneIds": ["tune_b20vtec_club_sport_e85"],
+      "requirements": {
+        "minimumTuneTier": "clubSport",
+        "recommendedFuelIds": ["fuel_e85"]
+      },
+      "modifies": {
+        "vtec": {
+          "enabled": true,
+          "activationRpm": 5900,
+          "transitionWidthRpm": 280
+        },
+        "engine": {
+          "compressionRatio": 11.8,
+          "redlineRpm": 8400,
+          "limiterRpm": 8600,
+          "limiterResumeRpm": 8400
+        }
+      },
+      "notes": "Supported B20/VTEC hybrid path using the B20B bottom end and B16B Type R cylinder head. Intended for E85 club/pro naturally aspirated builds with upgraded valvetrain support."
+    }
+  ]
+}

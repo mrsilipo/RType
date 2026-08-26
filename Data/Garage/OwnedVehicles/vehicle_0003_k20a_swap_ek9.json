@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "id": "vehicle_0003_k20a_swap_ek9",
+  "displayName": "EK9 K20A K-Swap",
+  "role": "owned_vehicle",
+  "template": {
+    "sourcePurchaseCar": "Data/PurchaseCars/2000_Ek9_Stock.json",
+    "purchaseCarId": "2000_Ek9_Stock"
+  },
+  "ownership": {
+    "source": "player_garage",
+    "playerOwned": true,
+    "ownerProfileId": "dev_profile",
+    "garageSlot": 3,
+    "purchaseState": "owned"
+  },
+  "assembly": {
+    "chassis": {
+      "chassisId": "chassis_2000_ek9",
+      "chassisCode": "EK9",
+      "drivetrainLayout": "FF",
+      "bodyShell": "street_reinforced_ek9_body_shell"
+    },
+    "engine": {
+      "engineId": "engine_k20a",
+      "blockId": "block_k20a",
+      "headId": "head_k20a_vtec",
+      "tuneId": "tune_k20a_factory",
+      "fuel": {
+        "default": "fuel_98ron",
+        "selected": "fuel_98ron",
+        "allowed": [
+          "fuel_98ron",
+          "fuel_e85"
+        ]
+      },
+      "installedParts": {}
+    },
+    "drivetrain": {
+      "gearbox": "stock_k20a_6_speed",
+      "finalDrive": "stock_k20a_final_drive",
+      "differential": "stock_k20a_helical_lsd"
+    },
+    "swapKits": {
+      "engineMounts": "ek9_k_series_engine_mounts",
+      "wiringLoom": "ek9_k_series_wiring_loom",
+      "driveshafts": "ek9_k_series_driveshafts",
+      "shiftLinkage": "ek9_k_series_shift_linkage"
+    },
+    "suspension": {
+      "front": "street_sport_front_suspension",
+      "rear": "street_sport_rear_suspension",
+      "alignment": "stock_ek9_alignment"
+    },
+    "brakes": {
+      "front": "stock_ek9_front_brakes",
+      "rear": "stock_ek9_rear_brakes",
+      "system": "stock_ek9_brake_system"
+    },
+    "tyres": {
+      "frontCompound": "sports_hard_reference",
+      "rearCompound": "sports_hard_reference",
+      "frontModel": "sports_hard_ek9_front_model",
+      "rearModel": "sports_hard_ek9_rear_model"
+    },
+    "wheels": {
+      "front": "stock_ek9_15x6_wheel",
+      "rear": "stock_ek9_15x6_wheel"
+    },
+    "aero": {
+      "package": "stock_ek9_aero_package"
+    },
+    "tuning": {
+      "steering": "stock_ek9_steering_setup",
+      "handling": "stock_ek9_arcade_handling_setup"
+    }
+  },
+  "notes": [
+    "Development proof for an engine-family swap through the owned-vehicle path.",
+    "Uses engine_k20a defaultInstalledParts, K-series FF drivetrain catalog parts, and chassis-side EK9 K-series swap kit parts so the build does not borrow B-series transmission data."
+  ]
+}

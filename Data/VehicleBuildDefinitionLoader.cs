@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Microsoft.Xna.Framework;
 using RType.Vehicle;
 
@@ -20,7 +21,9 @@ internal static class VehicleBuildDefinitionLoader
         CatalogLookup chassisTunes = CatalogLookup.Load(ChassisTuneIndexPath);
 
         JsonElement chassis = Require(assembly, "chassis");
+        JsonElement engine = Require(assembly, "engine");
         JsonElement drivetrain = Require(assembly, "drivetrain");
+        IReadOnlyDictionary<string, string> swapKitIds = ReadStringMap(assembly, "swapKits");
         JsonElement suspension = Require(assembly, "suspension");
         JsonElement brakes = Require(assembly, "brakes");
         JsonElement wheels = Require(assembly, "wheels");
@@ -32,6 +35,7 @@ internal static class VehicleBuildDefinitionLoader
         JsonElement gearbox = catalogs.Require(ReadString(drivetrain, string.Empty, "gearbox"));
         JsonElement finalDrive = catalogs.Require(ReadString(drivetrain, string.Empty, "finalDrive"));
         JsonElement differential = catalogs.Require(ReadString(drivetrain, string.Empty, "differential"));
+        float swapKitMassKg = SumCatalogWeights(catalogs, swapKitIds.Values);
         JsonElement frontSuspension = catalogs.Require(ReadString(suspension, string.Empty, "front"));
         JsonElement rearSuspension = catalogs.Require(ReadString(suspension, string.Empty, "rear"));
         JsonElement alignment = catalogs.Require(ReadString(suspension, string.Empty, "alignment"));
@@ -49,7 +53,8 @@ internal static class VehicleBuildDefinitionLoader
         JsonElement handlingSetup = chassisTunes.Require(ReadString(tuning, string.Empty, "handling"));
 
         string vehicleDefinitionPath = ReadString(root, string.Empty, "vehicleDefinitionPath");
-        ResolvedEngineBuild engineBuild = ReadReferenceEngine(vehicleDefinitionPath);
+        ResolvedEngineBuild engineBuild = ReadResolvedEngine(engine);
+        ResolvedEngineAssembly engineAssembly = EngineAssemblyResolver.Resolve(engine);
         float frontTyreRadius = RequirePositive(frontTyre, "data", "loadedRadiusMeters");
         float rearTyreRadius = RequirePositive(rearTyre, "data", "loadedRadiusMeters");
 
@@ -58,7 +63,7 @@ internal static class VehicleBuildDefinitionLoader
             Id = ReadString(root, Path.GetFileNameWithoutExtension(resolvedBuildPath), "id"),
             DisplayName = ReadString(root, string.Empty, "displayName"),
             VehicleDefinitionPath = vehicleDefinitionPath,
-            ChassisVehicleId = ReadString(chassis, string.Empty, "vehicleId"),
+            ChassisVehicleId = ReadString(chassis, ReadString(chassis, string.Empty, "vehicleId"), "chassisId"),
             ChassisCode = ReadString(chassis, string.Empty, "chassisCode"),
             DrivetrainLayout = ReadString(chassis, string.Empty, "drivetrainLayout"),
             BodyShellId = ReadString(bodyShell, string.Empty, "id"),
@@ -67,10 +72,11 @@ internal static class VehicleBuildDefinitionLoader
             Mass = new ResolvedVehicleMass
             {
                 BodyShellKg = ReadWeight(bodyShell),
-                EngineAssemblyKg = EstimateEngineAssemblyWeight(buildPath),
+                EngineAssemblyKg = engineAssembly.EstimatedAssemblyMassKg,
                 GearboxKg = ReadWeight(gearbox),
                 FinalDriveKg = ReadWeight(finalDrive),
                 DifferentialKg = ReadWeight(differential),
+                SwapKitKg = swapKitMassKg,
                 FrontSuspensionKg = ReadWeight(frontSuspension),
                 RearSuspensionKg = ReadWeight(rearSuspension),
                 FrontBrakesKg = ReadWeight(frontBrakes),
@@ -79,7 +85,7 @@ internal static class VehicleBuildDefinitionLoader
                 RearWheelKg = ReadWeight(rearWheel),
                 FrontTyreKg = ReadWeight(frontTyre),
                 RearTyreKg = ReadWeight(rearTyre),
-                CatalogVehicleSideKg = ReadWeight(bodyShell) + ReadWeight(gearbox) + ReadWeight(finalDrive) + ReadWeight(differential) +
+                CatalogVehicleSideKg = ReadWeight(bodyShell) + ReadWeight(gearbox) + ReadWeight(finalDrive) + ReadWeight(differential) + swapKitMassKg +
                     ReadWeight(frontSuspension) + ReadWeight(rearSuspension) + ReadWeight(frontBrakes) + ReadWeight(rearBrakes) +
                     ReadWeight(frontWheel) + ReadWeight(rearWheel) + ReadWeight(frontTyre) + ReadWeight(rearTyre)
             },
@@ -92,9 +98,15 @@ internal static class VehicleBuildDefinitionLoader
                 WidthMeters = RequirePositive(bodyShell, "data", "widthMeters"),
                 HeightMeters = RequirePositive(bodyShell, "data", "heightMeters"),
                 BaseCurbMassKg = RequirePositive(bodyShell, "data", "baseCurbMassKg"),
+                CalibrationResidualMassKg = ReadSingle(bodyShell, float.NaN, "data", "calibrationResidualMassKg"),
+                YawInertiaCalibrationScale = RequirePositive(bodyShell, "data", "yawInertiaCalibrationScale"),
                 FrontWeightDistribution = RequireRange(bodyShell, 0.05f, 0.95f, "data", "frontWeightDistribution"),
-                CenterOfGravityHeightMeters = RequirePositive(bodyShell, "data", "cgHeightMeters"),
-                TorsionalRigidityNmPerDeg = RequirePositive(bodyShell, "data", "torsionalRigidityNmPerDeg")
+                CenterOfGravityHeightMeters = RequirePositive(bodyShell, "data", "cgHeightMeters") + ReadSingle(bodyShell, 0f, "data", "cgHeightDeltaMeters"),
+                BodyMassCenterY = ReadSingle(bodyShell, float.NaN, "data", "bodyMassCenterY") + ReadSingle(bodyShell, 0f, "data", "cgHeightDeltaMeters"),
+                BodyMassCenterLongitudinalMeters = ReadSingle(bodyShell, float.NaN, "data", "bodyMassCenterLongitudinalMeters"),
+                TorsionalRigidityNmPerDeg = RequirePositive(bodyShell, "data", "torsionalRigidityNmPerDeg"),
+                FrontSuspensionHardPoints = ReadSuspensionHardPoints(bodyShell, "front"),
+                RearSuspensionHardPoints = ReadSuspensionHardPoints(bodyShell, "rear")
             },
             Drivetrain = new ResolvedDrivetrainBuild
             {
@@ -116,6 +128,11 @@ internal static class VehicleBuildDefinitionLoader
                 DownshiftOverRevBrakeMultiplier = RequirePositive(gearbox, "data", "downshiftOverRevBrakeMultiplier"),
                 DownshiftOverRevShockSeconds = RequirePositive(gearbox, "data", "downshiftOverRevShockSeconds")
             },
+            SwapKits = new ResolvedSwapKitBuild
+            {
+                InstalledParts = swapKitIds,
+                TotalMassKg = swapKitMassKg
+            },
             Suspension = new ResolvedSuspensionBuild
             {
                 FrontId = ReadString(frontSuspension, string.Empty, "id"),
@@ -129,6 +146,12 @@ internal static class VehicleBuildDefinitionLoader
                 RearReboundDampingNsPerM = RequirePositive(rearSuspension, "data", "reboundDampingNsPerM"),
                 FrontRideHeightMeters = RequirePositive(frontSuspension, "data", "rideHeightMeters"),
                 RearRideHeightMeters = RequirePositive(rearSuspension, "data", "rideHeightMeters"),
+                FrontRollCentreHeightMeters = RequirePositive(frontSuspension, "data", "rollCentreHeightMeters"),
+                RearRollCentreHeightMeters = RequirePositive(rearSuspension, "data", "rollCentreHeightMeters"),
+                FrontMaxCompressionMeters = RequirePositive(frontSuspension, "data", "maxCompressionMeters"),
+                RearMaxCompressionMeters = RequirePositive(rearSuspension, "data", "maxCompressionMeters"),
+                FrontMaxDroopMeters = RequirePositive(frontSuspension, "data", "maxDroopMeters"),
+                RearMaxDroopMeters = RequirePositive(rearSuspension, "data", "maxDroopMeters"),
                 FrontAntiRollBarRateNmPerRad = RequirePositive(frontSuspension, "data", "antiRollBarRateNmPerRad"),
                 RearAntiRollBarRateNmPerRad = RequirePositive(rearSuspension, "data", "antiRollBarRateNmPerRad"),
                 FrontCamberDegrees = ReadSingle(alignment, 0f, "data", "frontCamberDegrees"),
@@ -143,6 +166,12 @@ internal static class VehicleBuildDefinitionLoader
                 RearId = ReadString(rearBrakes, string.Empty, "id"),
                 FrontDiscDiameterMm = RequirePositive(frontBrakes, "data", "discDiameterMm"),
                 RearDiscDiameterMm = RequirePositive(rearBrakes, "data", "discDiameterMm"),
+                FrontEffectiveRadiusRatio = ReadSingle(frontBrakes, 0.42f, "data", "effectiveRadiusRatio"),
+                RearEffectiveRadiusRatio = ReadSingle(rearBrakes, 0.42f, "data", "effectiveRadiusRatio"),
+                FrontTotalPistonAreaSquareMeters = CalculateTotalPistonAreaSquareMeters(frontBrakes),
+                RearTotalPistonAreaSquareMeters = CalculateTotalPistonAreaSquareMeters(rearBrakes),
+                FrontClampForceMultiplier = ReadSingle(frontBrakes, 2f, "data", "clampForceMultiplier"),
+                RearClampForceMultiplier = ReadSingle(rearBrakes, 2f, "data", "clampForceMultiplier"),
                 FrontPadFriction = RequirePositive(frontBrakes, "data", "padFriction"),
                 RearPadFriction = RequirePositive(rearBrakes, "data", "padFriction"),
                 System = new ResolvedBrakeSystemBuild
@@ -228,8 +257,8 @@ internal static class VehicleBuildDefinitionLoader
                 AutomaticMinimumUpshiftSpeedKph = RequirePositive(handlingSetup, "data", "automaticMinimumUpshiftSpeedKph"),
                 AutomaticDownshiftRpm = RequirePositive(handlingSetup, "data", "automaticDownshiftRpm"),
                 EngineFreeRevResponseRate = RequirePositive(handlingSetup, "data", "engineFreeRevResponseRate"),
-                LaunchSlipTargetRpm = RequirePositive(handlingSetup, "data", "launchSlipTargetRpm"),
-                LaunchSlipBlend = RequireRange(handlingSetup, 0f, 1f, "data", "launchSlipBlend"),
+                MaxFreeRevRiseRpmPerSecond = RequirePositive(handlingSetup, "data", "maxFreeRevRiseRpmPerSecond"),
+                MaxFreeRevFallRpmPerSecond = RequirePositive(handlingSetup, "data", "maxFreeRevFallRpmPerSecond"),
                 WallCollisionPointRadiusMeters = RequirePositive(handlingSetup, "data", "wallCollisionPointRadiusMeters"),
                 WallCollisionRestitution = RequireRange(handlingSetup, 0f, 1f, "data", "wallCollisionRestitution"),
                 WallImpactFriction = RequireRange(handlingSetup, 0f, 1f, "data", "wallImpactFriction"),
@@ -240,67 +269,73 @@ internal static class VehicleBuildDefinitionLoader
         };
     }
 
-    public static VehicleSimulationParameters LoadReferenceRuntimeParameters(string buildPath)
+    public static JsonElement LoadVehicleCatalogItemForDiagnostics(string id)
     {
-        ResolvedVehicleBuild build = Load(buildPath);
-        return VehicleDefinitionLoader.LoadSimulationParameters(build.VehicleDefinitionPath);
+        return CatalogLookup.Load(VehicleCatalogIndexPath).Require(id);
     }
 
     public static VehicleSimulationParameters LoadSimulationParameters(string buildPath)
     {
         ResolvedVehicleBuild build = Load(buildPath);
-        VehicleSimulationParameters reference = LoadReferenceRuntimeParameters(buildPath);
+        ResolvedVehicleAssembly assembly = VehicleAssemblyResolver.Resolve(buildPath);
+        ResolvedEngineAssembly engineAssembly = assembly.Engine;
+        ResolvedMassProperties massProperties = assembly.MassProperties;
 
         return new VehicleSimulationParameters
         {
             Id = build.Id,
             DisplayName = build.DisplayName,
-            MassKg = build.Chassis.BaseCurbMassKg,
+            MassKg = massProperties.TotalMassKg,
             WheelbaseMeters = build.Chassis.WheelbaseMeters,
             FrontTrackMeters = build.Chassis.FrontTrackMeters,
             RearTrackMeters = build.Chassis.RearTrackMeters,
             BodyLengthMeters = build.Chassis.LengthMeters,
             BodyWidthMeters = build.Chassis.WidthMeters,
-            FrontWeightDistribution = build.Chassis.FrontWeightDistribution,
-            CenterOfGravityHeightMeters = build.Chassis.CenterOfGravityHeightMeters,
-            YawInertiaKgM2 = reference.YawInertiaKgM2,
+            FrontWeightDistribution = massProperties.FrontWeightDistribution,
+            CenterOfGravityHeightMeters = massProperties.CenterOfGravityHeightMeters,
+            YawInertiaKgM2 = massProperties.YawInertiaKgM2,
             WheelRadiusMeters = build.Tyres.FrontLoadedRadiusMeters,
             FinalDriveRatio = build.Drivetrain.FinalDriveRatio,
             DrivetrainEfficiency = build.Handling.DrivetrainEfficiency,
             ClosedThrottleEngineBrakeTorqueNm = build.Handling.ClosedThrottleEngineBrakeTorqueNm,
-            IdleRpm = build.Engine.IdleRpm,
-            PowerRedlineRpm = build.Engine.PowerRedlineRpm,
-            LimiterHardCutRpm = build.Engine.LimiterRpm,
-            MaxGaugeRpm = CalculateDefaultMaxGaugeRpm(build.Engine.LimiterRpm),
-            RedlineRpm = build.Engine.LimiterRpm,
-            RevLimiterResumeRpm = reference.RevLimiterResumeRpm,
-            RevLimiterFuelCutSeconds = reference.RevLimiterFuelCutSeconds,
-            RevLimiterRestoreSeconds = reference.RevLimiterRestoreSeconds,
-            RevLimiterCutTorqueMultiplier = reference.RevLimiterCutTorqueMultiplier,
-            RevLimiterBounceRpm = CalculateRevLimiterBounceRpm(build.Engine.LimiterRpm),
-            EngineRotationalInertiaKgM2 = build.Engine.RotationalInertiaKgM2,
-            VtecEnabled = build.Engine.VtecEnabled,
-            VtecActivationRpm = build.Engine.VtecActivationRpm,
-            VtecTransitionWidthRpm = build.Engine.VtecTransitionWidthRpm,
-            VtecLowCamFlowMultiplier = reference.VtecLowCamFlowMultiplier,
-            VtecHighCamFlowMultiplier = reference.VtecHighCamFlowMultiplier,
-            EngineSimulatorDrivesPhysics = reference.EngineSimulatorDrivesPhysics,
-            EngineSimulatorFullDriveline = reference.EngineSimulatorFullDriveline,
-            EngineSimulatorPhysicsSimulationFrequencyHz = reference.EngineSimulatorPhysicsSimulationFrequencyHz,
-            EngineSimulatorPhysicsFluidSimulationSteps = reference.EngineSimulatorPhysicsFluidSimulationSteps,
-            EngineSimulatorPhysicsTorqueScale = reference.EngineSimulatorPhysicsTorqueScale,
-            EngineSimulatorPhysicsTorqueBlend = reference.EngineSimulatorPhysicsTorqueBlend,
-            EngineSimulatorPhysicsUseReferenceTorqueCalibration = reference.EngineSimulatorPhysicsUseReferenceTorqueCalibration,
-            EngineSimulatorPhysicsEngineBrakeScale = reference.EngineSimulatorPhysicsEngineBrakeScale,
-            EngineSimulatorPhysicsEngineBrakeBlend = reference.EngineSimulatorPhysicsEngineBrakeBlend,
-            EngineSimulatorPhysicsMaxTorqueNm = reference.EngineSimulatorPhysicsMaxTorqueNm,
-            EngineSimulatorPhysicsMaxEngineBrakeTorqueNm = reference.EngineSimulatorPhysicsMaxEngineBrakeTorqueNm,
-            ClutchTorqueCapacityNm = reference.ClutchTorqueCapacityNm,
-            ClutchEngagementPoint = reference.ClutchEngagementPoint,
-            ClutchCouplingRate = reference.ClutchCouplingRate,
+            IdleRpm = engineAssembly.IdleRpm,
+            PowerRedlineRpm = engineAssembly.PowerRedlineRpm,
+            LimiterHardCutRpm = engineAssembly.LimiterHardCutRpm,
+            MaxGaugeRpm = engineAssembly.MaxGaugeRpm > 0f
+                ? engineAssembly.MaxGaugeRpm
+                : CalculateDefaultMaxGaugeRpm(engineAssembly.LimiterHardCutRpm),
+            RevLimiterResumeRpm = engineAssembly.LimiterResumeRpm,
+            RevLimiterFuelCutSeconds = engineAssembly.LimiterFuelCutSeconds,
+            RevLimiterRestoreSeconds = engineAssembly.LimiterRestoreSeconds,
+            RevLimiterCutTorqueMultiplier = engineAssembly.LimiterCutTorqueMultiplier,
+            RevLimiterBounceRpm = CalculateRevLimiterBounceRpm(engineAssembly.LimiterHardCutRpm),
+            EngineRotationalInertiaKgM2 = engineAssembly.RotationalInertiaKgM2,
+            VtecEnabled = engineAssembly.VtecEnabled,
+            VtecActivationRpm = engineAssembly.VtecActivationRpm,
+            VtecTransitionWidthRpm = engineAssembly.VtecTransitionWidthRpm,
+            VtecLowCamFlowMultiplier = engineAssembly.LowCamFlowMultiplier,
+            VtecHighCamFlowMultiplier = engineAssembly.HighCamFlowMultiplier,
+            EngineSimulatorDrivesPhysics = false,
+            EngineSimulatorFullDriveline = false,
+            EngineSimulatorPhysicsTorqueBlend = 0f,
+            EngineSimulatorPhysicsUseReferenceTorqueCalibration = false,
+            EngineSimulatorPhysicsEngineBrakeBlend = 0f,
+            ClutchTorqueCapacityNm = engineAssembly.ClutchTorqueCapacityNm,
+            ClutchEngagementPoint = engineAssembly.ClutchBitePoint,
+            ClutchCouplingRate = engineAssembly.ClutchCouplingRate,
+            ClutchEngagementSharpness = engineAssembly.ClutchEngagementSharpness,
+            ClutchSlipDamping = engineAssembly.ClutchSlipDamping,
+            ClutchLowSpeedAssistStrength = engineAssembly.ClutchLowSpeedAssistStrength,
+            ClutchBiteInputStartMultiplier = engineAssembly.ClutchBiteInputStartMultiplier,
+            ClutchLaunchAssistExponent = engineAssembly.ClutchLaunchAssistExponent,
+            ClutchLowSpeedThrottleGamma = engineAssembly.ClutchLowSpeedThrottleGamma,
+            ClutchLowSpeedThrottleAssist = engineAssembly.ClutchLowSpeedThrottleAssist,
+            ClutchLowSpeedTorqueAssistNm = engineAssembly.ClutchLowSpeedTorqueAssistNm,
+            ClutchRollingLockSpeedMetersPerSecond = engineAssembly.ClutchRollingLockSpeedMetersPerSecond,
+            ClutchRollingLockSlipRadiansPerSecond = engineAssembly.ClutchRollingLockSlipRadiansPerSecond,
             EngineFreeRevResponseRate = build.Handling.EngineFreeRevResponseRate,
-            LaunchSlipTargetRpm = build.Handling.LaunchSlipTargetRpm,
-            LaunchSlipBlend = build.Handling.LaunchSlipBlend,
+            MaxFreeRevRiseRpmPerSecond = build.Handling.MaxFreeRevRiseRpmPerSecond,
+            MaxFreeRevFallRpmPerSecond = build.Handling.MaxFreeRevFallRpmPerSecond,
             UpshiftRpm = build.Handling.AutomaticUpshiftRpm,
             DownshiftRpm = build.Handling.AutomaticDownshiftRpm,
             AutomaticMinimumUpshiftSpeedMetersPerSecond = build.Handling.AutomaticMinimumUpshiftSpeedKph / 3.6f,
@@ -314,7 +349,7 @@ internal static class VehicleBuildDefinitionLoader
             ReverseGearRatio = build.Drivetrain.ReverseGearRatio,
             MaxBrakeForceN = build.Brakes.System.MaxBrakeForceN,
             BrakeBiasFront = build.Brakes.System.BrakeBiasFront,
-            Brakes = MergeBrakes(reference.Brakes, build.Brakes),
+            Brakes = BuildBrakes(build.Brakes),
             AeroDragFactor = 0.5f * build.Handling.AirDensityKgM3 * build.Aero.DragCoefficient * build.Aero.FrontalAreaSquareMeters,
             FrontLiftFactor = 0.5f * build.Handling.AirDensityKgM3 * build.Aero.FrontLiftCoefficient * build.Aero.FrontalAreaSquareMeters,
             RearLiftFactor = 0.5f * build.Handling.AirDensityKgM3 * build.Aero.RearLiftCoefficient * build.Aero.FrontalAreaSquareMeters,
@@ -340,22 +375,22 @@ internal static class VehicleBuildDefinitionLoader
             RearSpringRateNPerM = build.Suspension.RearSpringRateNPerM,
             FrontAntiRollBarRateNmPerRad = build.Suspension.FrontAntiRollBarRateNmPerRad,
             RearAntiRollBarRateNmPerRad = build.Suspension.RearAntiRollBarRateNmPerRad,
-            FrontSuspensionGeometry = MergeSuspensionGeometry(reference.FrontSuspensionGeometry, build.Suspension, true),
-            RearSuspensionGeometry = MergeSuspensionGeometry(reference.RearSuspensionGeometry, build.Suspension, false),
+            FrontSuspensionGeometry = BuildSuspensionGeometry(build.Chassis.FrontSuspensionHardPoints, build.Suspension, true),
+            RearSuspensionGeometry = BuildSuspensionGeometry(build.Chassis.RearSuspensionHardPoints, build.Suspension, false),
             DifferentialTorqueBiasRatio = build.Drivetrain.DifferentialTorqueBiasRatio,
             DifferentialPreloadTorqueNm = build.Drivetrain.DifferentialPreloadTorqueNm,
             WheelInertiaKgM2 = EstimateWheelInertia(build),
             DrivenWheels = ReadDrivenWheels(build.DrivetrainLayout),
-            FrontTyres = MergeTyres(reference.FrontTyres, build.Tyres, true),
-            RearTyres = MergeTyres(reference.RearTyres, build.Tyres, false),
-            Audio = reference.Audio,
+            FrontTyres = BuildTyres(build.Tyres, true),
+            RearTyres = BuildTyres(build.Tyres, false),
+            Audio = VehicleRaceSampleAudioBuilder.Build(engineAssembly, build.Drivetrain, buildPath),
             WallCollisionPointRadiusMeters = build.Handling.WallCollisionPointRadiusMeters,
             WallCollisionRestitution = build.Handling.WallCollisionRestitution,
             WallImpactFriction = build.Handling.WallImpactFriction,
             WallScrapeFriction = build.Handling.WallScrapeFriction,
             WallYawImpulseScale = build.Handling.WallYawImpulseScale,
-            TorqueCurve = reference.TorqueCurve,
-            EngineBrakeTorqueCurve = reference.EngineBrakeTorqueCurve
+            TorqueCurve = engineAssembly.TorqueCurve,
+            EngineBrakeTorqueCurve = engineAssembly.EngineBrakeTorqueCurve
         };
     }
 
@@ -370,7 +405,7 @@ internal static class VehicleBuildDefinitionLoader
         return MathF.Ceiling(padded / 1000f) * 1000f;
     }
 
-    private static BrakeSystemParameters MergeBrakes(BrakeSystemParameters reference, ResolvedBrakeBuild build)
+    private static BrakeSystemParameters BuildBrakes(ResolvedBrakeBuild build)
     {
         return new BrakeSystemParameters
         {
@@ -379,8 +414,8 @@ internal static class VehicleBuildDefinitionLoader
             HandbrakeRearTorqueNm = build.System.HandbrakeRearTorqueNm,
             PressureRiseRatePerSecond = build.System.PressureRiseRatePerSecond,
             PressureReleaseRatePerSecond = build.System.PressureReleaseRatePerSecond,
-            Front = MergeBrakeAxle(reference.Front, build.FrontDiscDiameterMm, build.FrontPadFriction),
-            Rear = MergeBrakeAxle(reference.Rear, build.RearDiscDiameterMm, build.RearPadFriction),
+            Front = MergeBrakeAxle(build.FrontDiscDiameterMm, build.FrontEffectiveRadiusRatio, build.FrontTotalPistonAreaSquareMeters, build.FrontClampForceMultiplier, build.FrontPadFriction),
+            Rear = MergeBrakeAxle(build.RearDiscDiameterMm, build.RearEffectiveRadiusRatio, build.RearTotalPistonAreaSquareMeters, build.RearClampForceMultiplier, build.RearPadFriction),
             Abs = new AbsParameters
             {
                 Enabled = build.System.AbsEnabled,
@@ -394,20 +429,25 @@ internal static class VehicleBuildDefinitionLoader
         };
     }
 
-    private static BrakeAxleParameters MergeBrakeAxle(BrakeAxleParameters reference, float discDiameterMm, float padFriction)
+    private static BrakeAxleParameters MergeBrakeAxle(
+        float discDiameterMm,
+        float effectiveRadiusRatio,
+        float totalPistonAreaSquareMeters,
+        float clampForceMultiplier,
+        float padFriction)
     {
         return new BrakeAxleParameters
         {
             DiscDiameterMeters = discDiameterMm / 1000f,
-            EffectiveRadiusRatio = reference.EffectiveRadiusRatio,
-            TotalPistonAreaSquareMeters = reference.TotalPistonAreaSquareMeters,
-            ClampForceMultiplier = reference.ClampForceMultiplier,
+            EffectiveRadiusRatio = effectiveRadiusRatio,
+            TotalPistonAreaSquareMeters = totalPistonAreaSquareMeters,
+            ClampForceMultiplier = clampForceMultiplier,
             PadFrictionCoefficient = padFriction
         };
     }
 
-    private static SuspensionGeometryParameters MergeSuspensionGeometry(
-        SuspensionGeometryParameters reference,
+    private static SuspensionGeometryParameters BuildSuspensionGeometry(
+        ResolvedSuspensionHardPoints hardPoints,
         ResolvedSuspensionBuild build,
         bool front)
     {
@@ -415,17 +455,33 @@ internal static class VehicleBuildDefinitionLoader
         {
             StaticCamberRadians = MathHelper.ToRadians(front ? build.FrontCamberDegrees : build.RearCamberDegrees),
             StaticToeRadians = MathHelper.ToRadians(front ? build.FrontToeDegrees : build.RearToeDegrees),
-            CasterRadians = front ? MathHelper.ToRadians(build.FrontCasterDegrees) : reference.CasterRadians,
-            CamberGainRadiansPerMeter = reference.CamberGainRadiansPerMeter,
-            ToeGainRadiansPerMeter = reference.ToeGainRadiansPerMeter,
-            BodyRollCamberMultiplier = reference.BodyRollCamberMultiplier,
-            CasterCamberGain = reference.CasterCamberGain,
-            MaxCompressionMeters = reference.MaxCompressionMeters,
-            MaxDroopMeters = reference.MaxDroopMeters
+            CasterRadians = MathHelper.ToRadians(front ? build.FrontCasterDegrees : hardPoints.CasterDegrees),
+            CamberGainRadiansPerMeter = MathHelper.ToRadians(hardPoints.CamberGainDegreesPerMeter),
+            ToeGainRadiansPerMeter = MathHelper.ToRadians(hardPoints.ToeGainDegreesPerMeter),
+            BodyRollCamberMultiplier = hardPoints.BodyRollCamberMultiplier,
+            CasterCamberGain = hardPoints.CasterCamberGain,
+            MaxCompressionMeters = front ? build.FrontMaxCompressionMeters : build.RearMaxCompressionMeters,
+            MaxDroopMeters = front ? build.FrontMaxDroopMeters : build.RearMaxDroopMeters
         };
     }
 
-    private static TyreAxleParameters MergeTyres(TyreAxleParameters reference, ResolvedTyreBuild build, bool front)
+    private static ResolvedSuspensionHardPoints ReadSuspensionHardPoints(JsonElement bodyShell, string axle)
+    {
+        return new ResolvedSuspensionHardPoints
+        {
+            Type = ReadString(bodyShell, string.Empty, "data", "suspensionHardPoints", axle, "type"),
+            RollCentreHeightMeters = ReadSingle(bodyShell, 0f, "data", "suspensionHardPoints", axle, "rollCentreHeightMeters"),
+            CamberGainDegreesPerMeter = ReadSingle(bodyShell, 0f, "data", "suspensionHardPoints", axle, "camberGainDegreesPerMeter"),
+            ToeGainDegreesPerMeter = ReadSingle(bodyShell, 0f, "data", "suspensionHardPoints", axle, "toeGainDegreesPerMeter"),
+            BodyRollCamberMultiplier = ReadSingle(bodyShell, 0f, "data", "suspensionHardPoints", axle, "bodyRollCamberMultiplier"),
+            CasterDegrees = ReadSingle(bodyShell, 0f, "data", "suspensionHardPoints", axle, "casterDegrees"),
+            CasterCamberGain = ReadSingle(bodyShell, 0f, "data", "suspensionHardPoints", axle, "casterCamberGain"),
+            MaxCompressionMeters = ReadSingle(bodyShell, 0f, "data", "suspensionHardPoints", axle, "maxCompressionMeters"),
+            MaxDroopMeters = ReadSingle(bodyShell, 0f, "data", "suspensionHardPoints", axle, "maxDroopMeters")
+        };
+    }
+
+    private static TyreAxleParameters BuildTyres(ResolvedTyreBuild build, bool front)
     {
         ResolvedTyreModel model = front ? build.FrontModel : build.RearModel;
         return new TyreAxleParameters
@@ -434,8 +490,8 @@ internal static class VehicleBuildDefinitionLoader
             PeakFriction = front ? build.FrontPeakFriction : build.RearPeakFriction,
             RollingResistanceCoefficient = front ? build.FrontRollingResistance : build.RearRollingResistance,
             LoadSensitivity = model.LoadSensitivity,
-            CorneringStiffnessNPerRad = reference.CorneringStiffnessNPerRad,
-            LongitudinalStiffnessN = reference.LongitudinalStiffnessN,
+            CorneringStiffnessNPerRad = model.CorneringStiffnessNPerRad,
+            LongitudinalStiffnessN = model.LongitudinalStiffnessN,
             LateralPeakSlipAngleRadians = MathHelper.ToRadians(model.LateralPeakSlipAngleDegrees),
             LateralSlideSlipAngleRadians = MathHelper.ToRadians(model.LateralSlideSlipAngleDegrees),
             LateralForceRiseShape = model.LateralForceRiseShape,
@@ -459,6 +515,8 @@ internal static class VehicleBuildDefinitionLoader
         {
             Id = ReadString(model, string.Empty, "id"),
             LoadSensitivity = RequirePositive(model, "data", "loadSensitivity"),
+            CorneringStiffnessNPerRad = RequirePositive(model, "data", "corneringStiffnessNPerRad"),
+            LongitudinalStiffnessN = RequirePositive(model, "data", "longitudinalStiffnessN"),
             LateralPeakSlipAngleDegrees = RequirePositive(model, "data", "lateralPeakSlipAngleDegrees"),
             LateralSlideSlipAngleDegrees = RequirePositive(model, "data", "lateralSlideSlipAngleDegrees"),
             LateralForceRiseShape = RequirePositive(model, "data", "lateralForceRiseShape"),
@@ -514,33 +572,13 @@ internal static class VehicleBuildDefinitionLoader
 
     private static DrivenWheelSet ReadDrivenWheels(string layout)
     {
-        return layout.Equals("FF", StringComparison.OrdinalIgnoreCase)
-            ? new DrivenWheelSet(true, true, false, false)
-            : new DrivenWheelSet(true, true, false, false);
-    }
-
-    private static float EstimateEngineAssemblyWeight(string buildPath)
-    {
-        string resolvedBuildPath = ResolveDataPath(buildPath);
-        using FileStream stream = File.OpenRead(resolvedBuildPath);
-        using JsonDocument document = JsonDocument.Parse(stream, new JsonDocumentOptions { AllowTrailingCommas = true });
-        JsonElement engine = Require(document.RootElement, "assembly", "engine");
-        CatalogLookup catalogs = CatalogLookup.Load("Data/RTypeEngineProfiles/PartCatalogs/part_catalog_index.json", "Data/RTypeEngineProfiles/Tunes/engine_tunes.json");
-
-        float weight = 0f;
-        weight += ReadWeight(catalogs.Require(ReadString(engine, string.Empty, "blockId")));
-        weight += ReadWeight(catalogs.Require(ReadString(engine, string.Empty, "headId")));
-
-        foreach (JsonProperty part in Require(engine, "installedParts").EnumerateObject())
+        return layout.Trim().ToUpperInvariant() switch
         {
-            string id = part.Value.ValueKind == JsonValueKind.String ? part.Value.GetString() ?? string.Empty : string.Empty;
-            if (!string.IsNullOrWhiteSpace(id))
-            {
-                weight += ReadWeight(catalogs.Require(id));
-            }
-        }
-
-        return weight;
+            "FF" => new DrivenWheelSet(true, true, false, false),
+            "FR" or "MR" or "RR" => new DrivenWheelSet(false, false, true, true),
+            "AWD" or "4WD" => new DrivenWheelSet(true, true, true, true),
+            _ => new DrivenWheelSet(true, true, false, false)
+        };
     }
 
     private static float[] ReadForwardRatios(JsonElement gearbox)
@@ -580,6 +618,43 @@ internal static class VehicleBuildDefinitionLoader
             ReadSingle(item, 0f, "weightDeltaKg") +
             ReadSingle(item, 0f, "data", "weightKg") +
             ReadSingle(item, 0f, "data", "massKg");
+    }
+
+    private static float SumCatalogWeights(CatalogLookup catalogs, IEnumerable<string> ids)
+    {
+        float total = 0f;
+        foreach (string id in ids)
+        {
+            if (!string.IsNullOrWhiteSpace(id))
+            {
+                total += ReadWeight(catalogs.Require(id));
+            }
+        }
+
+        return total;
+    }
+
+    private static float CalculateTotalPistonAreaSquareMeters(JsonElement brake)
+    {
+        if (!TryGet(brake, out JsonElement diameters, "data", "pistonDiametersMm") ||
+            diameters.ValueKind != JsonValueKind.Array)
+        {
+            return 0.0015f;
+        }
+
+        float total = 0f;
+        foreach (JsonElement diameterElement in diameters.EnumerateArray())
+        {
+            if (!diameterElement.TryGetSingle(out float diameterMm) || diameterMm <= 0f)
+            {
+                continue;
+            }
+
+            float radiusMeters = diameterMm * 0.0005f;
+            total += MathF.PI * radiusMeters * radiusMeters;
+        }
+
+        return total > 0f ? total : 0.0015f;
     }
 
     private static float RequirePositive(JsonElement root, params string[] path)
@@ -629,6 +704,29 @@ internal static class VehicleBuildDefinitionLoader
             : fallback;
     }
 
+    private static IReadOnlyDictionary<string, string> ReadStringMap(JsonElement root, params string[] path)
+    {
+        if (!TryGet(root, out JsonElement value, path) || value.ValueKind != JsonValueKind.Object)
+        {
+            return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        Dictionary<string, string> result = new(StringComparer.OrdinalIgnoreCase);
+        foreach (JsonProperty property in value.EnumerateObject())
+        {
+            if (property.Value.ValueKind == JsonValueKind.String)
+            {
+                string id = property.Value.GetString() ?? string.Empty;
+                if (!string.IsNullOrWhiteSpace(id))
+                {
+                    result[property.Name] = id;
+                }
+            }
+        }
+
+        return result;
+    }
+
     private static bool ReadBoolean(JsonElement root, bool fallback, params string[] path)
     {
         return TryGet(root, out JsonElement value, path) && value.ValueKind is JsonValueKind.True or JsonValueKind.False
@@ -656,28 +754,25 @@ internal static class VehicleBuildDefinitionLoader
         return true;
     }
 
-    private static ResolvedEngineBuild ReadReferenceEngine(string vehicleDefinitionPath)
+    private static ResolvedEngineBuild ReadResolvedEngine(JsonElement engine)
     {
-        if (string.IsNullOrWhiteSpace(vehicleDefinitionPath))
-        {
-            return new ResolvedEngineBuild();
-        }
-
-        VehicleSimulationParameters reference = VehicleDefinitionLoader.LoadSimulationParameters(vehicleDefinitionPath);
+        ResolvedEngineAssembly assembly = EngineAssemblyResolver.Resolve(engine);
         return new ResolvedEngineBuild
         {
-            IdleRpm = reference.IdleRpm,
-            PowerRedlineRpm = reference.PowerRedlineRpm,
-            LimiterRpm = reference.RedlineRpm,
-            RotationalInertiaKgM2 = reference.EngineRotationalInertiaKgM2,
-            VtecEnabled = reference.VtecEnabled,
-            VtecActivationRpm = reference.VtecActivationRpm,
-            VtecTransitionWidthRpm = reference.VtecTransitionWidthRpm
+            IdleRpm = assembly.IdleRpm,
+            PowerRedlineRpm = assembly.PowerRedlineRpm,
+            LimiterRpm = assembly.LimiterHardCutRpm,
+            RotationalInertiaKgM2 = assembly.RotationalInertiaKgM2,
+            VtecEnabled = assembly.VtecEnabled,
+            VtecActivationRpm = assembly.VtecActivationRpm,
+            VtecTransitionWidthRpm = assembly.VtecTransitionWidthRpm
         };
     }
 
     private static string ResolveDataPath(string path)
     {
+        path = VehiclePathMigration.ResolveLegacyBuildPath(path);
+
         if (Path.IsPathRooted(path) && File.Exists(path))
         {
             return path;
@@ -738,6 +833,8 @@ internal static class VehicleBuildDefinitionLoader
                     LoadCatalog(path);
                 }
             }
+
+            ResolveInheritedItems();
         }
 
         private void LoadCatalog(string path)
@@ -769,6 +866,63 @@ internal static class VehicleBuildDefinitionLoader
                 }
             }
         }
+
+        private void ResolveInheritedItems()
+        {
+            foreach (string id in _items.Keys.ToArray())
+            {
+                _items[id] = ResolveInheritedItem(id, []);
+            }
+        }
+
+        private JsonElement ResolveInheritedItem(string id, HashSet<string> stack)
+        {
+            if (!_items.TryGetValue(id, out JsonElement item))
+            {
+                throw new InvalidDataException($"Missing inherited catalog id '{id}'.");
+            }
+
+            string baseId = ReadString(item, string.Empty, "inherits");
+            if (string.IsNullOrWhiteSpace(baseId))
+            {
+                return item;
+            }
+
+            if (!stack.Add(id))
+            {
+                throw new InvalidDataException($"Catalog inheritance cycle detected at '{id}'.");
+            }
+
+            JsonElement inherited = ResolveInheritedItem(baseId, stack);
+            stack.Remove(id);
+
+            JsonNode? baseNode = JsonNode.Parse(inherited.GetRawText());
+            JsonNode? overrideNode = JsonNode.Parse(item.GetRawText());
+            if (baseNode is not JsonObject baseObject || overrideNode is not JsonObject overrideObject)
+            {
+                return item;
+            }
+
+            DeepMerge(baseObject, overrideObject);
+            using JsonDocument mergedDocument = JsonDocument.Parse(baseObject.ToJsonString());
+            return mergedDocument.RootElement.Clone();
+        }
+
+        private static void DeepMerge(JsonObject target, JsonObject overlay)
+        {
+            foreach (KeyValuePair<string, JsonNode?> property in overlay)
+            {
+                if (target[property.Key] is JsonObject targetChild &&
+                    property.Value is JsonObject overlayChild)
+                {
+                    DeepMerge(targetChild, overlayChild);
+                }
+                else
+                {
+                    target[property.Key] = property.Value?.DeepClone();
+                }
+            }
+        }
     }
 }
 
@@ -786,6 +940,7 @@ internal sealed class ResolvedVehicleBuild
     public ResolvedVehicleMass Mass { get; init; } = new();
     public ResolvedChassisBuild Chassis { get; init; } = new();
     public ResolvedDrivetrainBuild Drivetrain { get; init; } = new();
+    public ResolvedSwapKitBuild SwapKits { get; init; } = new();
     public ResolvedSuspensionBuild Suspension { get; init; } = new();
     public ResolvedBrakeBuild Brakes { get; init; } = new();
     public ResolvedWheelBuild Wheels { get; init; } = new();
@@ -813,6 +968,7 @@ internal sealed class ResolvedVehicleMass
     public float GearboxKg { get; init; }
     public float FinalDriveKg { get; init; }
     public float DifferentialKg { get; init; }
+    public float SwapKitKg { get; init; }
     public float FrontSuspensionKg { get; init; }
     public float RearSuspensionKg { get; init; }
     public float FrontBrakesKg { get; init; }
@@ -834,9 +990,28 @@ internal sealed class ResolvedChassisBuild
     public float WidthMeters { get; init; }
     public float HeightMeters { get; init; }
     public float BaseCurbMassKg { get; init; }
+    public float CalibrationResidualMassKg { get; init; } = float.NaN;
+    public float YawInertiaCalibrationScale { get; init; } = 1f;
     public float FrontWeightDistribution { get; init; }
     public float CenterOfGravityHeightMeters { get; init; }
+    public float BodyMassCenterY { get; init; } = float.NaN;
+    public float BodyMassCenterLongitudinalMeters { get; init; } = float.NaN;
     public float TorsionalRigidityNmPerDeg { get; init; }
+    public ResolvedSuspensionHardPoints FrontSuspensionHardPoints { get; init; } = new();
+    public ResolvedSuspensionHardPoints RearSuspensionHardPoints { get; init; } = new();
+}
+
+internal sealed class ResolvedSuspensionHardPoints
+{
+    public string Type { get; init; } = string.Empty;
+    public float RollCentreHeightMeters { get; init; }
+    public float CamberGainDegreesPerMeter { get; init; }
+    public float ToeGainDegreesPerMeter { get; init; }
+    public float BodyRollCamberMultiplier { get; init; }
+    public float CasterDegrees { get; init; }
+    public float CasterCamberGain { get; init; }
+    public float MaxCompressionMeters { get; init; }
+    public float MaxDroopMeters { get; init; }
 }
 
 internal sealed class ResolvedDrivetrainBuild
@@ -860,6 +1035,13 @@ internal sealed class ResolvedDrivetrainBuild
     public float DownshiftOverRevShockSeconds { get; init; }
 }
 
+internal sealed class ResolvedSwapKitBuild
+{
+    public IReadOnlyDictionary<string, string> InstalledParts { get; init; } =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+    public float TotalMassKg { get; init; }
+}
+
 internal sealed class ResolvedSuspensionBuild
 {
     public string FrontId { get; init; } = string.Empty;
@@ -873,6 +1055,12 @@ internal sealed class ResolvedSuspensionBuild
     public float RearReboundDampingNsPerM { get; init; }
     public float FrontRideHeightMeters { get; init; }
     public float RearRideHeightMeters { get; init; }
+    public float FrontRollCentreHeightMeters { get; init; }
+    public float RearRollCentreHeightMeters { get; init; }
+    public float FrontMaxCompressionMeters { get; init; }
+    public float RearMaxCompressionMeters { get; init; }
+    public float FrontMaxDroopMeters { get; init; }
+    public float RearMaxDroopMeters { get; init; }
     public float FrontAntiRollBarRateNmPerRad { get; init; }
     public float RearAntiRollBarRateNmPerRad { get; init; }
     public float FrontCamberDegrees { get; init; }
@@ -888,6 +1076,12 @@ internal sealed class ResolvedBrakeBuild
     public string RearId { get; init; } = string.Empty;
     public float FrontDiscDiameterMm { get; init; }
     public float RearDiscDiameterMm { get; init; }
+    public float FrontEffectiveRadiusRatio { get; init; }
+    public float RearEffectiveRadiusRatio { get; init; }
+    public float FrontTotalPistonAreaSquareMeters { get; init; }
+    public float RearTotalPistonAreaSquareMeters { get; init; }
+    public float FrontClampForceMultiplier { get; init; }
+    public float RearClampForceMultiplier { get; init; }
     public float FrontPadFriction { get; init; }
     public float RearPadFriction { get; init; }
     public ResolvedBrakeSystemBuild System { get; init; } = new();
@@ -943,6 +1137,8 @@ internal sealed class ResolvedTyreModel
 {
     public string Id { get; init; } = string.Empty;
     public float LoadSensitivity { get; init; }
+    public float CorneringStiffnessNPerRad { get; init; }
+    public float LongitudinalStiffnessN { get; init; }
     public float LateralPeakSlipAngleDegrees { get; init; }
     public float LateralSlideSlipAngleDegrees { get; init; }
     public float LateralForceRiseShape { get; init; }
@@ -1000,8 +1196,8 @@ internal sealed class ResolvedHandlingSetup
     public float AutomaticMinimumUpshiftSpeedKph { get; init; }
     public float AutomaticDownshiftRpm { get; init; }
     public float EngineFreeRevResponseRate { get; init; }
-    public float LaunchSlipTargetRpm { get; init; }
-    public float LaunchSlipBlend { get; init; }
+    public float MaxFreeRevRiseRpmPerSecond { get; init; }
+    public float MaxFreeRevFallRpmPerSecond { get; init; }
     public float WallCollisionPointRadiusMeters { get; init; }
     public float WallCollisionRestitution { get; init; }
     public float WallImpactFriction { get; init; }

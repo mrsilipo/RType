@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "id": "vehicle_0002_modified_ek9",
+  "displayName": "Player EK9 Type R Club Build",
+  "role": "owned_vehicle",
+  "template": {
+    "sourcePurchaseCar": "Data/PurchaseCars/2000_Ek9_Stock.json",
+    "purchaseCarId": "2000_Ek9_Stock"
+  },
+  "ownership": {
+    "source": "player_garage",
+    "playerOwned": true,
+    "ownerProfileId": "dev_profile",
+    "garageSlot": 2,
+    "purchaseState": "owned"
+  },
+  "assembly": {
+    "chassis": {
+      "chassisId": "chassis_2000_ek9",
+      "chassisCode": "EK9",
+      "drivetrainLayout": "FF",
+      "bodyShell": "club_sport_seam_welded_ek9_body_shell"
+    },
+    "engine": {
+      "engineId": "engine_b16b",
+      "blockId": "block_b16b",
+      "headId": "head_b16b_type_r",
+      "tuneId": "tune_b16b_club_sport_e85",
+      "fuel": {
+        "default": "fuel_98ron",
+        "selected": "fuel_e85",
+        "allowed": [
+          "fuel_98ron",
+          "fuel_e85"
+        ]
+      },
+      "installedParts": {
+        "blockUpgrade": "block_upgrade_billet_aluminum",
+        "headUpgrade": "head_upgrade_billet_aluminum",
+        "cams": "cam_set_club_sport",
+        "displacement": "displacement_pro_high_comp",
+        "portPolishing": "ports_club_sport",
+        "throttleBody": "throttle_club_sport",
+        "intake": "intake_club_sport",
+        "intakeRunnerLength": "intake_length_short_club",
+        "valveSprings": "valve_springs_club_sport",
+        "headers": "header_club_sport",
+        "exhaust": "exhaust_club_sport",
+        "flywheel": "flywheel_club_sport",
+        "clutch": "clutch_club_sport",
+        "engineAudioDsp": "engine_audio_stock"
+      }
+    },
+    "drivetrain": {
+      "gearbox": "stock_ek9_5_speed",
+      "finalDrive": "stock_ek9_final_drive",
+      "differential": "stock_ek9_helical_lsd"
+    },
+    "suspension": {
+      "front": "stock_ek9_front_suspension",
+      "rear": "stock_ek9_rear_suspension",
+      "alignment": "stock_ek9_alignment"
+    },
+    "brakes": {
+      "front": "stock_ek9_front_brakes",
+      "rear": "stock_ek9_rear_brakes",
+      "system": "stock_ek9_brake_system"
+    },
+    "tyres": {
+      "frontCompound": "sports_hard_reference",
+      "rearCompound": "sports_hard_reference",
+      "frontModel": "sports_hard_ek9_front_model",
+      "rearModel": "sports_hard_ek9_rear_model"
+    },
+    "wheels": {
+      "front": "stock_ek9_15x6_wheel",
+      "rear": "stock_ek9_15x6_wheel"
+    },
+    "aero": {
+      "package": "stock_ek9_aero_package"
+    },
+    "tuning": {
+      "steering": "stock_ek9_steering_setup",
+      "handling": "stock_ek9_arcade_handling_setup"
+    }
+  },
+  "notes": [
+    "Development proof that owned vehicles can diverge from purchase-car templates through installed part IDs.",
+    "Uses E85 with high-compression B16B hardware to prove torque, engine-brake, inertia, mass, and validation metadata move through the resolver."
+  ]
+}

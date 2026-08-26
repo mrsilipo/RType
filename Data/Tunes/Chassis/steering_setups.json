@@ -33,6 +33,7 @@
     {
       "id": "street_quick_steering_setup",
       "displayName": "Street Quick Steering Setup",
+      "inherits": "stock_ek9_steering_setup",
       "tier": "street",
       "compatibility": ["ek9"],
       "data": {
@@ -53,6 +54,7 @@
     {
       "id": "club_sport_steering_setup",
       "displayName": "Club Sport Steering Setup",
+      "inherits": "stock_ek9_steering_setup",
       "tier": "clubSport",
       "compatibility": ["ek9"],
       "data": {
@@ -73,6 +75,7 @@
     {
       "id": "pro_racing_steering_setup",
       "displayName": "Pro Racing Steering Setup",
+      "inherits": "stock_ek9_steering_setup",
       "tier": "proRacing",
       "compatibility": ["ek9"],
       "data": {

@@ -13,10 +13,18 @@ public static class VehicleDefinitionLoader
 
     public static VehicleSimulationParameters LoadSimulationParameters(string path)
     {
-        return LoadSimulationParameters(path, null);
+        return LoadSimulationParameters(path, null, null);
     }
 
     public static VehicleSimulationParameters LoadSimulationParameters(string path, string? engineSimulatorProfileOverridePath)
+    {
+        return LoadSimulationParameters(path, engineSimulatorProfileOverridePath, null);
+    }
+
+    public static VehicleSimulationParameters LoadSimulationParameters(
+        string path,
+        string? engineSimulatorProfileOverridePath,
+        string? engineAudioProfileOverridePath)
     {
         string resolvedPath = ResolveDataPath(path);
         using FileStream stream = File.OpenRead(resolvedPath);
@@ -59,7 +67,6 @@ public static class VehicleDefinitionLoader
             PowerRedlineRpm = powerRedlineRpm,
             LimiterHardCutRpm = limiterHardCutRpm,
             MaxGaugeRpm = CalculateDefaultMaxGaugeRpm(limiterHardCutRpm),
-            RedlineRpm = limiterHardCutRpm,
             RevLimiterResumeRpm = ReadValueSingle(root, 6620f, "powertrain", "engine", "revLimiter", "resumeRpm"),
             RevLimiterFuelCutSeconds = ReadValueSingle(root, 0.08f, "powertrain", "engine", "revLimiter", "fuelCutSeconds"),
             RevLimiterRestoreSeconds = ReadValueSingle(root, 0.05f, "powertrain", "engine", "revLimiter", "restoreSeconds"),
@@ -85,9 +92,17 @@ public static class VehicleDefinitionLoader
             ClutchTorqueCapacityNm = ReadValueSingle(root, 250f, "powertrain", "clutch", "maxTorqueNm"),
             ClutchEngagementPoint = ReadValueSingle(root, 0.55f, "powertrain", "clutch", "engagementPoint"),
             ClutchCouplingRate = ReadValueSingle(root, 10f, "powertrain", "clutch", "couplingRate"),
+            ClutchLowSpeedAssistStrength = ReadValueSingle(root, 0.65f, "powertrain", "clutch", "lowSpeedAssistStrength"),
+            ClutchBiteInputStartMultiplier = ReadValueSingle(root, 0.35f, "powertrain", "clutch", "biteInputStartMultiplier"),
+            ClutchLaunchAssistExponent = ReadValueSingle(root, 0.55f, "powertrain", "clutch", "launchAssistExponent"),
+            ClutchLowSpeedThrottleGamma = ReadValueSingle(root, 0.65f, "powertrain", "clutch", "lowSpeedThrottleGamma"),
+            ClutchLowSpeedThrottleAssist = ReadValueSingle(root, 0.45f, "powertrain", "clutch", "lowSpeedThrottleAssist"),
+            ClutchLowSpeedTorqueAssistNm = ReadValueSingle(root, 55f, "powertrain", "clutch", "lowSpeedTorqueAssistNm"),
+            ClutchRollingLockSpeedMetersPerSecond = ReadValueSingle(root, 0.85f, "powertrain", "clutch", "rollingLockSpeedMetersPerSecond"),
+            ClutchRollingLockSlipRadiansPerSecond = ReadValueSingle(root, 115f, "powertrain", "clutch", "rollingLockSlipRadiansPerSecond"),
             EngineFreeRevResponseRate = ReadValueSingle(root, 7f, "simulation", "currentPrototype", "engineFreeRevResponseRate"),
-            LaunchSlipTargetRpm = ReadValueSingle(root, 3800f, "simulation", "currentPrototype", "launchSlipTargetRpm"),
-            LaunchSlipBlend = ReadValueSingle(root, 0.3f, "simulation", "currentPrototype", "launchSlipBlend"),
+            MaxFreeRevRiseRpmPerSecond = ReadValueSingle(root, 4600f, "simulation", "currentPrototype", "maxFreeRevRiseRpmPerSecond"),
+            MaxFreeRevFallRpmPerSecond = ReadValueSingle(root, 7600f, "simulation", "currentPrototype", "maxFreeRevFallRpmPerSecond"),
             UpshiftRpm = ReadValueSingle(root, 6250f, "simulation", "currentPrototype", "automaticUpshiftRpm"),
             DownshiftRpm = ReadValueSingle(root, 2350f, "simulation", "currentPrototype", "automaticDownshiftRpm"),
             AutomaticMinimumUpshiftSpeedMetersPerSecond = ReadValueSingle(root, 18f, "simulation", "currentPrototype", "automaticMinimumUpshiftSpeedKph") / 3.6f,
@@ -135,7 +150,7 @@ public static class VehicleDefinitionLoader
             DrivenWheels = ReadDrivenWheels(root),
             FrontTyres = frontTyres,
             RearTyres = rearTyres,
-            Audio = ReadAudio(root, engineSimulatorProfileOverridePath),
+            Audio = ReadAudio(root, engineSimulatorProfileOverridePath, engineAudioProfileOverridePath),
             WallCollisionPointRadiusMeters = ReadValueSingle(root, 0.08f, "simulation", "currentPrototype", "wallCollisionPointRadiusMeters"),
             WallCollisionRestitution = ReadValueSingle(root, 0.12f, "simulation", "currentPrototype", "wallCollisionRestitution"),
             WallImpactFriction = ReadValueSingle(root, 0.24f, "simulation", "currentPrototype", "wallImpactFriction"),
@@ -319,11 +334,15 @@ public static class VehicleDefinitionLoader
         };
     }
 
-    private static VehicleAudioParameters ReadAudio(JsonElement root, string? engineSimulatorProfileOverridePath = null)
+    private static VehicleAudioParameters ReadAudio(
+        JsonElement root,
+        string? engineSimulatorProfileOverridePath = null,
+        string? engineAudioProfileOverridePath = null)
     {
         float vtecActivationRpm = ReadValueSingle(root, 5800f, "powertrain", "engine", "vtec", "activationRpm");
         float vtecTransitionWidthRpm = ReadValueSingle(root, 650f, "powertrain", "engine", "vtec", "transitionWidthRpm");
-        string engineAudioProfilePath = ReadString(root, string.Empty, "audio", "engineAudioProfilePath");
+        string engineAudioProfilePath = engineAudioProfileOverridePath ??
+            ReadString(root, string.Empty, "audio", "engineAudioProfilePath");
         EngineAudioProfile? engineAudioProfile = LoadEngineAudioProfile(engineAudioProfilePath);
         bool engineSimulatorEnabled = ReadBoolean(root, false, "audio", "engineSimulator", "enabled");
         string engineSimulatorProfilePath = engineSimulatorProfileOverridePath ??
@@ -377,7 +396,7 @@ public static class VehicleDefinitionLoader
             RTypeEngineEnabled = ReadBoolean(root, true, "audio", "rTypeEngine", "enabled"),
             RTypeEngineBuildPath = ReadString(
                 root,
-                ReadString(root, "Data/VehicleBuilds/ek9_showroom_stock.json", "defaultBuildPath"),
+                ReadString(root, "Data/PurchaseCars/2000_Ek9_Stock.json", "defaultBuildPath"),
                 "audio",
                 "rTypeEngine",
                 "buildPath"),

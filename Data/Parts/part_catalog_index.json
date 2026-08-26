@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "catalogs": [
     { "slot": "bodyShell", "path": "Data/Parts/Chassis/body_shells.json" },
+    { "slot": "swapKit", "path": "Data/Parts/Chassis/swap_kits.json" },
     { "slot": "gearbox", "path": "Data/Parts/Drivetrain/gearboxes.json" },
     { "slot": "finalDrive", "path": "Data/Parts/Drivetrain/final_drives.json" },
     { "slot": "differential", "path": "Data/Parts/Drivetrain/differentials.json" },
@@ -12,6 +13,7 @@
     { "slot": "wheels", "path": "Data/Parts/Wheels/wheels.json" },
     { "slot": "tyres", "path": "Data/Parts/Tyres/tyres.json" },
     { "slot": "tyreModel", "path": "Data/Parts/Tyres/tyre_models.json" },
+    { "slot": "tyrePackage", "path": "Data/Parts/Tyres/tyre_packages.json" },
     { "slot": "aeroPackage", "path": "Data/Parts/Aero/aero_packages.json" }
   ]
 }

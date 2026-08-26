@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "id": "dev_profile",
+  "displayName": "Development Profile",
+  "credits": 50000,
+  "activeVehicleId": "vehicle_0001",
+  "ownedVehicles": [
+    {
+      "vehicleId": "vehicle_0001",
+      "path": "Data/Garage/OwnedVehicles/vehicle_0001.json",
+      "garageSlot": 1
+    },
+    {
+      "vehicleId": "vehicle_0002_modified_ek9",
+      "path": "Data/Garage/OwnedVehicles/vehicle_0002_modified_ek9.json",
+      "garageSlot": 2
+    },
+    {
+      "vehicleId": "vehicle_0003_k20a_swap_ek9",
+      "path": "Data/Garage/OwnedVehicles/vehicle_0003_k20a_swap_ek9.json",
+      "garageSlot": 3
+    },
+    {
+      "vehicleId": "vehicle_0004_b20vtec_ek9",
+      "path": "Data/Garage/OwnedVehicles/vehicle_0004_b20vtec_ek9.json",
+      "garageSlot": 4
+    },
+    {
+      "vehicleId": "vehicle_0005_k24_k20_pro_ek9",
+      "path": "Data/Garage/OwnedVehicles/vehicle_0005_k24_k20_pro_ek9.json",
+      "garageSlot": 5
+    }
+  ],
+  "savedSetups": [
+    {
+      "setupId": "vehicle_0001_track_day_setup",
+      "vehicleId": "vehicle_0001",
+      "path": "Data/Garage/SavedSetups/vehicle_0001_track_day_setup.json",
+      "displayName": "EK9 Track Day Setup",
+      "active": true
+    }
+  ],
+  "inventory": {
+    "ownedPartIds": [
+      "fuel_98ron",
+      "fuel_e85",
+      "tyre_package_sports_hard_ek9",
+      "tyre_package_sports_medium_balanced",
+      "stock_ek9_helical_lsd",
+      "club_sport_plate_lsd",
+      "displacement_stock",
+      "displacement_pro_high_comp"
+    ],
+    "purchasablePartIds": [
+      "*"
+    ],
+    "lockedPartIds": [
+      "pro_racing_plate_lsd",
+      "tyre_package_semi_slick_aggressive",
+      "engine_audio_pro_racing"
+    ]
+  },
+  "notes": [
+    "Development fixture for first garage profile and inventory gating.",
+    "Catalogs do not own prices yet, so purchasable means visible/allowed for future shop flow, not an implemented transaction."
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "catalog": "flywheels",
+  "slot": "flywheel",
+  "description": "Flywheels should control rotating inertia, rev rise/drop, shift recovery, and launch behavior.",
+  "parts": [
+    { "id": "flywheel_stock", "displayName": "Stock B16 Flywheel", "tier": "stock", "compatibility": ["honda_b_series"], "data": { "massKg": 7.8, "inertiaKgM2": 0.18 }, "modifies": { "engine": { "rotationalInertiaKgM2": 0.18 } } },
+    { "id": "flywheel_stock_b18c", "displayName": "Stock B18C Flywheel", "tier": "stock", "compatibility": ["honda_b_series"], "data": { "massKg": 8.1, "inertiaKgM2": 0.205 }, "modifies": { "engine": { "rotationalInertiaKgM2": 0.205 } } },
+    { "id": "flywheel_stock_b18a_b18b", "displayName": "Stock B18A/B Flywheel", "tier": "stock", "compatibility": ["honda_b_series"], "data": { "massKg": 8.4, "inertiaKgM2": 0.215 }, "modifies": { "engine": { "rotationalInertiaKgM2": 0.215 } } },
+    { "id": "flywheel_stock_d16", "displayName": "Stock D16 Flywheel", "tier": "stock", "compatibility": ["honda_d_series"], "data": { "massKg": 7.4, "inertiaKgM2": 0.190 }, "modifies": { "engine": { "rotationalInertiaKgM2": 0.190 } } },
+    { "id": "flywheel_stock_k20a", "displayName": "Stock K20A Flywheel", "tier": "stock", "compatibility": ["honda_k_series"], "data": { "massKg": 8.6, "inertiaKgM2": 0.225 }, "modifies": { "engine": { "rotationalInertiaKgM2": 0.225 } } },
+    { "id": "flywheel_stock_k24a3", "displayName": "Stock K24A3 Flywheel", "tier": "stock", "compatibility": ["honda_k_series"], "data": { "massKg": 9.2, "inertiaKgM2": 0.265 }, "modifies": { "engine": { "rotationalInertiaKgM2": 0.265 } } },
+    { "id": "flywheel_street", "displayName": "Street Lightweight Flywheel", "tier": "street", "compatibility": ["honda_b_series", "honda_k_series"], "data": { "massKg": 6.2, "inertiaKgM2": 0.158 }, "modifies": { "engine": { "rotationalInertiaKgM2": 0.158 } } },
+    { "id": "flywheel_club_sport", "displayName": "Club Sport Lightweight Flywheel", "tier": "clubSport", "compatibility": ["honda_b_series", "honda_k_series"], "data": { "massKg": 4.8, "inertiaKgM2": 0.132 }, "modifies": { "engine": { "rotationalInertiaKgM2": 0.132 } } },
+    { "id": "flywheel_pro_racing", "displayName": "Pro Racing Flywheel", "tier": "proRacing", "compatibility": ["honda_b_series", "honda_k_series"], "data": { "massKg": 3.6, "inertiaKgM2": 0.108 }, "modifies": { "engine": { "rotationalInertiaKgM2": 0.108 } } }
+  ]
+}

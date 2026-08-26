@@ -9,7 +9,11 @@ public static class ShiftProbe
 {
     public static void Run(GameLaunchOptions options)
     {
-        VehicleSimulationParameters parameters = VehicleDefinitionLoader.LoadSimulationParameters(options.VehicleDefinitionPath);
+        VehicleSimulationParameters parameters = VehicleRuntimeLoader.LoadSimulationParameters(
+            options.VehiclePath,
+            options.GarageProfilePath,
+            options.GarageVehicleIdOrPath,
+            options.GarageSetupIdOrPath);
         SimulationEngineParameters engineParameters = SimulationEngineDefinitionLoader.Load(options.SimulationEngineDefinitionPath);
         SimpleVehicleSimulator simulator = new(
             new FlatSurfaceSampler(),
@@ -85,7 +89,7 @@ public static class ShiftProbe
 
         const float dt = 1f / 60f;
         float secondGearRatio = parameters.ForwardGearRatios[1];
-        float targetOverRevRpm = parameters.RedlineRpm + parameters.DownshiftOverRevToleranceRpm + 650f;
+        float targetOverRevRpm = parameters.LimiterHardCutRpm + parameters.DownshiftOverRevToleranceRpm + 650f;
         float targetSpeedMetersPerSecond =
             targetOverRevRpm /
             MathF.Max(0.1f, secondGearRatio * parameters.FinalDriveRatio) *
@@ -114,7 +118,7 @@ public static class ShiftProbe
             parameters.FinalDriveRatio;
         Console.WriteLine(
             $"manual over-rev setup speed={simulator.State.SpeedMetersPerSecond * 3.6f:0.0} " +
-            $"gear={simulator.State.Gear} predicted2={predictedSecondGearRpm:0} limiter={parameters.RedlineRpm:0}");
+            $"gear={simulator.State.Gear} predicted2={predictedSecondGearRpm:0} limiter={parameters.LimiterHardCutRpm:0}");
 
         simulator.Update(new VehicleInput(0f, 0f, 0f, shiftDownRequested: true), dt);
         float previousSpeed = simulator.State.SpeedMetersPerSecond;

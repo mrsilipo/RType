@@ -9,7 +9,11 @@ public static class HandlingProbe
 {
     public static void Run(GameLaunchOptions options)
     {
-        VehicleSimulationParameters parameters = VehicleDefinitionLoader.LoadSimulationParameters(options.VehicleDefinitionPath);
+        VehicleSimulationParameters parameters = VehicleRuntimeLoader.LoadSimulationParameters(
+            options.VehiclePath,
+            options.GarageProfilePath,
+            options.GarageVehicleIdOrPath,
+            options.GarageSetupIdOrPath);
         SimulationEngineParameters engineParameters = SimulationEngineDefinitionLoader.Load(options.SimulationEngineDefinitionPath);
         RunSet(parameters, engineParameters, 7.0f);
         RunSet(parameters, engineParameters, 16.7f);

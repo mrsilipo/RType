@@ -2,13 +2,16 @@ namespace RType.Core;
 
 public sealed record GameLaunchOptions(
     int? AutoExitMilliseconds,
-    string VehicleDefinitionPath,
+    string VehiclePath,
+    string GarageProfilePath,
+    string GarageVehicleIdOrPath,
+    string GarageSetupIdOrPath,
     bool StartInManualTransmission,
     string ControlSchemePath,
     string SurfaceDefinitionPath,
     string SimulationEngineDefinitionPath)
 {
-    public const string DefaultVehicleDefinitionPath = "Data/Vehicles/ek9_reference_2000.json";
+    public const string DefaultVehiclePath = "Data/PurchaseCars/2000_Ek9_Stock.json";
     public const string DefaultControlSchemePath = "Data/Controls/racing_xbox360_default.json";
     public const string DefaultSurfaceDefinitionPath = "Data/Surfaces/default_surfaces.json";
     public const string DefaultSimulationEngineDefinitionPath = "Data/Simulation/arcade_physics.json";
@@ -16,7 +19,10 @@ public sealed record GameLaunchOptions(
     public static GameLaunchOptions FromArgs(string[] args)
     {
         int? autoExitMilliseconds = null;
-        string vehicleDefinitionPath = DefaultVehicleDefinitionPath;
+        string vehiclePath = DefaultVehiclePath;
+        string garageProfilePath = string.Empty;
+        string garageVehicleIdOrPath = string.Empty;
+        string garageSetupIdOrPath = "active";
         string controlSchemePath = DefaultControlSchemePath;
         string surfaceDefinitionPath = DefaultSurfaceDefinitionPath;
         string simulationEngineDefinitionPath = DefaultSimulationEngineDefinitionPath;
@@ -34,12 +40,30 @@ public sealed record GameLaunchOptions(
             else if (args[i].Equals("--vehicle", StringComparison.OrdinalIgnoreCase) &&
                      i + 1 < args.Length)
             {
-                vehicleDefinitionPath = args[i + 1];
+                vehiclePath = args[i + 1];
                 i++;
             }
             else if (args[i].Equals("--manual-transmission", StringComparison.OrdinalIgnoreCase))
             {
                 startInManualTransmission = true;
+            }
+            else if (args[i].Equals("--garage-profile", StringComparison.OrdinalIgnoreCase) &&
+                     i + 1 < args.Length)
+            {
+                garageProfilePath = args[i + 1];
+                i++;
+            }
+            else if (args[i].Equals("--garage-vehicle", StringComparison.OrdinalIgnoreCase) &&
+                     i + 1 < args.Length)
+            {
+                garageVehicleIdOrPath = args[i + 1];
+                i++;
+            }
+            else if (args[i].Equals("--garage-setup", StringComparison.OrdinalIgnoreCase) &&
+                     i + 1 < args.Length)
+            {
+                garageSetupIdOrPath = args[i + 1];
+                i++;
             }
             else if (args[i].Equals("--controls", StringComparison.OrdinalIgnoreCase) &&
                      i + 1 < args.Length)
@@ -63,7 +87,10 @@ public sealed record GameLaunchOptions(
 
         return new GameLaunchOptions(
             autoExitMilliseconds,
-            vehicleDefinitionPath,
+            vehiclePath,
+            garageProfilePath,
+            garageVehicleIdOrPath,
+            garageSetupIdOrPath,
             startInManualTransmission,
             controlSchemePath,
             surfaceDefinitionPath,

@@ -84,8 +84,8 @@
         "rimDiameterIn": 15,
         "loadedRadiusMeters": 0.291,
         "rollingResistance": 0.017,
-        "frontPeakFriction": 1.58,
-        "rearPeakFriction": 1.50,
+        "frontPeakFriction": 2.37,
+        "rearPeakFriction": 2.25,
         "lateralPeakSlipAngleDegrees": 7.4,
         "longitudinalPeakSlipRatio": 0.10
       },

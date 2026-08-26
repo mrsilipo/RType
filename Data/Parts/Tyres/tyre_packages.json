@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "catalog": "tyrePackages",
+  "slot": "tyrePackage",
+  "description": "Garage-facing tyre packages. A package changes both axle compounds and the matching tyre model records together so builds do not leave compound/model compatibility mismatches behind.",
+  "parts": [
+    {
+      "id": "tyre_package_sports_hard_ek9",
+      "displayName": "Sports Hard EK9 Tyre Package",
+      "tier": "stock",
+      "compatibility": ["ek9", "15_inch"],
+      "data": {
+        "frontCompound": "sports_hard_reference",
+        "rearCompound": "sports_hard_reference",
+        "frontModel": "sports_hard_ek9_front_model",
+        "rearModel": "sports_hard_ek9_rear_model"
+      }
+    },
+    {
+      "id": "tyre_package_sports_medium_balanced",
+      "displayName": "Sports Medium Balanced Tyre Package",
+      "tier": "street",
+      "compatibility": ["ek9", "15_inch"],
+      "data": {
+        "frontCompound": "sports_medium_reference",
+        "rearCompound": "sports_medium_reference",
+        "frontModel": "sports_medium_balanced_model",
+        "rearModel": "sports_medium_balanced_model"
+      }
+    },
+    {
+      "id": "tyre_package_semi_slick_aggressive",
+      "displayName": "Semi-Slick Aggressive Tyre Package",
+      "tier": "proRacing",
+      "compatibility": ["ek9", "15_inch"],
+      "data": {
+        "frontCompound": "semi_slick_reference",
+        "rearCompound": "semi_slick_reference",
+        "frontModel": "semi_slick_aggressive_model",
+        "rearModel": "semi_slick_aggressive_model"
+      }
+    }
+  ]
+}

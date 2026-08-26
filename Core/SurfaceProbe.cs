@@ -7,7 +7,7 @@ namespace RType.Core;
 
 public static class SurfaceProbe
 {
-    private const string ShowroomStockBuildPath = "Data/VehicleBuilds/ek9_showroom_stock.json";
+    private const string ShowroomStockBuildPath = "Data/PurchaseCars/2000_Ek9_Stock.json";
 
     public static void Run(GameLaunchOptions options)
     {

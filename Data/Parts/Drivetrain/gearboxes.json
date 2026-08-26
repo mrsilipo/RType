@@ -35,9 +35,16 @@
       "compatibility": ["honda_b_series", "ff_transverse"],
       "weightKg": 45.8,
       "data": {
+        "type": "manual",
+        "reverseRatio": -3.153,
         "forwardRatios": [3.307, 2.130, 1.517, 1.147, 0.921],
         "efficiency": 0.945,
-        "manualShiftTimeSeconds": 0.25
+        "manualShiftTimeSeconds": 0.25,
+        "automaticShiftTimeSeconds": 0.17,
+        "downshiftOverRevToleranceRpm": 220,
+        "downshiftMechanicalOverRevLimitRpm": 9800,
+        "downshiftOverRevBrakeMultiplier": 2.55,
+        "downshiftOverRevShockSeconds": 0.40
       },
       "durability": {
         "rating": 0.90,
@@ -53,9 +60,16 @@
       "compatibility": ["honda_b_series", "ff_transverse"],
       "weightKg": 46.5,
       "data": {
+        "type": "manual",
+        "reverseRatio": -3.153,
         "forwardRatios": [3.462, 2.250, 1.650, 1.296, 1.033],
         "efficiency": 0.955,
-        "manualShiftTimeSeconds": 0.21
+        "manualShiftTimeSeconds": 0.21,
+        "automaticShiftTimeSeconds": 0.15,
+        "downshiftOverRevToleranceRpm": 180,
+        "downshiftMechanicalOverRevLimitRpm": 10000,
+        "downshiftOverRevBrakeMultiplier": 2.70,
+        "downshiftOverRevShockSeconds": 0.38
       },
       "durability": {
         "rating": 0.93,
@@ -71,9 +85,66 @@
       "compatibility": ["honda_b_series", "ff_transverse"],
       "weightKg": 43.2,
       "data": {
+        "type": "dogbox",
+        "reverseRatio": -3.153,
         "forwardRatios": [3.000, 2.313, 1.857, 1.550, 1.318, 1.130],
         "efficiency": 0.965,
-        "manualShiftTimeSeconds": 0.13
+        "manualShiftTimeSeconds": 0.13,
+        "automaticShiftTimeSeconds": 0.10,
+        "downshiftOverRevToleranceRpm": 140,
+        "downshiftMechanicalOverRevLimitRpm": 10400,
+        "downshiftOverRevBrakeMultiplier": 2.90,
+        "downshiftOverRevShockSeconds": 0.34
+      },
+      "durability": {
+        "rating": 0.95,
+        "heatTolerance": 0.96,
+        "fatigueResistance": 0.94,
+        "safeTorqueMultiplier": 1.80
+      }
+    },
+    {
+      "id": "stock_k20a_6_speed",
+      "displayName": "Stock K20A 6-Speed Manual",
+      "tier": "stock",
+      "compatibility": ["honda_k_series", "ff_transverse"],
+      "weightKg": 48.5,
+      "data": {
+        "type": "manual",
+        "reverseRatio": -3.583,
+        "forwardRatios": [3.267, 2.130, 1.517, 1.147, 0.921, 0.738],
+        "efficiency": 0.945,
+        "manualShiftTimeSeconds": 0.27,
+        "automaticShiftTimeSeconds": 0.18,
+        "downshiftOverRevToleranceRpm": 220,
+        "downshiftMechanicalOverRevLimitRpm": 10000,
+        "downshiftOverRevBrakeMultiplier": 2.65,
+        "downshiftOverRevShockSeconds": 0.42
+      },
+      "durability": {
+        "rating": 0.88,
+        "heatTolerance": 0.86,
+        "fatigueResistance": 0.86,
+        "safeTorqueMultiplier": 1.00
+      }
+    },
+    {
+      "id": "pro_racing_k_series_dogbox_6_speed",
+      "displayName": "Pro Racing K-Series 6-Speed Dogbox",
+      "tier": "proRacing",
+      "compatibility": ["honda_k_series", "ff_transverse"],
+      "weightKg": 45.0,
+      "data": {
+        "type": "dogbox",
+        "reverseRatio": -3.583,
+        "forwardRatios": [3.000, 2.200, 1.700, 1.348, 1.080, 0.880],
+        "efficiency": 0.965,
+        "manualShiftTimeSeconds": 0.13,
+        "automaticShiftTimeSeconds": 0.10,
+        "downshiftOverRevToleranceRpm": 140,
+        "downshiftMechanicalOverRevLimitRpm": 10400,
+        "downshiftOverRevBrakeMultiplier": 2.90,
+        "downshiftOverRevShockSeconds": 0.34
       },
       "durability": {
         "rating": 0.95,

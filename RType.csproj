@@ -32,6 +32,7 @@
     <None Remove="Assets\Sounds\Honda\limiter_8200.wav" />
     <None Remove="Assets\Sounds\Nissan\**\*" />
     <None Remove="Assets\Music\Racing\**\*" />
+    <None Remove="Data\Legacy\**\*" />
     <None Remove="ReferenceSource\**\*" />
     <None Update="Data\**\*.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

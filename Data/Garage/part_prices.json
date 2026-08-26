@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "currency": "credits",
+  "prices": [
+    { "partId": "engine_audio_street", "price": 2500 },
+    { "partId": "engine_audio_club_sport", "price": 5200 },
+    { "partId": "tyre_package_sports_medium_balanced", "price": 1800 },
+    { "partId": "club_sport_plate_lsd", "price": 8500 },
+    { "partId": "displacement_club_stroker", "price": 6800 },
+    { "partId": "cam_set_street", "price": 4200 },
+    { "partId": "cam_set_club_sport", "price": 7800 }
+  ],
+  "notes": [
+    "Temporary first-pass shop price table. Catalogs own engineering data; this file owns economy prices until the career economy is formalized."
+  ]
+}

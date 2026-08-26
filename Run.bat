@@ -3,31 +3,28 @@ setlocal
 
 cd /d "%~dp0"
 
-set "GAME_EXE=bin\Release\net8.0-windows\RType.exe"
-set "GAME_DLL=bin\Release\net8.0-windows\RType.dll"
-set "DEBUG_GAME_EXE=bin\Debug\net8.0-windows\RType.exe"
-set "DEBUG_GAME_DLL=bin\Debug\net8.0-windows\RType.dll"
+set "PROJECT=RType.csproj"
+set "CONFIG=Release"
+set "OUTPUT_DIR=bin\%CONFIG%\net8.0-windows"
+set "GAME_EXE=%OUTPUT_DIR%\RType.exe"
+set "LOG_DIR=%OUTPUT_DIR%\Logs"
+set "BUILD_LOG=%LOG_DIR%\run_build.log"
+set "RUN_LOG=%LOG_DIR%\last_run.log"
 
-if exist "%GAME_DLL%" (
-    start "" /b dotnet "%GAME_DLL%" %* >nul 2>&1
-    exit /b 0
+if not exist "%LOG_DIR%" mkdir "%LOG_DIR%"
+
+dotnet build "%PROJECT%" -c "%CONFIG%" --nologo > "%BUILD_LOG%" 2>&1
+if errorlevel 1 (
+    echo RType build failed. Details:
+    type "%BUILD_LOG%"
+    exit /b 1
 )
 
-if exist "%GAME_EXE%" (
-    start "" /b "%GAME_EXE%" %* >nul 2>&1
-    exit /b 0
+if not exist "%GAME_EXE%" (
+    echo Built game not found: %GAME_EXE%
+    echo Build log: %BUILD_LOG%
+    exit /b 1
 )
 
-if exist "%DEBUG_GAME_DLL%" (
-    start "" /b dotnet "%DEBUG_GAME_DLL%" %* >nul 2>&1
-    exit /b 0
-)
-
-if exist "%DEBUG_GAME_EXE%" (
-    start "" /b "%DEBUG_GAME_EXE%" %* >nul 2>&1
-    exit /b 0
-)
-
-echo Built game not found: %GAME_EXE%
-echo Run dotnet build -c Release first.
-exit /b 1
+start "" "%GAME_EXE%" %* > "%RUN_LOG%" 2>&1
+exit /b 0

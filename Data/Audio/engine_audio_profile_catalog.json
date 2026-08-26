@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "description": "Catalog of race engine sample profiles and their source engine coverage. Runtime playback still follows engineAudioDsp selection; this catalog tracks sample generation/readiness coverage.",
+  "profiles": [
+    {
+      "id": "ek9_b16b_5zigen_reference",
+      "path": "Data/Audio/EngineAudioProfiles/ek9_b16b_5zigen_reference.json",
+      "sourceEngineId": "engine_b16b",
+      "sourceEngineFamily": "honda_b_series",
+      "sourceEngineCode": "B16B",
+      "coverage": "exact",
+      "generationMethod": "manual_gt_style_sample_loops",
+      "generatedSampleSetPath": "Assets/Sounds/Honda",
+      "sourceRecordingPath": "Assets/Sounds/Honda/JDM EK9 CIVIC TYPE-R B16B VTEC Exhaust sound  5ZIGEN MIRACLE FIER BALL  ASMR 4K.mp3",
+      "sourceRecordingRequired": false,
+      "fallbackAllowedForFamilies": [
+        "honda_b_series",
+        "honda_d_series",
+        "honda_k_series"
+      ],
+      "requiredSampleRoles": [
+        "idle",
+        "normal",
+        "vtec"
+      ]
+    }
+  ]
+}

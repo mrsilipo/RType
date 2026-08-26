@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "id": "2000_Ek9_Stock",
+  "displayName": "Honda Civic Type R EK9 Showroom Stock",
+  "role": "purchase_car_stock",
+  "ownership": {
+    "source": "purchase_car_catalog",
+    "playerOwned": false,
+    "purchaseState": "not_applicable_until_user_profiles_exist"
+  },
+  "assembly": {
+    "chassis": {
+      "chassisId": "chassis_2000_ek9",
+      "chassisCode": "EK9",
+      "drivetrainLayout": "FF",
+      "bodyShell": "stock_ek9_body_shell"
+    },
+    "engine": {
+      "engineId": "engine_b16b",
+      "blockId": "block_b16b",
+      "headId": "head_b16b_type_r",
+      "tuneId": "tune_b16b_factory",
+      "fuel": {
+        "default": "fuel_98ron",
+        "selected": "fuel_98ron",
+        "allowed": [
+          "fuel_98ron",
+          "fuel_e85"
+        ]
+      },
+      "installedParts": {
+        "blockUpgrade": "block_upgrade_stock_cast",
+        "headUpgrade": "head_upgrade_stock_cast",
+        "cams": "cam_set_stock",
+        "displacement": "displacement_stock",
+        "portPolishing": "ports_stock",
+        "throttleBody": "throttle_stock",
+        "intake": "intake_stock",
+        "intakeRunnerLength": "intake_length_stock",
+        "valveSprings": "valve_springs_stock",
+        "headers": "header_stock",
+        "exhaust": "exhaust_stock",
+        "flywheel": "flywheel_stock",
+        "clutch": "clutch_stock",
+        "engineAudioDsp": "engine_audio_stock"
+      }
+    },
+    "drivetrain": {
+      "gearbox": "stock_ek9_5_speed",
+      "finalDrive": "stock_ek9_final_drive",
+      "differential": "stock_ek9_helical_lsd"
+    },
+    "suspension": {
+      "front": "stock_ek9_front_suspension",
+      "rear": "stock_ek9_rear_suspension",
+      "alignment": "stock_ek9_alignment"
+    },
+    "brakes": {
+      "front": "stock_ek9_front_brakes",
+      "rear": "stock_ek9_rear_brakes",
+      "system": "stock_ek9_brake_system"
+    },
+    "tyres": {
+      "frontCompound": "sports_hard_reference",
+      "rearCompound": "sports_hard_reference",
+      "frontModel": "sports_hard_ek9_front_model",
+      "rearModel": "sports_hard_ek9_rear_model"
+    },
+    "wheels": {
+      "front": "stock_ek9_15x6_wheel",
+      "rear": "stock_ek9_15x6_wheel"
+    },
+    "aero": {
+      "package": "stock_ek9_aero_package"
+    },
+    "tuning": {
+      "steering": "stock_ek9_steering_setup",
+      "handling": "stock_ek9_arcade_handling_setup"
+    }
+  },
+  "notes": [
+    "This is the only active test vehicle until user profiles, buying cars, and garage ownership exist.",
+    "The build intentionally references catalog ids so later part swapping can resolve the same stock baseline before applying upgrades.",
+    "The tuneId is calibration data and is applied after hardware parts so the same engine can run factory, street, club sport, or race tunes.",
+    "The current game loads active race physics from this purchase-car build through the assembled catalog resolver."
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "catalog": "valveSprings",
+  "slot": "valveSpringSet",
+  "description": "Valve springs are future runtime data. They should control valve float, high-RPM stability, and safe limiter range.",
+  "parts": [
+    { "id": "valve_springs_stock", "displayName": "Stock B16 Valve Springs", "tier": "stock", "compatibility": ["honda_b_series"], "data": { "seatPressureN": 310, "openPressureN": 890, "floatStartRpm": 8500, "safeContinuousRpm": 8200, "valvetrainStability": 1.0 } },
+    { "id": "valve_springs_stock_b18c_k20a", "displayName": "Stock High-RPM VTEC Valve Springs", "tier": "stock", "compatibility": ["honda_b_series", "honda_k_series"], "data": { "seatPressureN": 325, "openPressureN": 940, "floatStartRpm": 8900, "safeContinuousRpm": 8600, "valvetrainStability": 1.0 } },
+    { "id": "valve_springs_stock_b18a_b18b_d16", "displayName": "Stock Lower-RPM Honda Valve Springs", "tier": "stock", "compatibility": ["honda_b_series", "honda_d_series"], "data": { "seatPressureN": 275, "openPressureN": 760, "floatStartRpm": 7600, "safeContinuousRpm": 7000, "valvetrainStability": 1.0 } },
+    { "id": "valve_springs_stock_d16y8", "displayName": "Stock D16Y8 VTEC Valve Springs", "tier": "stock", "compatibility": ["honda_d_series"], "data": { "seatPressureN": 285, "openPressureN": 790, "floatStartRpm": 7800, "safeContinuousRpm": 7400, "valvetrainStability": 1.0 } },
+    { "id": "valve_springs_stock_k24a3", "displayName": "Stock K24A3 Valve Springs", "tier": "stock", "compatibility": ["honda_k_series"], "data": { "seatPressureN": 310, "openPressureN": 880, "floatStartRpm": 8200, "safeContinuousRpm": 7800, "valvetrainStability": 1.0 } },
+    { "id": "valve_springs_street", "displayName": "Street Valve Springs", "tier": "street", "compatibility": ["honda_b_series", "honda_k_series"], "weightDeltaKg": 0.1, "data": { "seatPressureN": 345, "openPressureN": 980, "floatStartRpm": 8900, "safeContinuousRpm": 8500, "valvetrainStability": 1.08 } },
+    { "id": "valve_springs_club_sport", "displayName": "Club Sport Valve Springs", "tier": "clubSport", "compatibility": ["honda_b_series", "honda_k_series"], "weightDeltaKg": 0.2, "data": { "seatPressureN": 385, "openPressureN": 1100, "floatStartRpm": 9400, "safeContinuousRpm": 8900, "valvetrainStability": 1.18 } },
+    { "id": "valve_springs_pro_racing", "displayName": "Pro Racing Valve Springs", "tier": "proRacing", "compatibility": ["honda_b_series", "honda_k_series"], "weightDeltaKg": 0.3, "data": { "seatPressureN": 435, "openPressureN": 1260, "floatStartRpm": 10000, "safeContinuousRpm": 9400, "valvetrainStability": 1.30 } }
+  ]
+}

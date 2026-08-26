@@ -20,8 +20,46 @@
         "heightMeters": 1.36,
         "torsionalRigidityNmPerDeg": 11000,
         "baseCurbMassKg": 1060.0,
+        "calibrationResidualMassKg": 37.6,
+        "yawInertiaCalibrationScale": 0.888,
         "frontWeightDistribution": 0.62,
-        "cgHeightMeters": 0.48
+        "cgHeightMeters": 0.48,
+        "bodyMassCenterY": 0.539,
+        "bodyMassCenterLongitudinalMeters": 1.657,
+        "engineBay": {
+          "orientation": "transverse",
+          "allowedEngineFamilies": ["honda_b_series", "honda_d_series", "honda_k_series"],
+          "requiresSwapKitForFamilies": ["honda_k_series"],
+          "requiredSwapKitSlotsByFamily": {
+            "honda_k_series": ["engineMounts", "wiringLoom", "driveshafts", "shiftLinkage"]
+          },
+          "maxDisplacementCcWithoutBodyModification": 2400,
+          "notes": "EK9 is FF/transverse. K-series support represents a future mount/loom/shaft swap path, not a stock bolt-in."
+        },
+        "suspensionHardPoints": {
+          "front": {
+            "type": "doubleWishbone",
+            "rollCentreHeightMeters": 0.075,
+            "casterDegrees": 3.0,
+            "camberGainDegreesPerMeter": -24.0,
+            "toeGainDegreesPerMeter": -0.8,
+            "bodyRollCamberMultiplier": 0.92,
+            "casterCamberGain": 0.56,
+            "maxCompressionMeters": 0.082,
+            "maxDroopMeters": 0.074
+          },
+          "rear": {
+            "type": "doubleWishbone",
+            "rollCentreHeightMeters": 0.095,
+            "casterDegrees": 0.0,
+            "camberGainDegreesPerMeter": -20.0,
+            "toeGainDegreesPerMeter": 1.2,
+            "bodyRollCamberMultiplier": 0.88,
+            "casterCamberGain": 0.0,
+            "maxCompressionMeters": 0.086,
+            "maxDroopMeters": 0.078
+          }
+        }
       },
       "durability": {
         "rating": 0.86,
@@ -31,6 +69,7 @@
     },
     {
       "id": "street_reinforced_ek9_body_shell",
+      "inherits": "stock_ek9_body_shell",
       "displayName": "Street Reinforced EK9 Body Shell",
       "tier": "street",
       "compatibility": ["ek9"],
@@ -47,6 +86,7 @@
     },
     {
       "id": "club_sport_seam_welded_ek9_body_shell",
+      "inherits": "stock_ek9_body_shell",
       "displayName": "Club Sport Welded EK9 Body Shell",
       "tier": "clubSport",
       "compatibility": ["ek9"],
@@ -63,6 +103,7 @@
     },
     {
       "id": "pro_racing_lightweight_ek9_body_shell",
+      "inherits": "stock_ek9_body_shell",
       "displayName": "Pro Racing Lightweight EK9 Body Shell",
       "tier": "proRacing",
       "compatibility": ["ek9"],
@@ -75,6 +116,31 @@
         "rating": 0.88,
         "fatigueResistance": 0.96,
         "crashResistance": 0.76
+      }
+    },
+    {
+      "id": "pro_racing_stripped_caged_ek9_body_shell",
+      "inherits": "stock_ek9_body_shell",
+      "displayName": "Pro Racing Stripped Caged EK9 Shell",
+      "tier": "proRacing",
+      "compatibility": ["ek9"],
+      "weightKg": 436.0,
+      "data": {
+        "torsionalRigidityNmPerDeg": 28500,
+        "baseCurbMassKg": 750.0,
+        "calibrationResidualMassKg": 0.0,
+        "yawInertiaCalibrationScale": 0.82,
+        "frontWeightDistribution": 0.60,
+        "cgHeightMeters": 0.405,
+        "bodyMassCenterY": 0.405,
+        "bodyMassCenterLongitudinalMeters": 1.50,
+        "cgHeightDeltaMeters": -0.075,
+        "notes": "Stripped time-attack shell target: cage, one seat, lightweight battery, deleted interior/trim and race-prepped body hardware."
+      },
+      "durability": {
+        "rating": 0.92,
+        "fatigueResistance": 0.98,
+        "crashResistance": 0.86
       }
     }
   ]
