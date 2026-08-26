@@ -10,9 +10,18 @@ public sealed class HudRenderer : IDisposable
     private const int MainTextScale = 4;
     private const int SecondaryTextScale = 3;
     private const int DebugTextScale = 2;
+    private const int TimingOutlinePixels = 3;
+    private const float TimingLabelFontSize = 29f;
+    private const float TimingValueFontSize = 44f;
+    private const int TimingLabelWeight = 600;
+    private const int TimingValueWeight = 700;
+    private static readonly Color HudTimingLabelColor = new(242, 242, 242, 255);
+    private static readonly Color HudTimingValueColor = new(217, 163, 0, 255);
+    private static readonly Color HudTimingOutlineColor = new(0, 0, 0, 168);
 
     private readonly Texture2D _pixel;
     private readonly PixelFont _font;
+    private readonly RuntimeFontTextureCache _timingFonts;
     private readonly TachometerHudRenderer _tachometer;
 
     public HudRenderer(GraphicsDevice graphicsDevice)
@@ -20,7 +29,9 @@ public sealed class HudRenderer : IDisposable
         _pixel = new Texture2D(graphicsDevice, 1, 1);
         _pixel.SetData([Color.White]);
         _font = new PixelFont(_pixel);
+        _timingFonts = new RuntimeFontTextureCache(graphicsDevice, new TachometerFontConfig());
         _tachometer = new TachometerHudRenderer(graphicsDevice, TachometerConfig.CreateEk9Native1080Preset());
+        WarmUpTimingFontCache();
     }
 
     public void DrawTachometer(SpriteBatch spriteBatch, VehicleState vehicle)
@@ -42,15 +53,9 @@ public sealed class HudRenderer : IDisposable
     {
         string gear = vehicle.Gear < 0 ? "R" : vehicle.Gear == 0 ? "N" : vehicle.Gear.ToString();
 
-        TimeSpan displayedTime = raceSession?.RaceTime ?? raceElapsed;
-        const int timePanelWidth = 390;
-        int timePanelX = UiLayout.Width - timePanelWidth - 32;
-        DrawPanel(spriteBatch, timePanelX, 24, timePanelWidth, raceSession is null ? 58 : 102);
-        _font.Draw(spriteBatch, $"TIME {FormatTime(displayedTime)}", timePanelX + 24, 40, MainTextScale, new Color(220, 244, 206));
         if (raceSession is not null)
         {
-            _font.Draw(spriteBatch, $"LAP  {FormatTime(raceSession.CurrentLapTime)}", timePanelX + 24, 82, MainTextScale, new Color(220, 244, 206));
-            DrawRaceStatus(spriteBatch, raceSession);
+            DrawTimingHud(spriteBatch, raceSession);
         }
 
         if (raceSession?.WrongWay == true)
@@ -137,7 +142,15 @@ public sealed class HudRenderer : IDisposable
     public void Dispose()
     {
         _tachometer.Dispose();
+        _timingFonts.Dispose();
         _pixel.Dispose();
+    }
+
+    private void WarmUpTimingFontCache()
+    {
+        _timingFonts.Measure(TachometerFontRole.OrbitronSemiBold, "Total Record", TimingLabelFontSize, TimingLabelWeight);
+        _timingFonts.Measure(TachometerFontRole.Oswald, "--:--.---", TimingValueFontSize, TimingValueWeight);
+        _timingFonts.Measure(TachometerFontRole.Oswald, "99/99", TimingValueFontSize, TimingValueWeight);
     }
 
     private void DrawPanel(SpriteBatch spriteBatch, int x, int y, int width, int height)
@@ -174,6 +187,108 @@ public sealed class HudRenderer : IDisposable
         }
     }
 
+    private void DrawTimingHud(SpriteBatch spriteBatch, RaceSessionState session)
+    {
+        DrawLeftTimingBlock(spriteBatch, "Lap", $"{session.CurrentLap}/{session.TargetLaps}", 16f, 47f);
+        DrawLeftTimingBlock(spriteBatch, "Total Time", FormatTime(session.RaceTime), 131f, 162f);
+        DrawLeftTimingLabel(spriteBatch, "Lap Time", 251f);
+
+        int visibleLapRows = Math.Clamp(session.TargetLaps, 1, 5);
+        int firstVisibleLap = session.TargetLaps <= visibleLapRows
+            ? 1
+            : Math.Clamp(session.CurrentLap - visibleLapRows + 1, 1, Math.Max(1, session.TargetLaps - visibleLapRows + 1));
+        for (int row = 0; row < visibleLapRows; row++)
+        {
+            int lapNumber = firstVisibleLap + row;
+            string value = ResolveLapSlotText(session, lapNumber);
+            DrawLeftTimingValue(spriteBatch, value, 282f + row * 50f);
+        }
+
+        DrawRightTimingBlock(spriteBatch, "Total Record", "--:--.---", 16f, 47f);
+        DrawRightTimingBlock(
+            spriteBatch,
+            "Fastest Lap",
+            session.BestLapTime is TimeSpan bestLap ? FormatTime(bestLap) : "--:--.---",
+            133f,
+            164f);
+    }
+
+    private void DrawLeftTimingBlock(SpriteBatch spriteBatch, string label, string value, float labelY, float valueY)
+    {
+        DrawLeftTimingLabel(spriteBatch, label, labelY);
+        DrawLeftTimingValue(spriteBatch, value, valueY);
+    }
+
+    private static string ResolveLapSlotText(RaceSessionState session, int lapNumber)
+    {
+        if (!session.Finished && lapNumber == session.CurrentLap)
+        {
+            return FormatTime(session.CurrentLapTime);
+        }
+
+        if (lapNumber <= 0 || lapNumber > session.CompletedLaps)
+        {
+            return "--:--.---";
+        }
+
+        int completedIndex = session.CompletedLaps - lapNumber;
+        return completedIndex >= 0 && completedIndex < session.CompletedLapTimes.Count
+            ? FormatTime(session.CompletedLapTimes[completedIndex])
+            : "--:--.---";
+    }
+
+    private void DrawLeftTimingLabel(SpriteBatch spriteBatch, string text, float y)
+    {
+        _timingFonts.DrawOutlined(
+            spriteBatch,
+            TachometerFontRole.OrbitronSemiBold,
+            text,
+            new Vector2(20f, y),
+            TimingLabelFontSize,
+            TimingLabelWeight,
+            HudTimingLabelColor,
+            HudTimingOutlineColor,
+            TimingOutlinePixels);
+    }
+
+    private void DrawLeftTimingValue(SpriteBatch spriteBatch, string text, float y)
+    {
+        _timingFonts.DrawOutlined(
+            spriteBatch,
+            TachometerFontRole.Oswald,
+            text,
+            new Vector2(52f, y),
+            TimingValueFontSize,
+            TimingValueWeight,
+            HudTimingValueColor,
+            HudTimingOutlineColor,
+            TimingOutlinePixels);
+    }
+
+    private void DrawRightTimingBlock(SpriteBatch spriteBatch, string label, string value, float labelY, float valueY)
+    {
+        _timingFonts.DrawRightAlignedOutlined(
+            spriteBatch,
+            TachometerFontRole.OrbitronSemiBold,
+            label,
+            new Vector2(1900f, labelY),
+            TimingLabelFontSize,
+            TimingLabelWeight,
+            HudTimingLabelColor,
+            HudTimingOutlineColor,
+            TimingOutlinePixels);
+        _timingFonts.DrawRightAlignedOutlined(
+            spriteBatch,
+            TachometerFontRole.Oswald,
+            value,
+            new Vector2(1900f, valueY),
+            TimingValueFontSize,
+            TimingValueWeight,
+            HudTimingValueColor,
+            HudTimingOutlineColor,
+            TimingOutlinePixels);
+    }
+
     private void DrawCenterNotice(SpriteBatch spriteBatch, string text, Color fill, Color textColor)
     {
         const int scale = 5;
@@ -185,6 +300,6 @@ public sealed class HudRenderer : IDisposable
 
     private static string FormatTime(TimeSpan time)
     {
-        return $"{(int)time.TotalMinutes:0}:{time.Seconds:00}.{time.Milliseconds / 10:00}";
+        return $"{(int)time.TotalMinutes:0}:{time.Seconds:00}.{time.Milliseconds:000}";
     }
 }

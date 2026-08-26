@@ -658,16 +658,21 @@ public sealed class MenuRenderer : IDisposable
         DrawPanel(spriteBatch, bounds.X - 18, bounds.Y - 18, bounds.Width + 36, bounds.Height + 36, new Color(4, 7, 10, 170));
         Vector2[] points = track.Layout switch
         {
-            TrackLayout.VelocityLoop =>
+            TrackLayout.HighSpeedRing =>
             [
-                new(0.08f, 0.50f),
-                new(0.18f, 0.82f),
-                new(0.48f, 0.90f),
-                new(0.84f, 0.76f),
-                new(0.92f, 0.43f),
-                new(0.72f, 0.18f),
-                new(0.36f, 0.12f),
-                new(0.12f, 0.24f)
+                new(0.35f, 0.08f),
+                new(0.92f, 0.08f),
+                new(0.99f, 0.22f),
+                new(0.92f, 0.37f),
+                new(0.75f, 0.37f),
+                new(0.62f, 0.72f),
+                new(0.55f, 0.93f),
+                new(0.47f, 0.72f),
+                new(0.41f, 0.53f),
+                new(0.33f, 0.57f),
+                new(0.20f, 0.93f),
+                new(0.09f, 0.47f),
+                new(0.16f, 0.08f)
             ],
             _ =>
             [

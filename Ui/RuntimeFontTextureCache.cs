@@ -16,7 +16,11 @@ namespace RType.Ui;
 public enum TachometerFontRole
 {
     Orbitron,
-    Dseg7ClassicBold
+    OrbitronSemiBold,
+    Dseg7ClassicBold,
+    Oswald,
+    Exo2Medium,
+    Exo2BoldItalic
 }
 
 public sealed class RuntimeFontTextureCache : IDisposable
@@ -25,14 +29,22 @@ public sealed class RuntimeFontTextureCache : IDisposable
 
     private readonly GraphicsDevice _graphicsDevice;
     private readonly LoadedFont _orbitron;
+    private readonly LoadedFont _orbitronSemiBold;
     private readonly LoadedFont _dseg7ClassicBold;
+    private readonly LoadedFont _oswaldBold;
+    private readonly LoadedFont _exo2Medium;
+    private readonly LoadedFont _exo2BoldItalic;
     private readonly Dictionary<TextKey, CachedText> _cache = new();
 
     public RuntimeFontTextureCache(GraphicsDevice graphicsDevice, TachometerFontConfig fonts)
     {
         _graphicsDevice = graphicsDevice;
         _orbitron = new LoadedFont(ResolveAssetPath(fonts.OrbitronPath));
+        _orbitronSemiBold = new LoadedFont(ResolveAssetPath(fonts.OrbitronSemiBoldPath));
         _dseg7ClassicBold = new LoadedFont(ResolveAssetPath(fonts.Dseg7ClassicBoldPath));
+        _oswaldBold = new LoadedFont(ResolveAssetPath(fonts.OswaldBoldPath));
+        _exo2Medium = new LoadedFont(ResolveAssetPath(fonts.Exo2MediumPath));
+        _exo2BoldItalic = new LoadedFont(ResolveAssetPath(fonts.Exo2BoldItalicPath));
     }
 
     public Vector2 Measure(TachometerFontRole role, string text, float size, int weight)
@@ -67,6 +79,92 @@ public sealed class RuntimeFontTextureCache : IDisposable
         Draw(spriteBatch, role, text, center - measured * 0.5f, size, weight, color);
     }
 
+    public void DrawRightAligned(
+        SpriteBatch spriteBatch,
+        TachometerFontRole role,
+        string text,
+        Vector2 rightAnchor,
+        float size,
+        int weight,
+        XnaColor color)
+    {
+        Vector2 measured = Measure(role, text, size, weight);
+        Draw(spriteBatch, role, text, new Vector2(rightAnchor.X - measured.X, rightAnchor.Y), size, weight, color);
+    }
+
+    public Vector2 MeasureTracked(TachometerFontRole role, string text, float size, int weight, float trackingPixels)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return Measure(role, text, size, weight);
+        }
+
+        float width = 0f;
+        float height = 0f;
+        for (int i = 0; i < text.Length; i++)
+        {
+            Vector2 measured = Measure(role, text[i].ToString(), size, weight);
+            width += measured.X;
+            height = MathF.Max(height, measured.Y);
+            if (i < text.Length - 1)
+            {
+                width += trackingPixels;
+            }
+        }
+
+        return new Vector2(width, height);
+    }
+
+    public void DrawTrackedCentered(
+        SpriteBatch spriteBatch,
+        TachometerFontRole role,
+        string text,
+        Vector2 center,
+        float size,
+        int weight,
+        float trackingPixels,
+        XnaColor color)
+    {
+        Vector2 measured = MeasureTracked(role, text, size, weight, trackingPixels);
+        Vector2 position = center - measured * 0.5f;
+        for (int i = 0; i < text.Length; i++)
+        {
+            string glyph = text[i].ToString();
+            Draw(spriteBatch, role, glyph, position, size, weight, color);
+            position.X += Measure(role, glyph, size, weight).X + trackingPixels;
+        }
+    }
+
+    public void DrawOutlined(
+        SpriteBatch spriteBatch,
+        TachometerFontRole role,
+        string text,
+        Vector2 position,
+        float size,
+        int weight,
+        XnaColor fill,
+        XnaColor outline,
+        int outlinePixels)
+    {
+        DrawOutline(spriteBatch, role, text, position, size, weight, outline, outlinePixels);
+        Draw(spriteBatch, role, text, position, size, weight, fill);
+    }
+
+    public void DrawRightAlignedOutlined(
+        SpriteBatch spriteBatch,
+        TachometerFontRole role,
+        string text,
+        Vector2 rightAnchor,
+        float size,
+        int weight,
+        XnaColor fill,
+        XnaColor outline,
+        int outlinePixels)
+    {
+        Vector2 measured = Measure(role, text, size, weight);
+        DrawOutlined(spriteBatch, role, text, new Vector2(rightAnchor.X - measured.X, rightAnchor.Y), size, weight, fill, outline, outlinePixels);
+    }
+
     public void Dispose()
     {
         foreach (CachedText cached in _cache.Values)
@@ -76,7 +174,11 @@ public sealed class RuntimeFontTextureCache : IDisposable
 
         _cache.Clear();
         _orbitron.Dispose();
+        _orbitronSemiBold.Dispose();
         _dseg7ClassicBold.Dispose();
+        _oswaldBold.Dispose();
+        _exo2Medium.Dispose();
+        _exo2BoldItalic.Dispose();
     }
 
     private CachedText GetOrCreate(TachometerFontRole role, string text, float size, int weight)
@@ -95,12 +197,22 @@ public sealed class RuntimeFontTextureCache : IDisposable
 
     private CachedText CreateTexture(TextKey key)
     {
-        LoadedFont loadedFont = key.Role == TachometerFontRole.Orbitron
-            ? _orbitron
-            : _dseg7ClassicBold;
-        FontStyle style = key.Role == TachometerFontRole.Orbitron && key.Weight >= 650
-            ? FontStyle.Bold
-            : FontStyle.Regular;
+        LoadedFont loadedFont = key.Role switch
+        {
+            TachometerFontRole.Orbitron => _orbitron,
+            TachometerFontRole.OrbitronSemiBold => _orbitronSemiBold,
+            TachometerFontRole.Oswald => _oswaldBold,
+            TachometerFontRole.Exo2Medium => _exo2Medium,
+            TachometerFontRole.Exo2BoldItalic => _exo2BoldItalic,
+            _ => _dseg7ClassicBold
+        };
+        FontStyle style = key.Role switch
+        {
+            TachometerFontRole.Exo2BoldItalic => FontStyle.Bold | FontStyle.Italic,
+            TachometerFontRole.OrbitronSemiBold => FontStyle.Regular,
+            TachometerFontRole.Exo2Medium => FontStyle.Regular,
+            _ => key.Weight >= 650 ? FontStyle.Bold : FontStyle.Regular
+        };
 
         using DrawingFont font = loadedFont.CreateFont(key.Size, style);
         using DrawingStringFormat format = DrawingStringFormat.GenericTypographic;
@@ -182,6 +294,42 @@ public sealed class RuntimeFontTextureCache : IDisposable
         return (byte)((color * alpha + 127) / 255);
     }
 
+    private void DrawOutline(
+        SpriteBatch spriteBatch,
+        TachometerFontRole role,
+        string text,
+        Vector2 position,
+        float size,
+        int weight,
+        XnaColor outline,
+        int outlinePixels)
+    {
+        int radius = Math.Max(0, outlinePixels);
+        if (radius == 0 || outline.A == 0)
+        {
+            return;
+        }
+
+        for (int y = -radius; y <= radius; y++)
+        {
+            for (int x = -radius; x <= radius; x++)
+            {
+                if (x == 0 && y == 0)
+                {
+                    continue;
+                }
+
+                float distance = MathF.Sqrt(x * x + y * y);
+                if (distance > radius)
+                {
+                    continue;
+                }
+
+                Draw(spriteBatch, role, text, position + new Vector2(x, y), size, weight, outline);
+            }
+        }
+    }
+
     private static string ResolveAssetPath(string relativePath)
     {
         string fromWorkingDirectory = Path.GetFullPath(relativePath);
@@ -216,6 +364,11 @@ public sealed class RuntimeFontTextureCache : IDisposable
 
         public DrawingFont CreateFont(float size, FontStyle style)
         {
+            if (!_family.IsStyleAvailable(style))
+            {
+                style = FontStyle.Regular;
+            }
+
             return new DrawingFont(_family, MathF.Max(1f, size), style, GraphicsUnit.Pixel);
         }
 
