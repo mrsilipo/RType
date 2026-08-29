@@ -120,6 +120,66 @@ public sealed class VehicleState
 
     public float RearLateralLoadTransferN { get; set; }
 
+    public float FrontStaticAxleLoadN { get; set; }
+
+    public float RearStaticAxleLoadN { get; set; }
+
+    public float ClassicStaticFrontAxleLoadN { get; set; }
+
+    public float ClassicStaticRearAxleLoadN { get; set; }
+
+    public float ClassicDynamicFrontAxleLoadN { get; set; }
+
+    public float ClassicDynamicRearAxleLoadN { get; set; }
+
+    public float ClassicLongitudinalLoadTransferN { get; set; }
+
+    public float ClassicDriveForceRequestN { get; set; }
+
+    public float ClassicEngineBrakeForceRequestN { get; set; }
+
+    public float ClassicServiceBrakeForceRequestN { get; set; }
+
+    public float ClassicHandbrakeForceRequestN { get; set; }
+
+    public float ClassicRollingResistanceForceN { get; set; }
+
+    public float ClassicAeroDragForceN { get; set; }
+
+    public float ClassicFrontLongitudinalGripUsage { get; set; }
+
+    public float ClassicRearLongitudinalGripUsage { get; set; }
+
+    public float ClassicFrontLateralGripUsage { get; set; }
+
+    public float ClassicRearLateralGripUsage { get; set; }
+
+    public float ClassicBodySlipAngleDegrees { get; set; }
+
+    public float ClassicNaturalYawAccelerationDegreesPerSecondSquared { get; set; }
+
+    public float ClassicFrontYawAccelerationDegreesPerSecondSquared { get; set; }
+
+    public float ClassicRearYawAccelerationDegreesPerSecondSquared { get; set; }
+
+    public float ClassicYawDampingAccelerationDegreesPerSecondSquared { get; set; }
+
+    public float ClassicYawRecoveryAccelerationDegreesPerSecondSquared { get; set; }
+
+    public float ClassicRearFollowAccelerationDegreesPerSecondSquared { get; set; }
+
+    public float ClassicRearFollowForceDeficitN { get; set; }
+
+    public float ClassicBodySlipDampingForceN { get; set; }
+
+    public float ClassicCorneringCleanupSpeedRetentionForceN { get; set; }
+
+    public float FrontAeroLoadN { get; set; }
+
+    public float RearAeroLoadN { get; set; }
+
+    public float FrontRollShare { get; set; } = 0.5f;
+
     public float SurfaceGrip { get; set; } = 1f;
 
     public string SurfaceName { get; set; } = "ROAD";
@@ -138,6 +198,36 @@ public sealed class VehicleState
 
     public float FrontRightSteerAngleDegrees { get; set; }
 
+    public float SteeringFrontGripReserve { get; set; } = 1f;
+
+    public float SteeringCommittedTurnAuthority { get; set; }
+
+    public float SteeringSpeedMatchedMaxAngleDegrees { get; set; }
+
+    public float SteeringForwardForceClampN { get; set; }
+
+    public float FrontLeftTyreScrubForceN { get; set; }
+
+    public float FrontRightTyreScrubForceN { get; set; }
+
+    public float RearLeftTyreScrubForceN { get; set; }
+
+    public float RearRightTyreScrubForceN { get; set; }
+
+    public float FrontLeftSteeringProjectionForceN { get; set; }
+
+    public float FrontRightSteeringProjectionForceN { get; set; }
+
+    public float RearLeftSteeringProjectionForceN { get; set; }
+
+    public float RearRightSteeringProjectionForceN { get; set; }
+
+    public float PeakTyreScrubForceN { get; set; }
+
+    public float PeakSteeringProjectionForceN { get; set; }
+
+    public float RpmScrubIsolationIntensity { get; set; }
+
     public float DriveForce { get; set; }
 
     public float BrakeForce { get; set; }
@@ -145,6 +235,12 @@ public sealed class VehicleState
     public float FrontBrakeTorqueNm { get; set; }
 
     public float RearBrakeTorqueNm { get; set; }
+
+    public float RearHandbrakeLockAmount { get; set; }
+
+    public float RearHandbrakeSlideIntensity { get; set; }
+
+    public float RearHandbrakeScreechFactor { get; set; } = 1f;
 
     public float EngineBrakeTorqueNm { get; set; }
 
@@ -266,6 +362,104 @@ public sealed class VehicleState
 
     public float RearRightSlipRatio { get; set; }
 
+    public float FrontLeftRelaxedLongitudinalSlipRatio { get; set; }
+
+    public float FrontRightRelaxedLongitudinalSlipRatio { get; set; }
+
+    public float RearLeftRelaxedLongitudinalSlipRatio { get; set; }
+
+    public float RearRightRelaxedLongitudinalSlipRatio { get; set; }
+
+    public float FrontLeftRelaxedLateralSlip { get; set; }
+
+    public float FrontRightRelaxedLateralSlip { get; set; }
+
+    public float RearLeftRelaxedLateralSlip { get; set; }
+
+    public float RearRightRelaxedLateralSlip { get; set; }
+
+    public float PeakRawSlipRatio { get; set; }
+
+    public float PeakRelaxedLongitudinalSlipRatio { get; set; }
+
+    public float PeakRelaxedLateralSlip { get; set; }
+
+    public float FrontLeftWheelOmegaRadiansPerSecond { get; set; }
+
+    public float FrontRightWheelOmegaRadiansPerSecond { get; set; }
+
+    public float RearLeftWheelOmegaRadiansPerSecond { get; set; }
+
+    public float RearRightWheelOmegaRadiansPerSecond { get; set; }
+
+    public float FrontLeftFrictionEllipseTotalSlip { get; set; }
+
+    public float FrontRightFrictionEllipseTotalSlip { get; set; }
+
+    public float RearLeftFrictionEllipseTotalSlip { get; set; }
+
+    public float RearRightFrictionEllipseTotalSlip { get; set; }
+
+    public float FrontLeftFrictionEllipseGripBudgetN { get; set; }
+
+    public float FrontRightFrictionEllipseGripBudgetN { get; set; }
+
+    public float RearLeftFrictionEllipseGripBudgetN { get; set; }
+
+    public float RearRightFrictionEllipseGripBudgetN { get; set; }
+
+    public float FrontLeftFrictionEllipseLongitudinalShare { get; set; }
+
+    public float FrontRightFrictionEllipseLongitudinalShare { get; set; }
+
+    public float RearLeftFrictionEllipseLongitudinalShare { get; set; }
+
+    public float RearRightFrictionEllipseLongitudinalShare { get; set; }
+
+    public float FrontLeftFrictionEllipseLateralShare { get; set; }
+
+    public float FrontRightFrictionEllipseLateralShare { get; set; }
+
+    public float RearLeftFrictionEllipseLateralShare { get; set; }
+
+    public float RearRightFrictionEllipseLateralShare { get; set; }
+
+    public float FrontLeftFrictionEllipseLongitudinalForceN { get; set; }
+
+    public float FrontRightFrictionEllipseLongitudinalForceN { get; set; }
+
+    public float RearLeftFrictionEllipseLongitudinalForceN { get; set; }
+
+    public float RearRightFrictionEllipseLongitudinalForceN { get; set; }
+
+    public float FrontLeftFrictionEllipseLateralForceN { get; set; }
+
+    public float FrontRightFrictionEllipseLateralForceN { get; set; }
+
+    public float RearLeftFrictionEllipseLateralForceN { get; set; }
+
+    public float RearRightFrictionEllipseLateralForceN { get; set; }
+
+    public float FrontLeftFrictionEllipseTotalForceN { get; set; }
+
+    public float FrontRightFrictionEllipseTotalForceN { get; set; }
+
+    public float RearLeftFrictionEllipseTotalForceN { get; set; }
+
+    public float RearRightFrictionEllipseTotalForceN { get; set; }
+
+    public float FrontLeftFrictionEllipseGripUsage { get; set; }
+
+    public float FrontRightFrictionEllipseGripUsage { get; set; }
+
+    public float RearLeftFrictionEllipseGripUsage { get; set; }
+
+    public float RearRightFrictionEllipseGripUsage { get; set; }
+
+    public float PeakFrictionEllipseTotalSlip { get; set; }
+
+    public float PeakFrictionEllipseGripUsage { get; set; }
+
     public float FrontLeftSlipAngleDegrees { get; set; }
 
     public float FrontRightSlipAngleDegrees { get; set; }
@@ -282,6 +476,14 @@ public sealed class VehicleState
 
     public float RearRightLongitudinalForceN { get; set; }
 
+    public float FrontLeftRequestedLongitudinalForceN { get; set; }
+
+    public float FrontRightRequestedLongitudinalForceN { get; set; }
+
+    public float RearLeftRequestedLongitudinalForceN { get; set; }
+
+    public float RearRightRequestedLongitudinalForceN { get; set; }
+
     public float FfLsdCornerExitBite { get; set; }
 
     public float FfLsdInsideFrontMaxTorqueNm { get; set; }
@@ -297,6 +499,32 @@ public sealed class VehicleState
     public string FfLsdLowGripAnchor { get; set; } = string.Empty;
 
     public float FrontDriveTorqueSteerYawMomentNm { get; set; }
+
+    public float FrontDifferentialCornerExitBite { get; set; }
+
+    public float FrontDifferentialManagedAxleTorqueNm { get; set; }
+
+    public float FrontDifferentialLeftActualTorqueNm { get; set; }
+
+    public float FrontDifferentialRightActualTorqueNm { get; set; }
+
+    public string FrontDifferentialLowGripAnchor { get; set; } = string.Empty;
+
+    public float RearDifferentialManagedAxleTorqueNm { get; set; }
+
+    public float RearDifferentialLeftActualTorqueNm { get; set; }
+
+    public float RearDifferentialRightActualTorqueNm { get; set; }
+
+    public string RearDifferentialLowGripAnchor { get; set; } = string.Empty;
+
+    public float FrontLeftDriveTorqueNm { get; set; }
+
+    public float FrontRightDriveTorqueNm { get; set; }
+
+    public float RearLeftDriveTorqueNm { get; set; }
+
+    public float RearRightDriveTorqueNm { get; set; }
 
     public float FrontLeftLateralForceN { get; set; }
 

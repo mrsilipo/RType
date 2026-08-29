@@ -46,6 +46,13 @@ public static class VehicleDefinitionLoader
         float powerRedlineRpm = ReadValueSingle(root, 6600f, "powertrain", "engine", "redlineRpm");
         float limiterHardCutRpm = ReadValueSingle(root, powerRedlineRpm + 200f, "powertrain", "engine", "revLimiterRpm");
 
+        DrivenWheelSet drivenWheels = ReadDrivenWheels(root);
+        DrivetrainLayout drivetrainLayout = ReadDrivetrainLayout(drivenWheels);
+        float frontTbr = ReadValueSingle(root, 1f, "powertrain", "differentials", "front", "torqueBiasRatio");
+        float frontPreload = ReadValueSingle(root, 0f, "powertrain", "differentials", "front", "preloadNm");
+        float rearTbr = ReadValueSingle(root, frontTbr, "powertrain", "differentials", "rear", "torqueBiasRatio");
+        float rearPreload = ReadValueSingle(root, frontPreload, "powertrain", "differentials", "rear", "preloadNm");
+
         return new VehicleSimulationParameters
         {
             Id = ReadString(root, "prototype_default", "id"),
@@ -100,6 +107,7 @@ public static class VehicleDefinitionLoader
             ClutchLowSpeedTorqueAssistNm = ReadValueSingle(root, 55f, "powertrain", "clutch", "lowSpeedTorqueAssistNm"),
             ClutchRollingLockSpeedMetersPerSecond = ReadValueSingle(root, 0.85f, "powertrain", "clutch", "rollingLockSpeedMetersPerSecond"),
             ClutchRollingLockSlipRadiansPerSecond = ReadValueSingle(root, 115f, "powertrain", "clutch", "rollingLockSlipRadiansPerSecond"),
+            ClutchShiftKickIntensity = ReadValueSingle(root, 0.75f, "powertrain", "clutch", "shiftKickIntensity"),
             EngineFreeRevResponseRate = ReadValueSingle(root, 7f, "simulation", "currentPrototype", "engineFreeRevResponseRate"),
             MaxFreeRevRiseRpmPerSecond = ReadValueSingle(root, 4600f, "simulation", "currentPrototype", "maxFreeRevRiseRpmPerSecond"),
             MaxFreeRevFallRpmPerSecond = ReadValueSingle(root, 7600f, "simulation", "currentPrototype", "maxFreeRevFallRpmPerSecond"),
@@ -108,6 +116,8 @@ public static class VehicleDefinitionLoader
             AutomaticMinimumUpshiftSpeedMetersPerSecond = ReadValueSingle(root, 18f, "simulation", "currentPrototype", "automaticMinimumUpshiftSpeedKph") / 3.6f,
             ManualShiftTimeSeconds = ReadValueSingle(root, 0.32f, "powertrain", "transmission", "shiftModel", "manualShiftTimeSeconds"),
             AutomaticShiftTimeSeconds = ReadValueSingle(root, 0.18f, "powertrain", "transmission", "shiftModel", "automaticShiftTimeSeconds"),
+            GearboxType = ReadString(root, "manual", "powertrain", "transmission", "type"),
+            GearboxShiftShockMultiplier = ReadValueSingle(root, 1f, "powertrain", "transmission", "shiftModel", "shiftShockMultiplier"),
             DownshiftOverRevToleranceRpm = ReadValueSingle(root, 250f, "powertrain", "transmission", "shiftModel", "downshiftOverRevToleranceRpm"),
             DownshiftMechanicalOverRevLimitRpm = ReadValueSingle(root, 0f, "powertrain", "transmission", "shiftModel", "downshiftMechanicalOverRevLimitRpm"),
             DownshiftOverRevBrakeMultiplier = ReadValueSingle(root, 2.35f, "powertrain", "transmission", "shiftModel", "downshiftOverRevBrakeMultiplier"),
@@ -144,10 +154,22 @@ public static class VehicleDefinitionLoader
             RearAntiRollBarRateNmPerRad = ReadValueSingle(root, 10500f, "suspension", "antiRollBars", "rearRateNmPerRad"),
             FrontSuspensionGeometry = ReadSuspensionGeometry(root, "front"),
             RearSuspensionGeometry = ReadSuspensionGeometry(root, "rear"),
-            DifferentialTorqueBiasRatio = ReadValueSingle(root, 1f, "powertrain", "differentials", "front", "torqueBiasRatio"),
-            DifferentialPreloadTorqueNm = ReadValueSingle(root, 0f, "powertrain", "differentials", "front", "preloadNm"),
+            DifferentialTorqueBiasRatio = drivetrainLayout == DrivetrainLayout.FR ? rearTbr : frontTbr,
+            DifferentialPreloadTorqueNm = drivetrainLayout == DrivetrainLayout.FR ? rearPreload : frontPreload,
+            DrivetrainLayout = drivetrainLayout,
+            FrontTorqueShare = CalculateFrontTorqueShare(drivetrainLayout),
+            FrontDifferential = new DifferentialParameters
+            {
+                TorqueBiasRatio = drivetrainLayout == DrivetrainLayout.FR ? 1f : frontTbr,
+                PreloadTorqueNm = drivetrainLayout == DrivetrainLayout.FR ? 0f : frontPreload
+            },
+            RearDifferential = new DifferentialParameters
+            {
+                TorqueBiasRatio = drivetrainLayout == DrivetrainLayout.FF ? 1f : rearTbr,
+                PreloadTorqueNm = drivetrainLayout == DrivetrainLayout.FF ? 0f : rearPreload
+            },
             WheelInertiaKgM2 = EstimateWheelInertia(root, frontTyres.LoadedRadiusMeters),
-            DrivenWheels = ReadDrivenWheels(root),
+            DrivenWheels = drivenWheels,
             FrontTyres = frontTyres,
             RearTyres = rearTyres,
             Audio = ReadAudio(root, engineSimulatorProfileOverridePath, engineAudioProfileOverridePath),
@@ -391,7 +413,7 @@ public static class VehicleDefinitionLoader
             HighRpmMinimumSpeedMetersPerSecond = ReadValueSingle(root, 0f, "audio", "highRpmMinimumSpeedMetersPerSecond"),
             HighRpmVolumeBoost = ReadValueSingle(root, 0.12f, "audio", "highRpmVolumeBoost"),
             LimiterStutterFrequencyHz = ReadEngineAudioValueSingle(root, engineAudioProfile, 15f, "limiter", "stutterHz"),
-            LimiterStutterOffDuty = ReadEngineAudioValueSingle(root, engineAudioProfile, 0.48f, "limiter", "offDuty"),
+            LimiterStutterOffDuty = ReadEngineAudioValueSingle(root, engineAudioProfile, 0.50f, "limiter", "offDuty"),
             LimiterStutterIntensity = ReadEngineAudioValueSingle(root, engineAudioProfile, 1f, "limiter", "intensity"),
             RTypeEngineEnabled = ReadBoolean(root, true, "audio", "rTypeEngine", "enabled"),
             RTypeEngineBuildPath = ReadString(
@@ -871,6 +893,32 @@ public static class VehicleDefinitionLoader
             ReadBoolean(root, true, "architecture", "drivenWheels", "FR"),
             ReadBoolean(root, false, "architecture", "drivenWheels", "RL"),
             ReadBoolean(root, false, "architecture", "drivenWheels", "RR"));
+    }
+
+    private static DrivetrainLayout ReadDrivetrainLayout(DrivenWheelSet drivenWheels)
+    {
+        if (drivenWheels.FrontLeft && drivenWheels.FrontRight && drivenWheels.RearLeft && drivenWheels.RearRight)
+        {
+            return DrivetrainLayout.AWD;
+        }
+
+        if (drivenWheels.RearLeft && drivenWheels.RearRight && !drivenWheels.FrontLeft && !drivenWheels.FrontRight)
+        {
+            return DrivetrainLayout.FR;
+        }
+
+        return DrivetrainLayout.FF;
+    }
+
+    private static float CalculateFrontTorqueShare(DrivetrainLayout layout)
+    {
+        return layout switch
+        {
+            DrivetrainLayout.FF => 1f,
+            DrivetrainLayout.FR => 0f,
+            DrivetrainLayout.AWD => 0.5f,
+            _ => 1f
+        };
     }
 
     private static TyreAxleParameters ReadTyres(JsonElement root, string axle)

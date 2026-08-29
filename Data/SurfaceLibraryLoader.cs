@@ -39,7 +39,9 @@ public static class SurfaceLibraryLoader
             ReadValueSingle(surface, 0f, "vibrationPrimaryFrequency"),
             ReadValueSingle(surface, 0f, "vibrationPrimaryAmplitude"),
             ReadValueSingle(surface, 0f, "vibrationSecondaryFrequency"),
-            ReadValueSingle(surface, 0f, "vibrationSecondaryAmplitude"));
+            ReadValueSingle(surface, 0f, "vibrationSecondaryAmplitude"),
+            ReadValueSingle(surface, 1f, "handbrakeScreechFactor"),
+            ReadValueSingle(surface, 18f, "handbrakeWheelSpinRecoveryRate"));
     }
 
     private static SurfaceSample ReadOptionalSurface(JsonElement surfaces, string id, SurfaceSample fallback)

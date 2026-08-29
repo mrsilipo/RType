@@ -63,37 +63,43 @@
     },
     "actions": {
       "accelerate": {
-        "triggers": [
-          "RightTrigger"
+        "buttons": [
+          "A"
         ]
       },
       "brake": {
-        "triggers": [
-          "LeftTrigger"
+        "buttons": [
+          "X"
         ]
       },
       "handbrake": {
         "buttons": [
-          "Y"
+          "B"
         ]
       },
       "reverse": {
-        "buttons": []
+        "buttons": [
+          "Y"
+        ]
       },
       "lookBehind": {
-        "buttons": []
+        "buttons": [
+          "LeftShoulder"
+        ]
       },
       "toggleView": {
-        "buttons": []
+        "buttons": [
+          "RightShoulder"
+        ]
       },
       "shiftDown": {
-        "negativeAxes": [
-          "RightThumbstickY"
+        "triggers": [
+          "LeftTrigger"
         ]
       },
       "shiftUp": {
-        "positiveAxes": [
-          "RightThumbstickY"
+        "triggers": [
+          "RightTrigger"
         ]
       },
       "pause": {
@@ -122,7 +128,6 @@
       "keys": [],
       "buttons": [
         "X",
-        "Y",
         "Back"
       ]
     },

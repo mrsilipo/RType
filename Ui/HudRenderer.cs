@@ -15,9 +15,33 @@ public sealed class HudRenderer : IDisposable
     private const float TimingValueFontSize = 44f;
     private const int TimingLabelWeight = 600;
     private const int TimingValueWeight = 700;
+    private const int PauseMenuWidth = 520;
+    private const int PauseMenuHeight = 260;
+    private const int PauseMenuRowHeight = 62;
+    private const int PauseMenuFirstRowY = 466;
+    private const int PauseMenuRowStep = 76;
+    private const float PauseMenuTitleSize = 42f;
+    private const float PauseMenuOptionSize = 36f;
+    private const int PauseMenuTitleWeight = 700;
+    private const int PauseMenuOptionWeight = 700;
     private static readonly Color HudTimingLabelColor = new(242, 242, 242, 255);
     private static readonly Color HudTimingValueColor = new(217, 163, 0, 255);
     private static readonly Color HudTimingOutlineColor = new(0, 0, 0, 168);
+    private static readonly Color PauseMenuFill = new(0, 0, 0, 196);
+    private static readonly Color PauseMenuSelectedFill = new(227, 0, 0, 220);
+    private static readonly Color PauseMenuText = new(242, 242, 242, 255);
+    private static readonly Color PauseMenuMutedText = new(160, 152, 149, 255);
+    private static readonly Color TuningPanelFill = new(0, 0, 0, 204);
+    private static readonly Color TuningRowFill = new(255, 255, 255, 18);
+    private static readonly Color TuningSelectedFill = new(217, 163, 0, 62);
+    private static readonly Color TuningHeadingText = new(217, 163, 0, 255);
+    private static readonly Color TuningPathText = new(160, 152, 149, 255);
+    private static readonly Color TuningValueText = new(242, 242, 242, 255);
+    private static readonly Color TuningImpactText = new(221, 37, 28, 255);
+    private static readonly Color TuningInfoFill = new(244, 244, 238, 238);
+    private static readonly Color TuningInfoText = new(8, 8, 8, 255);
+    private static readonly Color TuningInfoMutedText = new(42, 42, 42, 255);
+    private static readonly string[] RacePauseItems = ["Continue", "Exit"];
 
     private readonly Texture2D _pixel;
     private readonly PixelFont _font;
@@ -47,9 +71,11 @@ public sealed class HudRenderer : IDisposable
         int fps,
         string viewName,
         bool paused,
+        int pauseSelectedIndex,
         bool controllerConnected,
         TimeSpan raceElapsed,
-        RaceSessionState? raceSession = null)
+        RaceSessionState? raceSession = null,
+        DrivabilityTuningOverlayView? tuning = null)
     {
         string gear = vehicle.Gear < 0 ? "R" : vehicle.Gear == 0 ? "N" : vehicle.Gear.ToString();
 
@@ -69,12 +95,12 @@ public sealed class HudRenderer : IDisposable
 
         if (paused)
         {
-            const int pauseWidth = 420;
-            const int pauseHeight = 144;
-            int pauseX = (UiLayout.Width - pauseWidth) / 2;
-            int pauseY = (UiLayout.Height - pauseHeight) / 2;
-            DrawPanel(spriteBatch, pauseX, pauseY, pauseWidth, pauseHeight, new Color(0, 0, 0, 190));
-            _font.Draw(spriteBatch, "PAUSED", pauseX + 120, pauseY + 52, 5, new Color(238, 238, 214));
+            DrawRacePauseMenu(spriteBatch, pauseSelectedIndex);
+        }
+
+        if (tuning?.Visible == true)
+        {
+            DrawDrivabilityTuningOverlay(spriteBatch, tuning);
         }
 
         if (vehicle.CrashFlashSeconds > 0f)
@@ -146,6 +172,23 @@ public sealed class HudRenderer : IDisposable
         _pixel.Dispose();
     }
 
+    public static bool TryHitRacePauseItem(Vector2 position, out int index)
+    {
+        int panelX = (UiLayout.Width - PauseMenuWidth) / 2;
+        for (int i = 0; i < RacePauseItems.Length; i++)
+        {
+            Rectangle row = new(panelX + 42, PauseMenuFirstRowY + i * PauseMenuRowStep, PauseMenuWidth - 84, PauseMenuRowHeight);
+            if (row.Contains(position))
+            {
+                index = i;
+                return true;
+            }
+        }
+
+        index = -1;
+        return false;
+    }
+
     private void WarmUpTimingFontCache()
     {
         _timingFonts.Measure(TachometerFontRole.OrbitronSemiBold, "Total Record", TimingLabelFontSize, TimingLabelWeight);
@@ -163,6 +206,149 @@ public sealed class HudRenderer : IDisposable
         spriteBatch.Draw(_pixel, new Rectangle(x, y, width, height), fill);
         spriteBatch.Draw(_pixel, new Rectangle(x, y, width, 1), new Color(210, 210, 190, 150));
         spriteBatch.Draw(_pixel, new Rectangle(x, y + height - 1, width, 1), new Color(20, 20, 24, 180));
+    }
+
+    private void DrawRacePauseMenu(SpriteBatch spriteBatch, int selectedIndex)
+    {
+        int safeSelectedIndex = Math.Clamp(selectedIndex, 0, RacePauseItems.Length - 1);
+        int panelX = (UiLayout.Width - PauseMenuWidth) / 2;
+        int panelY = (UiLayout.Height - PauseMenuHeight) / 2;
+
+        DrawPanel(spriteBatch, panelX, panelY, PauseMenuWidth, PauseMenuHeight, PauseMenuFill);
+        DrawCenteredFontText(
+            spriteBatch,
+            "Paused",
+            panelX + PauseMenuWidth / 2f,
+            panelY + 34f,
+            PauseMenuTitleSize,
+            PauseMenuTitleWeight,
+            PauseMenuText);
+
+        for (int i = 0; i < RacePauseItems.Length; i++)
+        {
+            Rectangle row = new(panelX + 42, PauseMenuFirstRowY + i * PauseMenuRowStep, PauseMenuWidth - 84, PauseMenuRowHeight);
+            bool selected = i == safeSelectedIndex;
+            if (selected)
+            {
+                spriteBatch.Draw(_pixel, row, PauseMenuSelectedFill);
+            }
+            else
+            {
+                spriteBatch.Draw(_pixel, row, new Color(255, 255, 255, 24));
+            }
+
+            DrawCenteredFontText(
+                spriteBatch,
+                RacePauseItems[i],
+                row.Center.X,
+                row.Y + 10f,
+                PauseMenuOptionSize,
+                PauseMenuOptionWeight,
+                selected ? PauseMenuText : PauseMenuMutedText);
+        }
+    }
+
+    private void DrawDrivabilityTuningOverlay(SpriteBatch spriteBatch, DrivabilityTuningOverlayView view)
+    {
+        const int panelX = 32;
+        const int panelY = 128;
+        const int panelWidth = 980;
+        const int panelHeight = 720;
+        DrawPanel(spriteBatch, panelX, panelY, panelWidth, panelHeight, TuningPanelFill);
+        _font.Draw(spriteBatch, "DRIVABILITY TUNING", panelX + 26, panelY + 24, 4, TuningHeadingText);
+        _font.Draw(spriteBatch, $"PAGE {view.Page}/{view.PageCount}   KEYBOARD ONLY   TAB CLOSE   UP/DOWN SELECT   LEFT/RIGHT VALUE   SHIFT INFO   ` DEFAULTS   1 SAVE   2 LOAD", panelX + 26, panelY + 72, 2, TuningPathText);
+
+        int y = panelY + 112;
+        string? currentGroup = null;
+        foreach (DrivabilityTuningRow row in view.Rows)
+        {
+            if (!string.Equals(currentGroup, row.Group, StringComparison.Ordinal))
+            {
+                currentGroup = row.Group;
+                _font.Draw(spriteBatch, currentGroup.ToUpperInvariant(), panelX + 26, y, 2, TuningHeadingText);
+                y += 24;
+            }
+
+            Rectangle rowBounds = new(panelX + 20, y - 5, panelWidth - 40, 28);
+            spriteBatch.Draw(_pixel, rowBounds, row.Selected ? TuningSelectedFill : TuningRowFill);
+            string marker = row.Selected ? ">" : " ";
+            string impact = row.HighImpact ? "*" : " ";
+            _font.Draw(spriteBatch, $"{marker}{impact} {row.DisplayName}", panelX + 34, y, 2, row.HighImpact ? TuningImpactText : TuningValueText);
+            _font.Draw(spriteBatch, row.Value, panelX + 520, y, 2, TuningValueText);
+            _font.Draw(spriteBatch, row.Limits, panelX + 640, y, 2, TuningPathText);
+            y += 32;
+        }
+
+        if (view.ShowExplanation)
+        {
+            DrawTuningExplanation(spriteBatch, view, panelX + 26, panelY + 540, panelWidth - 52);
+        }
+
+        if (view.LoadListVisible)
+        {
+            DrawTuningSaveList(spriteBatch, view, panelX + panelWidth + 24, panelY);
+        }
+
+        int messageY = panelY + panelHeight - 54;
+        foreach (string message in view.Messages)
+        {
+            _font.Draw(spriteBatch, message.ToUpperInvariant(), panelX + 26, messageY, 2, TuningPathText);
+            messageY += 22;
+        }
+    }
+
+    private void DrawTuningExplanation(SpriteBatch spriteBatch, DrivabilityTuningOverlayView view, int x, int y, int width)
+    {
+        DrawPanel(spriteBatch, x, y, width, 118, TuningInfoFill);
+        _font.Draw(spriteBatch, view.SelectedName.ToUpperInvariant(), x + 18, y + 14, 2, TuningInfoText);
+        _font.Draw(spriteBatch, view.SelectedPath, x + 18, y + 38, 2, TuningInfoMutedText);
+        _font.Draw(spriteBatch, view.Explanation, x + 18, y + 60, 2, TuningInfoText);
+        _font.Draw(spriteBatch, $"HIGHER: {view.HigherText}", x + 18, y + 82, 2, TuningInfoMutedText);
+        _font.Draw(spriteBatch, $"LOWER: {view.LowerText}", x + 18, y + 100, 2, TuningInfoMutedText);
+    }
+
+    private void DrawTuningSaveList(SpriteBatch spriteBatch, DrivabilityTuningOverlayView view, int x, int y)
+    {
+        const int panelWidth = 560;
+        DrawPanel(spriteBatch, x, y, panelWidth, 420, new Color(0, 0, 0, 218));
+        _font.Draw(spriteBatch, "LOAD TUNING", x + 24, y + 24, 3, TuningHeadingText);
+        _font.Draw(spriteBatch, "KEYBOARD ONLY   UP/DOWN SELECT   ENTER OR 2 LOAD   ESC BACK", x + 24, y + 64, 2, TuningPathText);
+        if (view.Saves.Count == 0)
+        {
+            _font.Draw(spriteBatch, "NO SAVED VALUES", x + 24, y + 116, 2, TuningValueText);
+            return;
+        }
+
+        int rowY = y + 112;
+        foreach (DrivabilityTuningSaveRow save in view.Saves)
+        {
+            Rectangle rowBounds = new(x + 18, rowY - 5, panelWidth - 36, 32);
+            spriteBatch.Draw(_pixel, rowBounds, save.Selected ? TuningSelectedFill : TuningRowFill);
+            _font.Draw(spriteBatch, $"{(save.Selected ? ">" : " ")} {save.Name}", x + 30, rowY, 2, TuningValueText);
+            rowY += 38;
+        }
+    }
+
+    private void DrawCenteredFontText(
+        SpriteBatch spriteBatch,
+        string text,
+        float centerX,
+        float y,
+        float size,
+        int weight,
+        Color color)
+    {
+        Vector2 measured = _timingFonts.Measure(TachometerFontRole.OrbitronSemiBold, text, size, weight);
+        _timingFonts.DrawOutlined(
+            spriteBatch,
+            TachometerFontRole.OrbitronSemiBold,
+            text,
+            new Vector2(centerX - measured.X * 0.5f, y),
+            size,
+            weight,
+            color,
+            HudTimingOutlineColor,
+            2);
     }
 
     private void DrawDebugLine(SpriteBatch spriteBatch, string text, int y)

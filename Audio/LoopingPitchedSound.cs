@@ -6,7 +6,7 @@ namespace RType.Audio;
 internal sealed class LoopingPitchedSound : IDisposable
 {
     private const int FramesPerBuffer = 1024;
-    private const int TargetPendingBuffers = 6;
+    private const int TargetPendingBuffers = 4;
     private const int BufferRingSize = 10;
 
     private readonly WavLoopSource _source;
@@ -27,6 +27,9 @@ internal sealed class LoopingPitchedSound : IDisposable
     private float _saturation;
     private float _noiseBurst;
     private float _idleAmount;
+    private float _hardCut;
+    private float _hardCutPhase;
+    private bool _hasHardCutPhase;
     private int _nextBufferIndex;
     private bool _hasPlaybackRatio;
     private bool _hasPlayed;
@@ -73,7 +76,8 @@ internal sealed class LoopingPitchedSound : IDisposable
         float idleAmount = 0f,
         float idlePulseHz = 30f,
         float hardCutFrequencyHz = 15f,
-        float hardCutOffDuty = 0.48f)
+        float hardCutOffDuty = 0.48f,
+        float hardCutPhase = 0f)
     {
         playbackRatio = MathHelper.Clamp(playbackRatio, 0.05f, 4.0f);
         resonance = MathHelper.Clamp(resonance, 0f, 0.85f);
@@ -82,6 +86,17 @@ internal sealed class LoopingPitchedSound : IDisposable
         hardCut = MathHelper.Clamp(hardCut, 0f, 1f);
         idleAmount = MathHelper.Clamp(idleAmount, 0f, 1f);
         idlePulseHz = MathHelper.Clamp(idlePulseHz, 12f, 60f);
+        hardCutPhase -= MathF.Floor(hardCutPhase);
+        if (hardCut > 0.0001f && !_hasHardCutPhase)
+        {
+            _hardCutPhase = hardCutPhase;
+            _hasHardCutPhase = true;
+        }
+        else if (hardCut <= 0.0001f)
+        {
+            _hasHardCutPhase = false;
+        }
+
         float clampedVolume = MathHelper.Clamp(volume, 0f, 1f);
         int pendingBefore = _instance.PendingBufferCount;
         SoundState stateBefore = _instance.State;
@@ -121,6 +136,9 @@ internal sealed class LoopingPitchedSound : IDisposable
         _sourceFrame = 0.0;
         _outputFrame = 0;
         _subBassPhase = 0f;
+        _hardCut = 0f;
+        _hardCutPhase = 0f;
+        _hasHardCutPhase = false;
         Array.Clear(_toneLowPass);
         Array.Clear(_idleLowPass);
         for (int channel = 0; channel < _echoDelayLines.Length; channel++)
@@ -159,6 +177,9 @@ internal sealed class LoopingPitchedSound : IDisposable
         float startSaturation = _saturation;
         float startNoiseBurst = _noiseBurst;
         float startIdleAmount = _idleAmount;
+        float startHardCut = _hardCut;
+        float hardCutPhase = _hardCutPhase;
+        float hardCutPhaseStep = MathHelper.Clamp(hardCutFrequencyHz, 1f, 30f) / _source.SampleRate;
 
         for (int frame = 0; frame < FramesPerBuffer; frame++)
         {
@@ -168,7 +189,8 @@ internal sealed class LoopingPitchedSound : IDisposable
             float frameSaturation = MathHelper.Lerp(startSaturation, saturation, rampT);
             float frameNoiseBurst = MathHelper.Lerp(startNoiseBurst, noiseBurst, rampT);
             float frameIdleAmount = MathHelper.Lerp(startIdleAmount, idleAmount, rampT);
-            float limiterGate = hardCut > 0f ? CalculateHardCutGate(hardCut, hardCutFrequencyHz, hardCutOffDuty) : 1f;
+            float frameHardCut = MathHelper.Lerp(startHardCut, hardCut, rampT);
+            float limiterGate = frameHardCut > 0f ? CalculateHardCutGate(frameHardCut, hardCutPhase, hardCutOffDuty) : 1f;
             float outputSeconds = _outputFrame / (float)_source.SampleRate;
             float pulse = 1f - frameIdleAmount * 0.08f * (0.5f + 0.5f * MathF.Sin(outputSeconds * idlePulseHz * MathHelper.TwoPi));
             float subBass = MathF.Sin(_subBassPhase) * frameIdleAmount * 0.004f;
@@ -224,6 +246,8 @@ internal sealed class LoopingPitchedSound : IDisposable
 
             _sourceFrame += framePlaybackRatio;
             _outputFrame++;
+            hardCutPhase += hardCutPhaseStep;
+            hardCutPhase -= MathF.Floor(hardCutPhase);
             _subBassPhase += MathHelper.TwoPi * idlePulseHz / _source.SampleRate;
             if (_subBassPhase >= MathHelper.TwoPi)
             {
@@ -242,40 +266,22 @@ internal sealed class LoopingPitchedSound : IDisposable
         _saturation = saturation;
         _noiseBurst = noiseBurst;
         _idleAmount = idleAmount;
+        _hardCut = hardCut;
+        _hardCutPhase = hardCutPhase;
         return buffer;
     }
 
-    private float CalculateHardCutGate(float hardCut, float frequencyHz, float offDuty)
+    private static float CalculateHardCutGate(float hardCut, float cycle, float offDuty)
     {
-        float cutFrequencyHz = MathHelper.Clamp(frequencyHz, 1f, 30f);
-        float cycle = (float)(_outputFrame / (double)_source.SampleRate * cutFrequencyHz);
         cycle -= MathF.Floor(cycle);
-        float cutDuty = MathHelper.Clamp(offDuty, 0.02f, 0.92f) * hardCut;
+        float cutDuty = MathHelper.Clamp(offDuty, 0.08f, 0.60f);
         if (cutDuty <= 0f)
         {
             return 1f;
         }
 
-        float fade = MathF.Min(0.08f, MathF.Min(cutDuty * 0.45f, (1f - cutDuty) * 0.45f));
-        float envelope;
-        if (cycle < fade)
-        {
-            envelope = SmoothStep(0f, fade, cycle) * 0.005f;
-        }
-        else if (cycle < cutDuty - fade)
-        {
-            envelope = 0.005f;
-        }
-        else if (cycle < cutDuty + fade)
-        {
-            envelope = MathHelper.Lerp(0.005f, 1f, SmoothStep(cutDuty - fade, cutDuty + fade, cycle));
-        }
-        else
-        {
-            envelope = 1f;
-        }
-
-        return MathHelper.Lerp(1f, envelope, hardCut);
+        float duckFloor = MathHelper.Lerp(1f, 0.48f, MathHelper.Clamp(hardCut, 0f, 1f));
+        return cycle < cutDuty ? duckFloor : 1f;
     }
 
     private float NextNoiseSample()

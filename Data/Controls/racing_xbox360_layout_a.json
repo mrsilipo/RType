@@ -1,0 +1,156 @@
+{
+  "$schema": "../Schemas/control_scheme_v1.json",
+  "schemaVersion": 1,
+  "id": "racing_xbox360_layout_a",
+  "name": "Xbox 360 Racing Controls - Layout A",
+  "keyboard": {
+    "steering": {
+      "negative": [],
+      "positive": []
+    },
+    "actions": {
+      "accelerate": {
+        "keys": []
+      },
+      "brake": {
+        "keys": []
+      },
+      "handbrake": {
+        "keys": []
+      },
+      "reverse": {
+        "keys": []
+      },
+      "lookBehind": {
+        "keys": []
+      },
+      "toggleView": {
+        "keys": []
+      },
+      "shiftDown": {
+        "keys": []
+      },
+      "shiftUp": {
+        "keys": []
+      },
+      "pause": {
+        "keys": []
+      },
+      "exit": {
+        "keys": []
+      },
+      "toggleDebug": {
+        "keys": []
+      },
+      "toggleTransmissionMode": {
+        "keys": []
+      }
+    }
+  },
+  "gamePad": {
+    "playerIndex": "One",
+    "triggerPressedThreshold": 0.55,
+    "steering": {
+      "axis": "LeftThumbstickX",
+      "invertAxis": false,
+      "deadZone": 0.16,
+      "negativeButtons": [
+        "DPadLeft"
+      ],
+      "positiveButtons": [
+        "DPadRight"
+      ]
+    },
+    "actions": {
+      "accelerate": {
+        "buttons": [
+          "A"
+        ]
+      },
+      "brake": {
+        "buttons": [
+          "X"
+        ]
+      },
+      "handbrake": {
+        "buttons": [
+          "B"
+        ]
+      },
+      "reverse": {
+        "buttons": [
+          "Y"
+        ]
+      },
+      "lookBehind": {
+        "buttons": [
+          "LeftShoulder"
+        ]
+      },
+      "toggleView": {
+        "buttons": [
+          "RightShoulder"
+        ]
+      },
+      "shiftDown": {
+        "triggers": [
+          "LeftTrigger"
+        ]
+      },
+      "shiftUp": {
+        "triggers": [
+          "RightTrigger"
+        ]
+      },
+      "pause": {
+        "buttons": [
+          "Start"
+        ]
+      },
+      "exit": {},
+      "toggleDebug": {},
+      "toggleTransmissionMode": {}
+    },
+    "unmappedWhileRacing": [
+      "Back"
+    ]
+  },
+  "menu": {
+    "confirm": {
+      "keys": [],
+      "buttons": [
+        "A",
+        "B",
+        "Start"
+      ]
+    },
+    "cancel": {
+      "keys": [],
+      "buttons": [
+        "X",
+        "Back"
+      ]
+    },
+    "navigation": {
+      "horizontalAxis": "LeftThumbstickX",
+      "verticalAxis": "LeftThumbstickY",
+      "deadZone": 0.45,
+      "leftKeys": [],
+      "rightKeys": [],
+      "upKeys": [],
+      "downKeys": [],
+      "leftButtons": [
+        "DPadLeft"
+      ],
+      "rightButtons": [
+        "DPadRight"
+      ],
+      "upButtons": [
+        "DPadUp"
+      ],
+      "downButtons": [
+        "DPadDown"
+      ]
+    }
+  }
+}

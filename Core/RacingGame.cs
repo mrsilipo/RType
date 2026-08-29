@@ -21,11 +21,19 @@ public sealed class RacingGame : Game
     private const int MainMenuOptionCount = 5;
     private const int MainMenuArcadeIndex = 0;
     private const int MainMenuEngineRoomIndex = 1;
+    private const int MainMenuOptionsIndex = 3;
     private const int MainMenuQuitIndex = 4;
     private const int ArcadeMenuOptionCount = 4;
     private const int ArcadeMenuSingleRaceIndex = 0;
     private const int ArcadeMenuTimeTrialIndex = 1;
     private const int ArcadeMenuBackIndex = 3;
+    private const int OptionsMenuOptionCount = 3;
+    private const int OptionsMenuLayoutAIndex = 0;
+    private const int OptionsMenuLayoutBIndex = 1;
+    private const int OptionsMenuBackIndex = 2;
+    private const int RacePauseOptionCount = 2;
+    private const int RacePauseContinueIndex = 0;
+    private const int RacePauseExitIndex = 1;
 
     private static readonly Color LetterboxColor = new(8, 9, 10);
     private static readonly Matrix UiScaleMatrix = Matrix.CreateScale(
@@ -39,22 +47,29 @@ public sealed class RacingGame : Game
         new("EK9 B20/VTEC CLUB", "Data/Garage/OwnedVehicles/vehicle_0004_b20vtec_ek9.json"),
         new("EK9 K24/K20 PRO", "Data/Garage/OwnedVehicles/vehicle_0005_k24_k20_pro_ek9.json")
     ];
+    private static readonly ControlLayoutOption[] ControlLayoutOptions =
+    [
+        new("Layout A", "Data/Controls/racing_xbox360_layout_a.json"),
+        new("Layout B", "Data/Controls/racing_xbox360_layout_b.json")
+    ];
 
     private readonly GraphicsDeviceManager _graphics;
     private readonly GameLaunchOptions _launchOptions;
-    private readonly RacingInputReader _inputReader;
     private readonly SurfaceLibrary _surfaceLibrary;
     private readonly SimulationEngineParameters _simulationEngine;
+    private readonly DrivabilityTuningOverlay _drivabilityTuning;
     private readonly TrackDefinition[] _trackOptions;
+    private RacingInputReader _inputReader;
 
     private SpriteBatch? _spriteBatch;
     private RenderTarget2D? _renderTarget;
     private GeneratedTextures? _textures;
     private TrackScene? _track;
     private SceneRenderer? _sceneRenderer;
-    private SimpleVehicleSimulator? _vehicle;
+    private ClassicFourWheelVehicleSimulator? _vehicle;
     private ChaseCamera? _camera;
     private HudRenderer? _hud;
+    private RearViewMirrorRenderer? _rearViewMirror;
     private MenuRenderer? _menu;
     private MenuSoundSystem? _menuSounds;
     private VehicleAudioSystem? _vehicleAudio;
@@ -80,6 +95,9 @@ public sealed class RacingGame : Game
     private int _trackSelection;
     private int _directionSelection;
     private int _resultsSelection;
+    private int _optionsSelection;
+    private int _controlLayoutSelection;
+    private int _racePauseSelection;
     private bool _showTransmissionPopup;
     private bool _showDirectionPopup;
     private MouseState _previousMouse;
@@ -98,9 +116,11 @@ public sealed class RacingGame : Game
         _inputReader = new RacingInputReader(ControlSchemeLoader.Load(_launchOptions.ControlSchemePath));
         _surfaceLibrary = SurfaceLibraryLoader.Load(_launchOptions.SurfaceDefinitionPath);
         _simulationEngine = SimulationEngineDefinitionLoader.Load(_launchOptions.SimulationEngineDefinitionPath);
+        _drivabilityTuning = new DrivabilityTuningOverlay(_simulationEngine, _launchOptions.SimulationEngineDefinitionPath);
         _trackOptions = TrackDefinitionFileLoader.LoadCatalog(TrackDefinitionFileLoader.DefaultTrackDirectory, TrackCatalog.All);
         _carSelection = FindCarSelection(_launchOptions.VehiclePath);
         _transmissionSelection = _launchOptions.StartInManualTransmission ? 1 : 0;
+        _controlLayoutSelection = FindControlLayoutSelection(_launchOptions.ControlSchemePath);
         _graphics = new GraphicsDeviceManager(this)
         {
             PreferredBackBufferWidth = InternalWidth,
@@ -132,6 +152,7 @@ public sealed class RacingGame : Game
         _sceneRenderer = new SceneRenderer(GraphicsDevice, _textures);
         _camera = new ChaseCamera(InternalWidth / (float)InternalHeight);
         _hud = new HudRenderer(GraphicsDevice);
+        _rearViewMirror = new RearViewMirrorRenderer(GraphicsDevice);
         _menu = new MenuRenderer(GraphicsDevice);
         _menuSounds = new MenuSoundSystem();
         _vehicleAudio = new VehicleAudioSystem();
@@ -146,6 +167,7 @@ public sealed class RacingGame : Game
         _menuSounds?.Dispose();
         _telemetryLogger.Dispose();
         _menu?.Dispose();
+        _rearViewMirror?.Dispose();
         _hud?.Dispose();
         _sceneRenderer?.Dispose();
         _track?.Dispose();
@@ -176,6 +198,9 @@ public sealed class RacingGame : Game
             case GameFlowState.EngineRoom:
                 UpdateEngineRoom(gameTime);
                 break;
+            case GameFlowState.Options:
+                UpdateOptionsMenu();
+                break;
             case GameFlowState.CarSelect:
                 UpdateCarSelect();
                 break;
@@ -199,7 +224,7 @@ public sealed class RacingGame : Game
             _mainSelection,
             _flowState == GameFlowState.EventSelect,
             _eventSelection);
-        IsMouseVisible = IsMenuFlowState(_flowState);
+        IsMouseVisible = IsMenuFlowState(_flowState) || _paused;
         UpdateVehicleAudio(dt);
         UpdateControllerRumble(dt);
         _elapsedSinceStart += gameTime.ElapsedGameTime;
@@ -224,6 +249,13 @@ public sealed class RacingGame : Game
             _menu is null)
         {
             return;
+        }
+
+        if (_track is not null &&
+            _vehicle is not null &&
+            _flowState is GameFlowState.PreRace or GameFlowState.Racing or GameFlowState.Results)
+        {
+            RenderRearViewMirror();
         }
 
         GraphicsDevice.SetRenderTarget(_renderTarget);
@@ -285,7 +317,24 @@ public sealed class RacingGame : Game
             return;
         }
 
+        _rearViewMirror?.Draw(spriteBatch);
         hud.DrawTachometer(spriteBatch, _vehicle.State);
+    }
+
+    private void RenderRearViewMirror()
+    {
+        if (_rearViewMirror is null ||
+            _sceneRenderer is null ||
+            _track is null ||
+            _vehicle is null ||
+            _renderTarget is null)
+        {
+            return;
+        }
+
+        _rearViewMirror.Render(_sceneRenderer, _track, _vehicle.State);
+        GraphicsDevice.SetRenderTarget(null);
+        GraphicsDevice.Viewport = new Viewport(0, 0, InternalWidth, InternalHeight);
     }
 
     private void DrawOverlay(SpriteBatch spriteBatch, HudRenderer hud, MenuRenderer menu)
@@ -300,6 +349,9 @@ public sealed class RacingGame : Game
                 break;
             case GameFlowState.EngineRoom:
                 _engineRoom?.Draw(spriteBatch);
+                break;
+            case GameFlowState.Options:
+                menu.DrawOptions(spriteBatch, _optionsSelection, _controlLayoutSelection);
                 break;
             case GameFlowState.CarSelect:
                 menu.DrawCarSelect(
@@ -321,9 +373,11 @@ public sealed class RacingGame : Game
                     _framesPerSecond,
                     _camera.ModeName,
                     _paused,
+                    _racePauseSelection,
                     _latestControls.ControllerConnected,
                     TimeSpan.Zero,
-                    _raceSession?.State);
+                    _raceSession?.State,
+                    _drivabilityTuning.CreateView());
                 menu.DrawCountdown(spriteBatch, GetCountdownText());
                 break;
             case GameFlowState.Racing when _vehicle is not null && _camera is not null:
@@ -335,9 +389,11 @@ public sealed class RacingGame : Game
                     _framesPerSecond,
                     _camera.ModeName,
                     _paused,
+                    _racePauseSelection,
                     _latestControls.ControllerConnected,
                     _raceElapsed,
-                    _raceSession?.State);
+                    _raceSession?.State,
+                    _drivabilityTuning.CreateView());
                 if (_raceElapsed.TotalSeconds < 0.75)
                 {
                     menu.DrawCountdown(spriteBatch, "GO");
@@ -376,7 +432,13 @@ public sealed class RacingGame : Game
                 _vehicleAudio?.Stop();
                 _flowState = GameFlowState.EngineRoom;
             }
-            else if (_mainSelection is 2 or 3)
+            else if (_mainSelection == MainMenuOptionsIndex)
+            {
+                _menuSounds?.PlayDecision();
+                _optionsSelection = _controlLayoutSelection;
+                _flowState = GameFlowState.Options;
+            }
+            else if (_mainSelection == 2)
             {
                 _menuSounds?.PlayNotAllowed();
             }
@@ -394,6 +456,33 @@ public sealed class RacingGame : Game
             }
 
             _menuSounds?.PlayCancel();
+        }
+    }
+
+    private void UpdateOptionsMenu()
+    {
+        if (MoveSelection(ref _optionsSelection, OptionsMenuOptionCount))
+        {
+            _menuSounds?.PlayClick();
+        }
+
+        bool mouseConfirmRequested = UpdateListMouseSelection(ref _optionsSelection, OptionsMenuOptionCount, 185);
+        if (_latestControls.MenuConfirmRequested || mouseConfirmRequested)
+        {
+            if (_optionsSelection == OptionsMenuBackIndex)
+            {
+                _menuSounds?.PlayCancel();
+                _flowState = GameFlowState.MainMenu;
+                return;
+            }
+
+            ApplyControlLayout(_optionsSelection);
+            _menuSounds?.PlayConfirm();
+        }
+        else if (_latestControls.MenuCancelRequested || _mouseRightClicked)
+        {
+            _menuSounds?.PlayCancel();
+            _flowState = GameFlowState.MainMenu;
         }
     }
 
@@ -545,7 +634,7 @@ public sealed class RacingGame : Game
         _track = TrackScene.Create(GraphicsDevice, _textures, trackDefinition, reverse, _surfaceLibrary);
 
         VehicleSimulationParameters parameters = LoadSelectedRaceParameters();
-        _vehicle = new SimpleVehicleSimulator(_track, _track.StartPosition, _track.StartHeadingRadians, parameters, _simulationEngine);
+        _vehicle = new ClassicFourWheelVehicleSimulator(_track, _track.StartPosition, _track.StartHeadingRadians, parameters, _simulationEngine);
         _vehicle.SetManualTransmission(_transmissionSelection == 1);
         RpmPresentationSmoother.Update(_vehicle.State, 0f);
         RaceEnginePresentationBridge.ApplyAudioState(_vehicle.State, parameters, 0f);
@@ -563,6 +652,8 @@ public sealed class RacingGame : Game
 
     private void UpdatePreRace(TimeSpan elapsed)
     {
+        _drivabilityTuning.Update();
+
         if (_latestControls.MenuCancelRequested)
         {
             _flowState = GameFlowState.TrackSelect;
@@ -620,14 +711,44 @@ public sealed class RacingGame : Game
 
     private void UpdateRacing(float dt, TimeSpan elapsed)
     {
+        _drivabilityTuning.Update();
+
         if (_latestControls.ExitRequested)
         {
             Exit();
         }
 
+        bool pauseToggledThisFrame = false;
         if (_latestControls.PauseRequested)
         {
             _paused = !_paused;
+            _racePauseSelection = RacePauseContinueIndex;
+            pauseToggledThisFrame = true;
+            if (_paused)
+            {
+                _menuSounds?.PlayConfirm();
+            }
+            else
+            {
+                _menuSounds?.PlayCancel();
+            }
+        }
+
+        _latestInput = _paused ? new VehicleInput(0f, 0f, 0f) : _latestControls.Vehicle;
+
+        if (_paused)
+        {
+            if (!pauseToggledThisFrame)
+            {
+                UpdateRacePauseMenu();
+            }
+
+            return;
+        }
+
+        if (pauseToggledThisFrame)
+        {
+            return;
         }
 
         if (_vehicle is not null)
@@ -643,8 +764,6 @@ public sealed class RacingGame : Game
             }
         }
 
-        _latestInput = _paused ? new VehicleInput(0f, 0f, 0f) : _latestControls.Vehicle;
-
         if (!_paused)
         {
             _vehicle?.Update(_latestInput, dt);
@@ -653,7 +772,7 @@ public sealed class RacingGame : Game
                 _raceSession?.Update(_vehicle.State, elapsed);
                 _raceElapsed = _raceSession?.State.RaceTime ?? _raceElapsed + elapsed;
                 UpdateVehiclePresentation(dt);
-                _camera?.Update(_vehicle.State, dt, _latestControls.LookBehind);
+                _camera?.Update(_vehicle.State, dt, _latestControls.LookBehind, _track);
                 _telemetryLogger.Log(_raceElapsed, dt, _latestInput, _vehicle.State);
                 if (_raceSession?.State.Finished == true)
                 {
@@ -662,6 +781,44 @@ public sealed class RacingGame : Game
                 }
             }
         }
+    }
+
+    private void UpdateRacePauseMenu()
+    {
+        if (MoveSelection(ref _racePauseSelection, RacePauseOptionCount))
+        {
+            _menuSounds?.PlayClick();
+        }
+
+        bool mouseConfirmRequested = UpdateRacePauseMouseSelection();
+        if (_latestControls.MenuConfirmRequested || mouseConfirmRequested)
+        {
+            if (_racePauseSelection == RacePauseContinueIndex)
+            {
+                _menuSounds?.PlayConfirm();
+                _paused = false;
+            }
+            else if (_racePauseSelection == RacePauseExitIndex)
+            {
+                _menuSounds?.PlayDecision();
+                ExitRaceToTrackSelect();
+            }
+        }
+        else if (_latestControls.MenuCancelRequested || _mouseRightClicked)
+        {
+            _menuSounds?.PlayCancel();
+            _paused = false;
+        }
+    }
+
+    private void ExitRaceToTrackSelect()
+    {
+        _paused = false;
+        _racePauseSelection = RacePauseContinueIndex;
+        _telemetryLogger.Stop();
+        _vehicleAudio?.Stop();
+        StopControllerRumble();
+        _flowState = GameFlowState.TrackSelect;
     }
 
     private void UpdateResults()
@@ -871,6 +1028,18 @@ public sealed class RacingGame : Game
             MenuRenderer.TryHitListItem(uiPosition, itemCount, startY, out index);
     }
 
+    private bool UpdateRacePauseMouseSelection()
+    {
+        if (_uiMousePosition is not Vector2 uiPosition ||
+            !HudRenderer.TryHitRacePauseItem(uiPosition, out int hoveredIndex))
+        {
+            return false;
+        }
+
+        ApplyMouseHover(ref _racePauseSelection, hoveredIndex);
+        return _mouseLeftClicked;
+    }
+
     private void ApplyMouseHover(ref int selection, int hoveredIndex)
     {
         if (hoveredIndex == selection)
@@ -910,6 +1079,7 @@ public sealed class RacingGame : Game
     {
         return state is GameFlowState.MainMenu or
             GameFlowState.EventSelect or
+            GameFlowState.Options or
             GameFlowState.CarSelect or
             GameFlowState.TrackSelect or
             GameFlowState.Results;
@@ -985,6 +1155,7 @@ public sealed class RacingGame : Game
         MainMenu,
         EventSelect,
         EngineRoom,
+        Options,
         CarSelect,
         TrackSelect,
         PreRace,
@@ -1007,4 +1178,31 @@ public sealed class RacingGame : Game
     }
 
     private sealed record CarMenuOption(string Label, string BuildPath);
+
+    private void ApplyControlLayout(int layoutIndex)
+    {
+        if (layoutIndex < 0 || layoutIndex >= ControlLayoutOptions.Length)
+        {
+            return;
+        }
+
+        _controlLayoutSelection = layoutIndex;
+        _optionsSelection = layoutIndex;
+        _inputReader = new RacingInputReader(ControlSchemeLoader.Load(ControlLayoutOptions[layoutIndex].Path));
+    }
+
+    private static int FindControlLayoutSelection(string path)
+    {
+        for (int i = 0; i < ControlLayoutOptions.Length; i++)
+        {
+            if (PathsMatch(ControlLayoutOptions[i].Path, path))
+            {
+                return i;
+            }
+        }
+
+        return 0;
+    }
+
+    private sealed record ControlLayoutOption(string Label, string Path);
 }

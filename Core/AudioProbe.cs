@@ -16,11 +16,64 @@ public static class AudioProbe
     public static void Run()
     {
         ProbeVehicleBuild("Data/PurchaseCars/2000_Ek9_Stock.json");
+        ProbeHighSpeedStraightLineScreechGate();
         ProbeLoop("Generic tyres", "wheelspin", "Assets/Sounds/Generic/TyreScreech_001.wav");
         ProbeLoopSlice("Generic tyres", "wheelspin-sustain-loop", "Assets/Sounds/Generic/TyreScreech_001.wav", TyreSpinLoopStartRatio, TyreSpinLoopEndRatio);
         ProbeLoopSlice("Generic tyres", "wheelspin-chirp-loop", "Assets/Sounds/Generic/TyreScreech_001.wav", TyreChirpLoopStartRatio, TyreChirpLoopEndRatio);
         ProbeLoop("Generic tyres", "control-loss", "Assets/Sounds/Generic/TyreScreech_002.wav");
         ProbeLoopSlice("Generic tyres", "control-loss-middle-loop", "Assets/Sounds/Generic/TyreScreech_002.wav", ControlLossScreechLoopStartRatio, ControlLossScreechLoopEndRatio);
+    }
+
+    private static void ProbeHighSpeedStraightLineScreechGate()
+    {
+        VehicleState straight = new()
+        {
+            Velocity = new Microsoft.Xna.Framework.Vector2(0f, 128f / 3.6f),
+            Steer = 0f,
+            LateralAcceleration = 0f,
+            Throttle = 0.42f,
+            EffectiveThrottle = 0.42f,
+            FrontLeftSlipRatio = 0.02f,
+            FrontRightSlipRatio = 0.02f,
+            RearLeftSlipRatio = 0.01f,
+            RearRightSlipRatio = 0.01f,
+            FrontLeftRelaxedLongitudinalSlipRatio = 0.48f,
+            FrontRightRelaxedLongitudinalSlipRatio = -0.48f,
+            RearLeftRelaxedLongitudinalSlipRatio = 0.40f,
+            RearRightRelaxedLongitudinalSlipRatio = -0.40f
+        };
+        if (!VehicleAudioSystem.ShouldSuppressHighSpeedStraightLineScreech(straight))
+        {
+            throw new InvalidOperationException("Audio probe failed: high-speed straight-line micro-chatter was not suppressed.");
+        }
+
+        VehicleState cornering = new()
+        {
+            Velocity = new Microsoft.Xna.Framework.Vector2(0f, 128f / 3.6f),
+            Steer = 0.22f,
+            LateralAcceleration = 9.81f * 0.48f,
+            FrontLeftSlipRatio = 0.03f,
+            FrontRightSlipRatio = 0.03f
+        };
+        if (VehicleAudioSystem.ShouldSuppressHighSpeedStraightLineScreech(cornering))
+        {
+            throw new InvalidOperationException("Audio probe failed: high-speed cornering screech was incorrectly suppressed.");
+        }
+
+        VehicleState wheelspin = new()
+        {
+            Velocity = new Microsoft.Xna.Framework.Vector2(0f, 128f / 3.6f),
+            Throttle = 1f,
+            EffectiveThrottle = 1f,
+            FrontLeftSlipRatio = 0.24f,
+            FrontRightSlipRatio = 0.22f
+        };
+        if (VehicleAudioSystem.ShouldSuppressHighSpeedStraightLineScreech(wheelspin))
+        {
+            throw new InvalidOperationException("Audio probe failed: true high-speed wheelspin was incorrectly suppressed.");
+        }
+
+        Console.WriteLine("High-speed straight-line tyre screech gate: suppresses micro-chatter, preserves cornering and wheelspin.");
     }
 
     private static void ProbeVehicleBuild(string buildPath)
@@ -29,8 +82,8 @@ public static class AudioProbe
         string vtecText = parameters.VtecEnabled
             ? $"VTEC {parameters.VtecActivationRpm:0} rpm"
             : "no VTEC";
-        Console.WriteLine($"{parameters.DisplayName} active engine audio: race sample recipe, power redline {parameters.PowerRedlineRpm:0} rpm, hard cut {parameters.LimiterHardCutRpm:0} rpm, {vtecText}, limiter uses pinned VTEC/high-RPM stutter with no dedicated limiter sample");
-        Console.WriteLine($"  limiter visualization: depth {RevLimiterPresentationRules.CalculateBounceDepthRpm(parameters.LimiterHardCutRpm):0} rpm, period {RevLimiterPresentationRules.CalculateBounceSeconds(parameters.LimiterHardCutRpm):0.000}s, audio stutter {parameters.Audio.LimiterStutterFrequencyHz:0.0} Hz, offDuty {parameters.Audio.LimiterStutterOffDuty:0.00}");
+        Console.WriteLine($"{parameters.DisplayName} active engine audio: race sample recipe, runtime redline {parameters.LimiterHardCutRpm:0} rpm, authored power peak/redline {parameters.PowerRedlineRpm:0} rpm, {vtecText}, limiter uses pinned VTEC/high-RPM envelope with no dedicated limiter sample");
+        Console.WriteLine($"  limiter visualization/audio: depth {RevLimiterPresentationRules.CalculateBounceDepthRpm(parameters.LimiterHardCutRpm):0} rpm, shared period {RevLimiterPresentationRules.CalculateBounceSeconds(parameters.LimiterHardCutRpm):0.000}s, envelope offDuty {parameters.Audio.LimiterStutterOffDuty:0.00}");
         ProbeRaceEngineAudio(parameters);
     }
 

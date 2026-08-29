@@ -19,6 +19,8 @@ public readonly struct SurfaceSample
         float vibrationPrimaryAmplitude = 0f,
         float vibrationSecondaryFrequency = 0f,
         float vibrationSecondaryAmplitude = 0f,
+        float handbrakeScreechFactor = 1f,
+        float handbrakeWheelSpinRecoveryRate = 18f,
         float blendWeight = 0f)
     {
         Name = name;
@@ -35,6 +37,8 @@ public readonly struct SurfaceSample
         VibrationPrimaryAmplitude = MathHelper.Clamp(vibrationPrimaryAmplitude, 0f, 0.95f);
         VibrationSecondaryFrequency = MathF.Max(0f, vibrationSecondaryFrequency);
         VibrationSecondaryAmplitude = MathHelper.Clamp(vibrationSecondaryAmplitude, 0f, 0.95f);
+        HandbrakeScreechFactor = MathHelper.Clamp(handbrakeScreechFactor, 0f, 1.5f);
+        HandbrakeWheelSpinRecoveryRate = MathF.Max(0f, handbrakeWheelSpinRecoveryRate);
         BlendWeight = MathHelper.Clamp(blendWeight, 0f, 1f);
     }
 
@@ -66,6 +70,10 @@ public readonly struct SurfaceSample
 
     public float VibrationSecondaryAmplitude { get; }
 
+    public float HandbrakeScreechFactor { get; }
+
+    public float HandbrakeWheelSpinRecoveryRate { get; }
+
     public float BlendWeight { get; }
 
     public static SurfaceSample Blend(string name, SurfaceSample from, SurfaceSample to, float amount)
@@ -86,6 +94,8 @@ public readonly struct SurfaceSample
             MathHelper.Lerp(from.VibrationPrimaryAmplitude, to.VibrationPrimaryAmplitude, t),
             MathHelper.Lerp(from.VibrationSecondaryFrequency, to.VibrationSecondaryFrequency, t),
             MathHelper.Lerp(from.VibrationSecondaryAmplitude, to.VibrationSecondaryAmplitude, t),
+            MathHelper.Lerp(from.HandbrakeScreechFactor, to.HandbrakeScreechFactor, t),
+            MathHelper.Lerp(from.HandbrakeWheelSpinRecoveryRate, to.HandbrakeWheelSpinRecoveryRate, t),
             t);
     }
 

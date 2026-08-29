@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "id": "classic_four_wheel_physics",
+  "handlingModel": {
+    "value": "classicFourWheel"
+  },
+  "physics": {
+    "fixedTickRateHz": {
+      "value": 120
+    },
+    "maximumFrameTimeSeconds": {
+      "value": 0.1
+    },
+    "maximumTicksPerUpdate": {
+      "value": 12
+    }
+  },
+  "vehicleSafety": {
+    "minimumSlipSpeedMetersPerSecond": {
+      "value": 2.0
+    },
+    "maximumReverseSpeedMetersPerSecond": {
+      "value": 13.5
+    },
+    "maximumForwardSpeedMetersPerSecond": {
+      "value": 70.0
+    }
+  },
+  "classicFourWheel": {
+    "steering": {
+      "zeroKmhAngleDegrees": {
+        "value": 26.0
+      },
+      "sixtyKmhAngleDegrees": {
+        "value": 12.5
+      },
+      "oneTwentyKmhAngleDegrees": {
+        "value": 11.5
+      },
+      "twoHundredKmhAngleDegrees": {
+        "value": 6.0
+      },
+      "steerSpeedDegreesPerSecond": {
+        "value": 145.0
+      },
+      "returnSpeedDegreesPerSecond": {
+        "value": 115.0
+      }
+    },
+    "frontTyres": {
+      "corneringStiffness": {
+        "value": 9.0
+      },
+      "peakSlipAngleDegrees": {
+        "value": 9.5
+      },
+      "falloffSlipAngleDegrees": {
+        "value": 44.0
+      },
+      "maxGrip": {
+        "value": 1.25
+      },
+      "slidingGrip": {
+        "value": 0.90
+      }
+    },
+    "rearTyres": {
+      "corneringStiffness": {
+        "value": 3.2
+      },
+      "peakSlipAngleDegrees": {
+        "value": 24.0
+      },
+      "falloffSlipAngleDegrees": {
+        "value": 38.0
+      },
+      "maxGrip": {
+        "value": 0.90
+      },
+      "slidingGrip": {
+        "value": 0.72
+      }
+    },
+    "yaw": {
+      "inertiaScale": {
+        "value": 2.45
+      },
+      "damping": {
+        "value": 1.85
+      },
+      "lateralVelocityDamping": {
+        "value": 1.6
+      }
+    },
+    "gripBudget": {
+      "combinedGripExponent": {
+        "value": 2.35
+      }
+    },
+    "lowSpeed": {
+      "slipSpeedFloorMetersPerSecond": {
+        "value": 3.4
+      }
+    },
+    "resistance": {
+      "rollingResistanceMultiplier": {
+        "value": 1.0
+      },
+      "aeroDragMultiplier": {
+        "value": 1.0
+      }
+    }
+  }
+}

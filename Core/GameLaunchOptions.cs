@@ -14,7 +14,7 @@ public sealed record GameLaunchOptions(
     public const string DefaultVehiclePath = "Data/PurchaseCars/2000_Ek9_Stock.json";
     public const string DefaultControlSchemePath = "Data/Controls/racing_xbox360_default.json";
     public const string DefaultSurfaceDefinitionPath = "Data/Surfaces/default_surfaces.json";
-    public const string DefaultSimulationEngineDefinitionPath = "Data/Simulation/arcade_physics.json";
+    public const string DefaultSimulationEngineDefinitionPath = "Data/Simulation/classic_four_wheel_physics.json";
 
     public static GameLaunchOptions FromArgs(string[] args)
     {

@@ -291,8 +291,10 @@ public sealed class VehicleAudioSystem : IDisposable
         float rollingBrakeGate = MathHelper.Lerp(0.35f, 1f, SmoothStep(1.0f, 9.0f, vehicle.SpeedMetersPerSecond));
         float brakeGate = SmoothStep(0.08f, 0.85f, vehicle.Brake);
         float hardBrakeGate = SmoothStep(0.62f, 0.96f, vehicle.Brake);
+        float handbrakeScreechIntensity = CalculateHandbrakeScreechIntensity(vehicle);
         float lockedWheels = MathHelper.Clamp(vehicle.LockedWheelCount / 4f, 0f, 1f);
-        float slipRatio = SmoothStep(0.24f, 0.90f, vehicle.AverageSlipRatio);
+        float averageRelaxedSlipRatio = CalculateAverageRelaxedLongitudinalSlipRatio(vehicle);
+        float slipRatio = SmoothStep(0.24f, 0.90f, averageRelaxedSlipRatio);
         float driveSlipRatio = CalculateDriveSlipRatio(vehicle);
         float drivenSlipMagnitude = CalculateDrivenSlipMagnitude(vehicle);
         float wheelSpinSlip = SmoothStep(0.08f, 0.56f, driveSlipRatio);
@@ -330,15 +332,77 @@ public sealed class VehicleAudioSystem : IDisposable
         float tyreChirpSource = MathF.Max(
             wheelSpinChirpSource,
             shiftChirpSource) * surfaceGate;
+        float nonHandbrakeControlLoss = MathF.Max(
+            MathF.Max(MathF.Max(brakeLockIntensity, hardBrakeIntensity), hardTurnIntensity),
+            swayScreechIntensity) * surfaceGate;
         float controlLossScreechIntensity = MathHelper.Clamp(
-            MathF.Max(MathF.Max(MathF.Max(brakeLockIntensity, hardBrakeIntensity), hardTurnIntensity), swayScreechIntensity) * brakeSpeedGate * pauseScale * surfaceGate,
+            MathF.Max(nonHandbrakeControlLoss, handbrakeScreechIntensity) * brakeSpeedGate * pauseScale,
             0f,
             1f);
         float tyreSpinIntensity = MathHelper.Clamp(wheelSpinIntensity * pauseScale, 0f, 1f);
-        float roughness = MathHelper.Clamp(lockedWheels * 0.65f + MathF.Max(slipRatio, wheelSpinSlip) * 0.25f + slipAngle * 0.35f, 0.15f, 1f);
+        if (ShouldSuppressHighSpeedStraightLineScreech(vehicle))
+        {
+            tyreChirpSource = 0f;
+            controlLossScreechIntensity = 0f;
+            tyreSpinIntensity = 0f;
+            driveSlipRatio = 0f;
+            wheelSpinSlip = 0f;
+            slipRatio = 0f;
+        }
+
+        float roughness = MathHelper.Clamp(lockedWheels * 0.65f + MathF.Max(slipRatio, wheelSpinSlip) * 0.25f + slipAngle * 0.35f + handbrakeScreechIntensity * 0.42f, 0.15f, 1f);
         UpdateTyreSpinLoop(tyreSpinIntensity, roughness, driveSlipRatio, vehicle.SpeedMetersPerSecond, dt);
         UpdateTyreChirpLoop(tyreChirpSource, driveSlipRatio, vehicle.SpeedMetersPerSecond, pauseScale, dt);
         UpdateControlLossScreechLoop(controlLossScreechIntensity, roughness, vehicle.SpeedMetersPerSecond, dt);
+    }
+
+    internal static bool ShouldSuppressHighSpeedStraightLineScreech(VehicleState vehicle)
+    {
+        float speedKmh = MathF.Abs(vehicle.SpeedMetersPerSecond) * 3.6f;
+        if (speedKmh < 100f ||
+            MathF.Abs(vehicle.Steer) > 0.05f ||
+            MathF.Abs(vehicle.LateralAcceleration) > 9.81f * 0.15f ||
+            vehicle.Brake > 0.04f ||
+            vehicle.Handbrake > 0.01f ||
+            vehicle.LockedWheelCount > 0 ||
+            MathF.Max(vehicle.SurfaceRumbleLeft, vehicle.SurfaceRumbleRight) > 0.02f)
+        {
+            return false;
+        }
+
+        float peakRawSlip = MathF.Max(
+            MathF.Max(MathF.Abs(vehicle.FrontLeftSlipRatio), MathF.Abs(vehicle.FrontRightSlipRatio)),
+            MathF.Max(MathF.Abs(vehicle.RearLeftSlipRatio), MathF.Abs(vehicle.RearRightSlipRatio)));
+        return peakRawSlip < 0.15f;
+    }
+
+    private static float CalculateHandbrakeScreechIntensity(VehicleState vehicle)
+    {
+        float handbrake = MathHelper.Clamp(vehicle.Handbrake, 0f, 1f);
+        if (handbrake <= 0.01f)
+        {
+            return 0f;
+        }
+
+        float speed = MathF.Abs(vehicle.SpeedMetersPerSecond);
+        float speedGate = SmoothStep(2.2f, 10.5f, speed);
+        if (speedGate <= 0f)
+        {
+            return 0f;
+        }
+
+        float rearSlipRatio = MathF.Max(
+            MathF.Max(0f, -vehicle.RearLeftRelaxedLongitudinalSlipRatio),
+            MathF.Max(0f, -vehicle.RearRightRelaxedLongitudinalSlipRatio));
+        float rearSlipAngle = MathF.Max(MathF.Abs(vehicle.RearLeftSlipAngleDegrees), MathF.Abs(vehicle.RearRightSlipAngleDegrees));
+        float rearSkidGate = MathF.Max(
+            vehicle.RearHandbrakeSlideIntensity,
+            MathF.Max(
+                SmoothStep(0.10f, 0.42f, rearSlipRatio) * vehicle.RearHandbrakeScreechFactor,
+                SmoothStep(5.0f, 18.0f, rearSlipAngle) * vehicle.RearHandbrakeScreechFactor * 0.72f));
+        float deliberateSlideGate = MathHelper.Lerp(0.28f, 1f, rearSkidGate);
+
+        return MathHelper.Clamp(handbrake * speedGate * deliberateSlideGate, 0f, 1f);
     }
 
     private static float CalculateTyreScreechSurfaceGate(VehicleState vehicle)
@@ -596,17 +660,18 @@ public sealed class VehicleAudioSystem : IDisposable
         float slipTotal = 0f;
         int slipCount = 0;
 
-        AccumulateDriveSlip(vehicle.FrontLeftSlipRatio, vehicle.FrontLeftLongitudinalForceN);
-        AccumulateDriveSlip(vehicle.FrontRightSlipRatio, vehicle.FrontRightLongitudinalForceN);
-        AccumulateDriveSlip(vehicle.RearLeftSlipRatio, vehicle.RearLeftLongitudinalForceN);
-        AccumulateDriveSlip(vehicle.RearRightSlipRatio, vehicle.RearRightLongitudinalForceN);
+        AccumulateDriveSlip(vehicle.FrontLeftRelaxedLongitudinalSlipRatio, vehicle.FrontLeftLongitudinalForceN);
+        AccumulateDriveSlip(vehicle.FrontRightRelaxedLongitudinalSlipRatio, vehicle.FrontRightLongitudinalForceN);
+        AccumulateDriveSlip(vehicle.RearLeftRelaxedLongitudinalSlipRatio, vehicle.RearLeftLongitudinalForceN);
+        AccumulateDriveSlip(vehicle.RearRightRelaxedLongitudinalSlipRatio, vehicle.RearRightLongitudinalForceN);
 
         if (slipCount > 0)
         {
             return slipTotal / slipCount;
         }
 
-        return MathF.Max(0f, vehicle.AverageSlipRatio) * SmoothStep(0.15f, 0.72f, MathF.Max(vehicle.Throttle, vehicle.EffectiveThrottle));
+        return MathF.Max(0f, CalculateAverageRelaxedLongitudinalSlipRatio(vehicle)) *
+               SmoothStep(0.15f, 0.72f, MathF.Max(vehicle.Throttle, vehicle.EffectiveThrottle));
 
         void AccumulateDriveSlip(float slipRatio, float longitudinalForceN)
         {
@@ -626,17 +691,17 @@ public sealed class VehicleAudioSystem : IDisposable
         float slipTotal = 0f;
         int slipCount = 0;
 
-        AccumulateSlip(vehicle.FrontLeftSlipRatio, vehicle.FrontLeftLongitudinalForceN);
-        AccumulateSlip(vehicle.FrontRightSlipRatio, vehicle.FrontRightLongitudinalForceN);
-        AccumulateSlip(vehicle.RearLeftSlipRatio, vehicle.RearLeftLongitudinalForceN);
-        AccumulateSlip(vehicle.RearRightSlipRatio, vehicle.RearRightLongitudinalForceN);
+        AccumulateSlip(vehicle.FrontLeftRelaxedLongitudinalSlipRatio, vehicle.FrontLeftLongitudinalForceN);
+        AccumulateSlip(vehicle.FrontRightRelaxedLongitudinalSlipRatio, vehicle.FrontRightLongitudinalForceN);
+        AccumulateSlip(vehicle.RearLeftRelaxedLongitudinalSlipRatio, vehicle.RearLeftLongitudinalForceN);
+        AccumulateSlip(vehicle.RearRightRelaxedLongitudinalSlipRatio, vehicle.RearRightLongitudinalForceN);
 
         if (slipCount > 0)
         {
             return slipTotal / slipCount;
         }
 
-        return MathF.Max(0f, vehicle.AverageSlipRatio) *
+        return MathF.Max(0f, CalculateAverageRelaxedLongitudinalSlipRatio(vehicle)) *
                SmoothStep(0.22f, 0.82f, MathF.Max(vehicle.Throttle, vehicle.EffectiveThrottle));
 
         void AccumulateSlip(float slipRatio, float longitudinalForceN)
@@ -649,6 +714,15 @@ public sealed class VehicleAudioSystem : IDisposable
             slipTotal += MathF.Abs(slipRatio);
             slipCount++;
         }
+    }
+
+    private static float CalculateAverageRelaxedLongitudinalSlipRatio(VehicleState vehicle)
+    {
+        return (
+            MathF.Abs(vehicle.FrontLeftRelaxedLongitudinalSlipRatio) +
+            MathF.Abs(vehicle.FrontRightRelaxedLongitudinalSlipRatio) +
+            MathF.Abs(vehicle.RearLeftRelaxedLongitudinalSlipRatio) +
+            MathF.Abs(vehicle.RearRightRelaxedLongitudinalSlipRatio)) * 0.25f;
     }
 
     private static float CalculateDrivenGripUsage(VehicleState vehicle)

@@ -13,4 +13,17 @@ public sealed class DifferentialParameters
     public float ClutchFrictionCoefficient { get; init; } = 0.32f;
 
     public float ClutchPressureScale { get; init; } = 0.14f;
+
+    public static DifferentialParameters Open { get; } = new();
+}
+
+public sealed class DrivetrainConfiguration
+{
+    public DrivetrainLayout Layout { get; init; } = DrivetrainLayout.FF;
+
+    public float FrontTorqueShare { get; init; } = 1f;
+
+    public DifferentialParameters FrontDifferential { get; init; } = DifferentialParameters.Open;
+
+    public DifferentialParameters RearDifferential { get; init; } = DifferentialParameters.Open;
 }

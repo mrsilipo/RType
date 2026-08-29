@@ -49,6 +49,11 @@ public sealed class SceneRenderer : IDisposable
 
     public void Draw(TrackScene track, VehicleState vehicle, ChaseCamera camera)
     {
+        Draw(track, vehicle, new SceneCamera(camera.View, camera.Projection, camera.Position), camera.Mode != CameraMode.InCar);
+    }
+
+    public void Draw(TrackScene track, VehicleState vehicle, SceneCamera camera, bool drawVehicle)
+    {
         _effect.View = camera.View;
         _effect.Projection = camera.Projection;
 
@@ -67,7 +72,7 @@ public sealed class SceneRenderer : IDisposable
         Matrix bodyWorld = CreateBodyWorld(vehicle);
         Matrix wheelWorld = CreateWheelWorld(vehicle);
 
-        if (camera.Mode != CameraMode.InCar)
+        if (drawVehicle)
         {
             DrawShadow(vehicle);
 

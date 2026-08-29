@@ -1,6 +1,9 @@
 {
   "schemaVersion": 1,
-  "id": "gt1_arcade_engine",
+  "id": "rtype_classic_arcade_physics",
+  "handlingModel": {
+    "value": "rtypeClassic"
+  },
   "physics": {
     "fixedTickRateHz": {
       "value": 120
@@ -154,7 +157,13 @@
       "value": 0.85
     },
     "committedTurnBrakeDampingMultiplier": {
-      "value": 0.54
+      "value": 0.0
+    },
+    "committedTurnCoastDampingMultiplier": {
+      "value": 0.0
+    },
+    "committedTurnCoastThrottleEnd": {
+      "value": 0.12
     },
     "minimumYawRateDegreesPerSecond": {
       "value": 2.0
@@ -239,10 +248,10 @@
       "value": 0.975
     },
     "trailBrakeFrontTorqueMultiplier": {
-      "value": 0.88
+      "value": 0.70
     },
     "trailBrakeRearTorqueMultiplier": {
-      "value": 0.99
+      "value": 1.28
     },
     "absTargetSlipRatio": {
       "value": -0.09
@@ -275,6 +284,9 @@
     }
   },
   "steeringAssist": {
+    "directRackInput": {
+      "value": true
+    },
     "brakeAngleBoostBrakeStart": {
       "value": 0.12
     },
@@ -291,19 +303,64 @@
       "value": 1.42
     },
     "speedMatchedSlipStartMetersPerSecond": {
-      "value": 32.0
+      "value": 12.0
     },
     "speedMatchedSlipEndMetersPerSecond": {
-      "value": 68.0
+      "value": 45.0
     },
     "lowSpeedSlipAllowanceMultiplier": {
       "value": 1.16
     },
     "highSpeedSlipAllowanceMultiplier": {
-      "value": 0.44
+      "value": 0.64
     },
     "highSpeedMinimumRoadWheelAngleDegrees": {
-      "value": 2.25
+      "value": 32.0
+    },
+    "committedTurnInputStart": {
+      "value": 0.25
+    },
+    "committedTurnInputEnd": {
+      "value": 0.85
+    },
+    "committedTurnMinimumRoadWheelAngleDegrees": {
+      "value": 24.0
+    },
+    "gripReserveAngleBoost": {
+      "value": 0.65
+    },
+    "highSpeedInputCurveExponent": {
+      "value": 0.82
+    },
+    "decelInputCurveExponent": {
+      "value": 0.82
+    },
+    "decelAuthorityThrottleEnd": {
+      "value": 0.12
+    },
+    "decelInputRateBoost": {
+      "value": 1.75
+    },
+    "lateralForceForwardProjectionScale": {
+      "value": 0.0
+    },
+    "poweredLateralForceForwardProjectionScale": {
+      "value": 0.0
+    },
+    "lowSpeedPivotSpeedEndMetersPerSecond": {
+      "value": 14.0
+    },
+    "lowSpeedPivotSteerStart": {
+      "value": 0.60
+    },
+    "lowSpeedPivotRearLateralMultiplier": {
+      "value": 1.0
+    },
+    "lowSpeedPivotYawResponse": {
+      "value": 5.5
+    },
+    "lowSpeedPivotMaxYawRateDegreesPerSecond": {
+      "value": 145.0
     },
     "inputBrakeAuthorityStart": {
       "value": 0.1
@@ -334,6 +391,35 @@
     },
     "recentBrakeAuthority": {
       "value": 0.58
+    }
+  },
+  "tyreForce": {
+    "slidingForceFloor": {
+      "value": 0.94
+    },
+    "scrubDragLimitMultiplier": {
+      "value": 0.08
+    },
+    "lateralLongitudinalGripCoupling": {
+      "value": 0.50
+    },
+    "corneringSpeedRetention": {
+      "value": 0.46
+    },
+    "corneringSpeedRetentionSteerStart": {
+      "value": 0.04
+    },
+    "corneringSpeedRetentionSteerEnd": {
+      "value": 0.35
+    },
+    "scrubRpmIsolationSlipStart": {
+      "value": 0.08
+    },
+    "scrubRpmIsolationSlipEnd": {
+      "value": 0.42
+    },
+    "scrubRpmIsolationMaximumSpeedDropMetersPerSecond": {
+      "value": 0.55
     }
   },
   "rpmResponse": {

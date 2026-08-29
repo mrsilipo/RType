@@ -34,6 +34,7 @@ public static class RpmPresentationSmoother
             state.DisplayedRpm = projectedRpm;
             state.DisplayedRpmTarget = projectedRpm;
             state.DisplayedRpmVelocity = 0f;
+            ClampLimiterDisplay(state, limiterPinned, limiterHardCutRpm);
             return;
         }
 
@@ -82,6 +83,7 @@ public static class RpmPresentationSmoother
         {
             state.DisplayedRpm = targetRpm;
             state.DisplayedRpmVelocity = 0f;
+            ClampLimiterDisplay(state, limiterPinned, limiterHardCutRpm);
             return;
         }
 
@@ -148,6 +150,7 @@ public static class RpmPresentationSmoother
             ? limiterHardCutRpm
             : MathF.Max(projectedRpm, targetRpm) + stressMargin;
         state.DisplayedRpm = MathHelper.Clamp(nextRpm, 300f, maximumDisplayedRpm);
+        ClampLimiterDisplay(state, limiterPinned, limiterHardCutRpm);
     }
 
     private static float MoveTowards(float current, float target, float maximumDelta)
@@ -166,7 +169,7 @@ public static class RpmPresentationSmoother
         float bounce = MathHelper.Clamp(state.RevLimiterBounceIntensity, 0f, 1f);
         if (bounce <= 0.02f)
         {
-            return projectedRpm;
+            return limiterHardCutRpm;
         }
 
         float phase = state.RevLimiterBouncePhase - MathF.Floor(state.RevLimiterBouncePhase);
@@ -175,6 +178,19 @@ public static class RpmPresentationSmoother
         float dip = (0.08f + 0.10f * (0.5f - 0.5f * MathF.Cos(phase * MathF.Tau))) * bounceDepth * bounce;
         float needleRpm = limiterHardCutRpm - dip + shake;
         return MathHelper.Clamp(needleRpm, limiterHardCutRpm - bounceDepth * 0.28f, limiterHardCutRpm);
+    }
+
+    private static void ClampLimiterDisplay(VehicleState state, bool limiterPinned, float limiterHardCutRpm)
+    {
+        if (!limiterPinned)
+        {
+            return;
+        }
+
+        float bounceDepth = RevLimiterPresentationRules.CalculateBounceDepthRpm(limiterHardCutRpm);
+        float minimumLimiterDisplayRpm = limiterHardCutRpm - bounceDepth * 0.28f;
+        state.DisplayedRpm = MathHelper.Clamp(state.DisplayedRpm, minimumLimiterDisplayRpm, limiterHardCutRpm);
+        state.DisplayedRpmTarget = MathHelper.Clamp(state.DisplayedRpmTarget, minimumLimiterDisplayRpm, limiterHardCutRpm);
     }
 
     private static float SmoothStep(float edge0, float edge1, float value)

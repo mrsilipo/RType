@@ -29,6 +29,9 @@ public static class SurfaceProbe
         RunCase("right grass split throttle", parameters, engineParameters, new VehicleRelativeSplitSurfaceSampler(surfaces.Road, surfaces.Grass), new VehicleInput(0.95f, 0f, -0.28f));
         RunCase("all dirt launch", parameters, engineParameters, new FixedSurfaceSampler(surfaces.Dirt), new VehicleInput(0.95f, 0f, 0.10f));
         RunCase("left dirt split throttle", parameters, engineParameters, new VehicleRelativeSplitSurfaceSampler(surfaces.Dirt, surfaces.Road), new VehicleInput(0.95f, 0f, 0.28f));
+        RunHandbrakeCase("road straight handbrake", parameters, engineParameters, new FixedSurfaceSampler(surfaces.Road), 0f, expectRotation: false, expectLowScreech: false);
+        RunHandbrakeCase("road turn handbrake", parameters, engineParameters, new FixedSurfaceSampler(surfaces.Road), 0.58f, expectRotation: true, expectLowScreech: false);
+        RunHandbrakeCase("grass turn handbrake", parameters, engineParameters, new FixedSurfaceSampler(surfaces.Grass), 0.58f, expectRotation: true, expectLowScreech: true);
     }
 
     private static void RunCase(
@@ -88,6 +91,82 @@ public static class SurfaceProbe
             $"blend FL/FR {end.FrontLeftSurfaceBlend:0.00}/{end.FrontRightSurfaceBlend:0.00}, peak rumble L/R {peakLeftRumble:0.00}/{peakRightRumble:0.00}, " +
             $"curb wheels {end.CurbContactWheelCount}, curb load FL/FR {end.FrontLeftCurbLoadMultiplier:0.00}/{end.FrontRightCurbLoadMultiplier:0.00}, " +
             $"surface vib wheels {end.SurfaceVibrationContactWheelCount}, surface load FL/FR {end.FrontLeftSurfaceLoadMultiplier:0.00}/{end.FrontRightSurfaceLoadMultiplier:0.00}");
+    }
+
+    private static void RunHandbrakeCase(
+        string label,
+        VehicleSimulationParameters parameters,
+        SimulationEngineParameters engineParameters,
+        ITrackSurfaceSampler surfaceSampler,
+        float steer,
+        bool expectRotation,
+        bool expectLowScreech)
+    {
+        SimpleVehicleSimulator simulator = new(
+            surfaceSampler,
+            new Vector3(0f, 0.06f, 0f),
+            0f,
+            parameters,
+            engineParameters);
+        simulator.SetManualTransmission(true);
+
+        const float dt = 1f / 120f;
+        for (int i = 0; i < 360; i++)
+        {
+            simulator.Update(new VehicleInput(1f, 0f, 0f), dt);
+        }
+
+        float startSpeedKph = simulator.State.SpeedMetersPerSecond * 3.6f;
+        float peakLock = 0f;
+        float peakSlideAudio = 0f;
+        float peakYawRate = 0f;
+        for (int i = 0; i < 90; i++)
+        {
+            simulator.Update(new VehicleInput(0f, 0f, steer, 1f), dt);
+            VehicleState state = simulator.State;
+            peakLock = MathF.Max(peakLock, state.RearHandbrakeLockAmount);
+            peakSlideAudio = MathF.Max(peakSlideAudio, state.RearHandbrakeSlideIntensity);
+            peakYawRate = MathF.Max(peakYawRate, MathF.Abs(state.YawRateRadiansPerSecond));
+        }
+
+        float releaseStartLock = simulator.State.RearHandbrakeLockAmount;
+        for (int i = 0; i < 120; i++)
+        {
+            simulator.Update(new VehicleInput(0.45f, 0f, steer * 0.35f, 0f), dt);
+        }
+
+        VehicleState end = simulator.State;
+        if (peakLock < 0.45f)
+        {
+            throw new InvalidOperationException($"Surface probe failed: {label} did not lock the rear axle enough ({peakLock:0.00}).");
+        }
+
+        if (expectRotation && peakYawRate < 0.12f)
+        {
+            throw new InvalidOperationException($"Surface probe failed: {label} did not create enough handbrake rotation ({peakYawRate:0.00} rad/s).");
+        }
+
+        if (!expectRotation && peakYawRate > 0.22f)
+        {
+            throw new InvalidOperationException($"Surface probe failed: {label} rotated too much while straight ({peakYawRate:0.00} rad/s).");
+        }
+
+        if (expectLowScreech && peakSlideAudio > 0.30f)
+        {
+            throw new InvalidOperationException($"Surface probe failed: {label} produced too much handbrake screech ({peakSlideAudio:0.00}).");
+        }
+
+        if (end.RearHandbrakeLockAmount > releaseStartLock * 0.65f && end.SpeedMetersPerSecond > 2f)
+        {
+            throw new InvalidOperationException($"Surface probe failed: {label} rear wheels did not recover after release ({releaseStartLock:0.00}->{end.RearHandbrakeLockAmount:0.00}).");
+        }
+
+        Console.WriteLine(
+            $"{label}: {startSpeedKph:0.0}->{end.SpeedMetersPerSecond * 3.6f:0.0} km/h, " +
+            $"lock peak/end {peakLock:0.00}/{end.RearHandbrakeLockAmount:0.00}, " +
+            $"slide audio peak {peakSlideAudio:0.00}, yaw peak {MathHelper.ToDegrees(peakYawRate):0.0}deg/s, " +
+            $"rear slip L/R {end.RearLeftSlipRatio:0.00}/{end.RearRightSlipRatio:0.00}, " +
+            $"rear surfaces {end.RearLeftSurfaceName}/{end.RearRightSurfaceName}");
     }
 
     private sealed class FixedSurfaceSampler : ITrackSurfaceSampler

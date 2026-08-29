@@ -79,6 +79,7 @@ public sealed class RaceRunTelemetryLogger : IDisposable
             "handbrake_input",
             "steer_input",
             "steer_applied",
+            "steering_speed_matched_max_angle_deg",
             "front_left_steer_angle_deg",
             "front_right_steer_angle_deg",
             "surface",
@@ -88,6 +89,21 @@ public sealed class RaceRunTelemetryLogger : IDisposable
             "front_brake_torque_nm",
             "rear_brake_torque_nm",
             "engine_brake_torque_nm",
+            "classic_engine_brake_force_n",
+            "classic_service_brake_force_n",
+            "classic_front_longitudinal_grip_usage",
+            "classic_front_lateral_grip_usage",
+            "classic_rear_longitudinal_grip_usage",
+            "classic_rear_lateral_grip_usage",
+            "classic_body_slip_angle_deg",
+            "classic_front_yaw_accel_deg_s2",
+            "classic_rear_yaw_accel_deg_s2",
+            "classic_natural_yaw_accel_deg_s2",
+            "classic_yaw_damping_accel_deg_s2",
+            "classic_yaw_recovery_accel_deg_s2",
+            "classic_rear_follow_accel_deg_s2",
+            "classic_body_slip_damping_force_n",
+            "classic_cornering_cleanup_speed_retention_force_n",
             "engine_power_unit_active",
             "engine_power_unit_drive_torque_nm",
             "engine_power_unit_engine_drive_torque_nm",
@@ -135,6 +151,10 @@ public sealed class RaceRunTelemetryLogger : IDisposable
             "fr_long_force_n",
             "rl_long_force_n",
             "rr_long_force_n",
+            "fl_requested_long_force_n",
+            "fr_requested_long_force_n",
+            "rl_requested_long_force_n",
+            "rr_requested_long_force_n",
             "fl_lat_force_n",
             "fr_lat_force_n",
             "rl_lat_force_n",
@@ -226,6 +246,7 @@ public sealed class RaceRunTelemetryLogger : IDisposable
         Append(input.Handbrake);
         Append(input.Steer);
         Append(vehicle.Steer);
+        Append(vehicle.SteeringSpeedMatchedMaxAngleDegrees);
         Append(vehicle.FrontLeftSteerAngleDegrees);
         Append(vehicle.FrontRightSteerAngleDegrees);
         Append(vehicle.SurfaceName);
@@ -235,6 +256,21 @@ public sealed class RaceRunTelemetryLogger : IDisposable
         Append(vehicle.FrontBrakeTorqueNm);
         Append(vehicle.RearBrakeTorqueNm);
         Append(vehicle.EngineBrakeTorqueNm);
+        Append(vehicle.ClassicEngineBrakeForceRequestN);
+        Append(vehicle.ClassicServiceBrakeForceRequestN);
+        Append(vehicle.ClassicFrontLongitudinalGripUsage);
+        Append(vehicle.ClassicFrontLateralGripUsage);
+        Append(vehicle.ClassicRearLongitudinalGripUsage);
+        Append(vehicle.ClassicRearLateralGripUsage);
+        Append(vehicle.ClassicBodySlipAngleDegrees);
+        Append(vehicle.ClassicFrontYawAccelerationDegreesPerSecondSquared);
+        Append(vehicle.ClassicRearYawAccelerationDegreesPerSecondSquared);
+        Append(vehicle.ClassicNaturalYawAccelerationDegreesPerSecondSquared);
+        Append(vehicle.ClassicYawDampingAccelerationDegreesPerSecondSquared);
+        Append(vehicle.ClassicYawRecoveryAccelerationDegreesPerSecondSquared);
+        Append(vehicle.ClassicRearFollowAccelerationDegreesPerSecondSquared);
+        Append(vehicle.ClassicBodySlipDampingForceN);
+        Append(vehicle.ClassicCorneringCleanupSpeedRetentionForceN);
         Append(vehicle.EnginePowerUnitActive);
         Append(vehicle.EnginePowerUnitDriveTorqueNm);
         Append(vehicle.EnginePowerUnitEngineDriveTorqueNm);
@@ -282,6 +318,10 @@ public sealed class RaceRunTelemetryLogger : IDisposable
         Append(vehicle.FrontRightLongitudinalForceN);
         Append(vehicle.RearLeftLongitudinalForceN);
         Append(vehicle.RearRightLongitudinalForceN);
+        Append(vehicle.FrontLeftRequestedLongitudinalForceN);
+        Append(vehicle.FrontRightRequestedLongitudinalForceN);
+        Append(vehicle.RearLeftRequestedLongitudinalForceN);
+        Append(vehicle.RearRightRequestedLongitudinalForceN);
         Append(vehicle.FrontLeftLateralForceN);
         Append(vehicle.FrontRightLateralForceN);
         Append(vehicle.RearLeftLateralForceN);

@@ -16,7 +16,6 @@
 
   <ItemGroup>
     <Compile Remove="Audio\RTypeEngine\**\*.cs" />
-    <Compile Remove="Vehicle\DifferentialParameters.cs" />
     <Compile Remove="Tools\**\*.cs" />
   </ItemGroup>
 

@@ -10,7 +10,7 @@
       "compatibility": ["ek9"],
       "data": {
         "drivetrainEfficiency": 0.9,
-        "closedThrottleEngineBrakeTorqueNm": 68,
+        "closedThrottleEngineBrakeTorqueNm": 42,
         "lateralGripResponse": 10.4,
         "rollingResistanceCoefficient": 0.013,
         "airDensityKgM3": 1.225,
@@ -59,7 +59,7 @@
       "compatibility": ["ek9"],
       "data": {
         "drivetrainEfficiency": 0.91,
-        "closedThrottleEngineBrakeTorqueNm": 72,
+        "closedThrottleEngineBrakeTorqueNm": 45,
         "lateralGripResponse": 10.8
       }
     },
@@ -71,7 +71,7 @@
       "compatibility": ["ek9"],
       "data": {
         "drivetrainEfficiency": 0.92,
-        "closedThrottleEngineBrakeTorqueNm": 78,
+        "closedThrottleEngineBrakeTorqueNm": 50,
         "lateralGripResponse": 11.4
       }
     },
@@ -83,7 +83,7 @@
       "compatibility": ["ek9"],
       "data": {
         "drivetrainEfficiency": 0.93,
-        "closedThrottleEngineBrakeTorqueNm": 84,
+        "closedThrottleEngineBrakeTorqueNm": 55,
         "lateralGripResponse": 12.2
       }
     }

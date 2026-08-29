@@ -12,9 +12,63 @@ if (args.Any(arg => arg.Equals("--handling-probe", StringComparison.OrdinalIgnor
     return;
 }
 
+if (args.Any(arg => arg.Equals("--classic-bicycle-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicBicycleProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-deceleration-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicDecelerationProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-four-wheel-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicFourWheelProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--power-balance-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    PowerBalanceProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--steering-authority-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    SteeringAuthorityProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
 if (args.Any(arg => arg.Equals("--surface-probe", StringComparison.OrdinalIgnoreCase)))
 {
     SurfaceProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--tire-relaxation-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    TireRelaxationProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--friction-ellipse-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    FrictionEllipseProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--universal-tyre-force-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    UniversalTyreForceProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--drivetrain-layout-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    DrivetrainLayoutProbe.Run(GameLaunchOptions.FromArgs(args));
     return;
 }
 
@@ -245,6 +299,12 @@ if (args.Any(arg => arg.Equals("--audio-diagnostics-smoke", StringComparison.Ord
 if (args.Any(arg => arg.Equals("--race-condition-probe", StringComparison.OrdinalIgnoreCase)))
 {
     RaceConditionProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--chase-camera-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ChaseCameraProbe.Run();
     return;
 }
 

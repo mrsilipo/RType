@@ -343,6 +343,26 @@ public sealed class MenuRenderer : IDisposable
         }
     }
 
+    public void DrawOptions(SpriteBatch spriteBatch, int selectedIndex, int controlLayoutIndex)
+    {
+        DrawHeader(spriteBatch, "OPTIONS");
+        DrawPanel(spriteBatch, 120, 214, 760, 236, new Color(5, 8, 12, 178));
+        DrawText(spriteBatch, "CONTROLLER LAYOUT", 152, 246, 34f, 760, TextPrimary);
+        DrawText(spriteBatch, "L1 LOOK BACK IN BOTH LAYOUTS", 156, 318, 22f, 620, TextMuted);
+
+        string layoutAMarker = controlLayoutIndex == 0 ? "  ACTIVE" : string.Empty;
+        string layoutBMarker = controlLayoutIndex == 1 ? "  ACTIVE" : string.Empty;
+        DrawList(
+            spriteBatch,
+            [
+                $"LAYOUT A{layoutAMarker}",
+                $"LAYOUT B{layoutBMarker}",
+                "BACK"
+            ],
+            selectedIndex,
+            185);
+    }
+
     public void DrawCountdown(SpriteBatch spriteBatch, string text)
     {
         float size = text == "GO" ? 164f : 210f;

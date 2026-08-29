@@ -123,6 +123,7 @@ internal static class EngineAssemblyResolver
             ClutchCouplingRate = 13f,
             ClutchEngagementSharpness = 1f,
             ClutchSlipDamping = 1f,
+            ClutchShiftKickIntensity = 0.75f,
             ClutchLowSpeedAssistStrength = 0.65f,
             ClutchBiteInputStartMultiplier = 0.35f,
             ClutchLaunchAssistExponent = 0.55f,
@@ -294,6 +295,7 @@ internal static class EngineAssemblyResolver
             draft.ClutchCouplingRate = ReadSingle(data, draft.ClutchCouplingRate, "couplingRate");
             draft.ClutchEngagementSharpness = ReadSingle(data, draft.ClutchEngagementSharpness, "engagementSharpness");
             draft.ClutchSlipDamping = ReadSingle(data, draft.ClutchSlipDamping, "slipDamping");
+            draft.ClutchShiftKickIntensity = ReadSingle(data, draft.ClutchShiftKickIntensity, "shiftKickIntensity");
             draft.ClutchLowSpeedAssistStrength = ReadSingle(data, draft.ClutchLowSpeedAssistStrength, "lowSpeedAssistStrength");
             draft.ClutchBiteInputStartMultiplier = ReadSingle(data, draft.ClutchBiteInputStartMultiplier, "biteInputStartMultiplier");
             draft.ClutchLaunchAssistExponent = ReadSingle(data, draft.ClutchLaunchAssistExponent, "launchAssistExponent");
@@ -1040,6 +1042,7 @@ internal static class EngineAssemblyResolver
         public float ClutchCouplingRate;
         public float ClutchEngagementSharpness;
         public float ClutchSlipDamping;
+        public float ClutchShiftKickIntensity;
         public float ClutchLowSpeedAssistStrength;
         public float ClutchBiteInputStartMultiplier;
         public float ClutchLaunchAssistExponent;
@@ -1118,6 +1121,7 @@ internal static class EngineAssemblyResolver
                 ClutchCouplingRate = ClutchCouplingRate,
                 ClutchEngagementSharpness = ClutchEngagementSharpness,
                 ClutchSlipDamping = ClutchSlipDamping,
+                ClutchShiftKickIntensity = ClutchShiftKickIntensity,
                 ClutchLowSpeedAssistStrength = ClutchLowSpeedAssistStrength,
                 ClutchBiteInputStartMultiplier = ClutchBiteInputStartMultiplier,
                 ClutchLaunchAssistExponent = ClutchLaunchAssistExponent,

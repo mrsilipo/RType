@@ -48,7 +48,8 @@ public static class LaunchProbe
                     $"t={(i + 1) * dt:0.000} rpm={state.Rpm:0} disp={state.DisplayedRpm:0} speed={state.SpeedMetersPerSecond * 3.6f:0.0} " +
                     $"roadRpm={roadRpm:0} gbRpm={state.GearboxInputOmegaRadiansPerSecond * (60f / MathF.Tau):0} gear={state.Gear} " +
                     $"clutchSlip={state.ClutchSlipRpm:0} clutch={state.ClutchEngagement:0.00} locked={state.ClutchIsLocked} clutchNm={state.ActiveClutchTorqueNm:0} effThr={state.EffectiveThrottle:0.00} " +
-                    $"slipFL/FR={state.FrontLeftSlipRatio:0.00}/{state.FrontRightSlipRatio:0.00} avgSlip={state.AverageSlipRatio:0.00} " +
+                    $"slipFL/FR={state.FrontLeftSlipRatio:0.00}/{state.FrontRightSlipRatio:0.00} relaxedFL/FR={state.FrontLeftRelaxedLongitudinalSlipRatio:0.00}/{state.FrontRightRelaxedLongitudinalSlipRatio:0.00} " +
+                    $"ellipseFL={state.FrontLeftFrictionEllipseLongitudinalForceN:0}N/{state.FrontLeftFrictionEllipseGripUsage:0.00} avgSlip={state.AverageSlipRatio:0.00} " +
                     $"drive={state.DriveForce / 1000f:0.0}kN");
             }
         }

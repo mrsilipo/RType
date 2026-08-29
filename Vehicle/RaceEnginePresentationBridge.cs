@@ -11,8 +11,8 @@ public static class RaceEnginePresentationBridge
         float? crankPhaseDegrees = null)
     {
         float rpm = MathF.Max(300f, state.Rpm);
-        float powerRedline = MathF.Max(450f, parameters.PowerRedlineRpm);
-        float limiterHardCut = MathF.Max(powerRedline, parameters.LimiterHardCutRpm);
+        float limiterHardCut = MathF.Max(450f, parameters.LimiterHardCutRpm);
+        float powerRedline = limiterHardCut;
         float dt = MathHelper.Clamp(deltaSeconds, 0f, 1f / 20f);
         float throttle = MathHelper.Clamp(MathF.Max(state.Throttle, state.EffectiveThrottle), 0f, 1f);
         float vtec = parameters.VtecEnabled

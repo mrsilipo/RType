@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "savedAtLocal": "2026-08-27T21:17:03.3457776\u002B10:00",
+  "source": "Data/Simulation/classic_bicycle_physics.json",
+  "values": {
+    "classicBicycle.steering.zeroKmhAngleDegrees": 20,
+    "classicBicycle.steering.sixtyKmhAngleDegrees": 15,
+    "classicBicycle.steering.oneTwentyKmhAngleDegrees": 10,
+    "classicBicycle.steering.twoHundredKmhAngleDegrees": 5,
+    "classicBicycle.steering.steerSpeedDegreesPerSecond": 30,
+    "classicBicycle.steering.returnSpeedDegreesPerSecond": 30,
+    "classicBicycle.frontTyres.corneringStiffness": 7.2,
+    "classicBicycle.frontTyres.peakSlipAngleDegrees": 7,
+    "classicBicycle.frontTyres.falloffSlipAngleDegrees": 45,
+    "classicBicycle.frontTyres.maxGrip": 2.5,
+    "classicBicycle.frontTyres.slidingGrip": 0.78,
+    "classicBicycle.rearTyres.corneringStiffness": 7.8,
+    "classicBicycle.rearTyres.peakSlipAngleDegrees": 8,
+    "classicBicycle.rearTyres.falloffSlipAngleDegrees": 24,
+    "classicBicycle.rearTyres.maxGrip": 1.08,
+    "classicBicycle.rearTyres.slidingGrip": 0.82,
+    "classicBicycle.gripBudget.combinedGripExponent": 2,
+    "classicBicycle.yaw.inertiaScale": 1,
+    "classicBicycle.yaw.damping": 0.18,
+    "classicBicycle.yaw.lateralVelocityDamping": 0,
+    "classicBicycle.lowSpeed.slipSpeedFloorMetersPerSecond": 3,
+    "classicBicycle.resistance.rollingResistanceMultiplier": 1,
+    "classicBicycle.resistance.aeroDragMultiplier": 1
+  }
+}

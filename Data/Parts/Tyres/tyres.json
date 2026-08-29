@@ -15,8 +15,8 @@
         "rimDiameterIn": 15,
         "loadedRadiusMeters": 0.292,
         "rollingResistance": 0.013,
-        "frontPeakFriction": 1.24,
-        "rearPeakFriction": 1.18,
+        "frontPeakFriction": 1.36,
+        "rearPeakFriction": 1.08,
         "lateralPeakSlipAngleDegrees": 9.0,
         "longitudinalPeakSlipRatio": 0.13
       },
@@ -38,8 +38,8 @@
         "rimDiameterIn": 15,
         "loadedRadiusMeters": 0.292,
         "rollingResistance": 0.014,
-        "frontPeakFriction": 1.32,
-        "rearPeakFriction": 1.27,
+        "frontPeakFriction": 1.45,
+        "rearPeakFriction": 1.16,
         "lateralPeakSlipAngleDegrees": 8.6,
         "longitudinalPeakSlipRatio": 0.12
       },
@@ -61,8 +61,8 @@
         "rimDiameterIn": 15,
         "loadedRadiusMeters": 0.292,
         "rollingResistance": 0.015,
-        "frontPeakFriction": 1.42,
-        "rearPeakFriction": 1.36,
+        "frontPeakFriction": 1.56,
+        "rearPeakFriction": 1.24,
         "lateralPeakSlipAngleDegrees": 8.1,
         "longitudinalPeakSlipRatio": 0.11
       },
@@ -84,8 +84,8 @@
         "rimDiameterIn": 15,
         "loadedRadiusMeters": 0.291,
         "rollingResistance": 0.017,
-        "frontPeakFriction": 2.37,
-        "rearPeakFriction": 2.25,
+        "frontPeakFriction": 2.55,
+        "rearPeakFriction": 2.05,
         "lateralPeakSlipAngleDegrees": 7.4,
         "longitudinalPeakSlipRatio": 0.10
       },

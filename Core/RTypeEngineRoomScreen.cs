@@ -144,8 +144,8 @@ public sealed class RTypeEngineRoomScreen : IDisposable
 
     private void UpdateRaceBench(float dt)
     {
-        float powerRedline = MathF.Max(_parameters.IdleRpm + 1000f, _parameters.PowerRedlineRpm);
-        float limiterHardCut = MathF.Max(powerRedline, _parameters.LimiterHardCutRpm);
+        float limiterHardCut = MathF.Max(_parameters.IdleRpm + 1000f, _parameters.LimiterHardCutRpm);
+        float powerRedline = limiterHardCut;
         bool hasVtec = HasVtec();
         float vtec = hasVtec
             ? SmoothStep(_parameters.VtecActivationRpm, _parameters.VtecActivationRpm + _parameters.VtecTransitionWidthRpm, _rpm)
@@ -245,7 +245,7 @@ public sealed class RTypeEngineRoomScreen : IDisposable
 
     private void PopulateVehicleState(float vtec, bool limiter)
     {
-        _vehicle.PowerRedlineRpm = _parameters.PowerRedlineRpm;
+        _vehicle.PowerRedlineRpm = _parameters.LimiterHardCutRpm;
         _vehicle.LimiterHardCutRpm = _parameters.LimiterHardCutRpm;
         _vehicle.LimiterResumeRpm = _parameters.RevLimiterResumeRpm;
         _vehicle.MaxGaugeRpm = _parameters.MaxGaugeRpm;
@@ -369,12 +369,12 @@ public sealed class RTypeEngineRoomScreen : IDisposable
             _font.Draw(spriteBatch, "VTEC", vtecX - 42, bar.Y - 56, 3, BrandRed);
         }
 
-        int redlineX = bar.X + (int)MathF.Round(bar.Width * MathHelper.Clamp(_parameters.PowerRedlineRpm / gaugeMax, 0f, 1f));
+        int redlineX = bar.X + (int)MathF.Round(bar.Width * MathHelper.Clamp(_parameters.LimiterHardCutRpm / gaugeMax, 0f, 1f));
         int limiterX = bar.X + (int)MathF.Round(bar.Width * MathHelper.Clamp(_parameters.LimiterHardCutRpm / gaugeMax, 0f, 1f));
         DrawRect(spriteBatch, new Rectangle(redlineX, bar.Y, 4, bar.Height), BrandRed);
         DrawRect(spriteBatch, new Rectangle(limiterX, bar.Y - 8, 4, bar.Height + 16), Color.White);
         _font.Draw(spriteBatch, $"{displayedRpm:0000} RPM", panel.X + 92, panel.Y + 138, 12, TextColor);
-        _font.Draw(spriteBatch, $"RED {_parameters.PowerRedlineRpm:0}  CUT {_parameters.LimiterHardCutRpm:0}", panel.X + 66, panel.Y + 414, 4, MutedTextColor);
+        _font.Draw(spriteBatch, $"REDLINE {_parameters.LimiterHardCutRpm:0}", panel.X + 66, panel.Y + 414, 4, MutedTextColor);
         _font.Draw(spriteBatch, $"CUT {(state.LimiterCut ? "ON" : "OFF")}", panel.X + 486, panel.Y + 414, 5, state.LimiterCut ? BrandRed : MutedTextColor);
     }
 

@@ -104,7 +104,7 @@ public sealed class VehicleAudioParameters
 
     public float LimiterStutterFrequencyHz { get; init; } = 15f;
 
-    public float LimiterStutterOffDuty { get; init; } = 0.48f;
+    public float LimiterStutterOffDuty { get; init; } = 0.50f;
 
     public float LimiterStutterIntensity { get; init; } = 1f;
 

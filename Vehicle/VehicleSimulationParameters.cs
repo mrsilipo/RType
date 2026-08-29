@@ -104,6 +104,8 @@ public sealed class VehicleSimulationParameters
 
     public float ClutchSlipDamping { get; init; } = 1f;
 
+    public float ClutchShiftKickIntensity { get; init; } = 0.75f;
+
     public float ClutchLowSpeedAssistStrength { get; init; } = 0.65f;
 
     public float ClutchBiteInputStartMultiplier { get; init; } = 0.35f;
@@ -143,6 +145,10 @@ public sealed class VehicleSimulationParameters
     public float ManualShiftTimeSeconds { get; init; } = 0.32f;
 
     public float AutomaticShiftTimeSeconds { get; init; } = 0.18f;
+
+    public string GearboxType { get; init; } = "manual";
+
+    public float GearboxShiftShockMultiplier { get; init; } = 1f;
 
     public float DownshiftOverRevToleranceRpm { get; init; } = 250f;
 
@@ -219,6 +225,14 @@ public sealed class VehicleSimulationParameters
     public float DifferentialTorqueBiasRatio { get; init; } = 1f;
 
     public float DifferentialPreloadTorqueNm { get; init; }
+
+    public DrivetrainLayout DrivetrainLayout { get; init; } = DrivetrainLayout.FF;
+
+    public float FrontTorqueShare { get; init; } = 1f;
+
+    public DifferentialParameters FrontDifferential { get; init; } = DifferentialParameters.Open;
+
+    public DifferentialParameters RearDifferential { get; init; } = DifferentialParameters.Open;
 
     public float WheelInertiaKgM2 { get; init; } = 0.85f;
 

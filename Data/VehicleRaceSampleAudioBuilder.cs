@@ -65,7 +65,7 @@ internal static class VehicleRaceSampleAudioBuilder
             HighRpmMinimumSpeedMetersPerSecond = ReadProfileSingle(engineAudioProfile, 0f, "highRpmMinimumSpeedMetersPerSecond"),
             HighRpmVolumeBoost = ReadProfileSingle(engineAudioProfile, 0f, "highRpmVolumeBoost"),
             LimiterStutterFrequencyHz = ReadProfileSingle(engineAudioProfile, 15f, "limiter", "stutterHz"),
-            LimiterStutterOffDuty = ReadProfileSingle(engineAudioProfile, 0.48f, "limiter", "offDuty"),
+            LimiterStutterOffDuty = ReadProfileSingle(engineAudioProfile, 0.50f, "limiter", "offDuty"),
             LimiterStutterIntensity = ReadProfileSingle(engineAudioProfile, 1f, "limiter", "intensity"),
             RTypeEngineEnabled = false,
             RTypeEngineBuildPath = buildPath,

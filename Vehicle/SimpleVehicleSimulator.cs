@@ -47,6 +47,11 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
     private float _longitudinalLoadTransferN;
     private float _frontLateralLoadTransferN;
     private float _rearLateralLoadTransferN;
+    private float _frontStaticAxleLoadN;
+    private float _rearStaticAxleLoadN;
+    private float _frontAeroLoadN;
+    private float _rearAeroLoadN;
+    private float _frontRollShare = 0.5f;
     private float _physicsTimeSeconds;
     private int _curbContactWheelCount;
     private int _surfaceVibrationContactWheelCount;
@@ -63,7 +68,16 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
     private float _ffLsdFrontLeftActualTorqueNm;
     private float _ffLsdFrontRightActualTorqueNm;
     private string _ffLsdLowGripAnchor = string.Empty;
+    private float _frontDifferentialCornerExitBite;
+    private AxleTorqueResult _frontDifferentialTorqueResult;
+    private AxleTorqueResult _rearDifferentialTorqueResult;
+    private readonly float[] _lastDriveTorquesNm = new float[4];
     private float _frontDriveTorqueSteerYawMomentNm;
+    private float _steeringFrontGripReserve = 1f;
+    private float _steeringCommittedTurnAuthority;
+    private float _steeringSpeedMatchedMaxAngleRadians;
+    private float _steeringForwardForceClampN;
+    private float _rpmScrubIsolationIntensity;
 
     public VehicleSimulationParameters Parameters => _parameters;
 
@@ -93,7 +107,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         State = new VehicleState
         {
             VehicleName = _parameters.DisplayName,
-            PowerRedlineRpm = _parameters.PowerRedlineRpm,
+            PowerRedlineRpm = _parameters.LimiterHardCutRpm,
             LimiterHardCutRpm = _parameters.LimiterHardCutRpm,
             LimiterResumeRpm = _parameters.RevLimiterResumeRpm,
             MaxGaugeRpm = _parameters.MaxGaugeRpm,
@@ -232,7 +246,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         Vector2 forward = GetForward();
         Vector2 right = GetRight();
         float[] normalLoads = CalculateNormalLoads(0f);
-        SteeringAngles steeringAngles = CalculateSteeringAngles(0f, 0f, 0f);
+        SteeringAngles steeringAngles = CalculateSteeringAngles(0f, 0f, 0f, 0f);
         for (int i = 0; i < _wheels.Length; i++)
         {
             WheelRuntimeState wheel = _wheels[i];
@@ -248,6 +262,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             wheel.EffectiveCamberRadians = alignment.CamberRadians;
             wheel.EffectiveToeRadians = alignment.ToeRadians;
             wheel.SuspensionCompressionMeters = alignment.CompressionMeters;
+            wheel.ResetTyreRelaxation();
         }
 
         State.FrontLeftLoadN = normalLoads[(int)WheelCorner.FrontLeft];
@@ -256,6 +271,9 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         State.RearRightLoadN = normalLoads[(int)WheelCorner.RearRight];
         State.FrontLeftSteerAngleDegrees = MathHelper.ToDegrees(GetWheel(WheelCorner.FrontLeft).SteerAngleRadians);
         State.FrontRightSteerAngleDegrees = MathHelper.ToDegrees(GetWheel(WheelCorner.FrontRight).SteerAngleRadians);
+        State.SteeringFrontGripReserve = _steeringFrontGripReserve;
+        State.SteeringCommittedTurnAuthority = _steeringCommittedTurnAuthority;
+        State.SteeringSpeedMatchedMaxAngleDegrees = MathHelper.ToDegrees(_steeringSpeedMatchedMaxAngleRadians);
         UpdateGroundContactPose(forward, right, 0f);
     }
 
@@ -275,7 +293,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         float throttle = State.Gear < 0 ? input.Reverse : input.Throttle;
         float driveThrottle = throttle;
         float steeringBrakeAuthority = CalculateSteeringBrakeAuthority(input.Brake, _filteredBrakeInput);
-        UpdateSteeringInput(input.Steer, MathF.Abs(forwardSpeed), steeringBrakeAuthority, dt);
+        UpdateSteeringInput(input.Steer, MathF.Abs(forwardSpeed), steeringBrakeAuthority, driveThrottle, dt);
         if (input.ThrottleAssistEnabled && State.Gear > 0)
         {
             driveThrottle = ApplyDigitalThrottleAssist(throttle, forwardSpeed);
@@ -291,14 +309,15 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         driveThrottle = ApplyBrakeThrottlePriority(driveThrottle, MathF.Max(brake, input.Brake));
         float[] normalLoads = CalculateNormalLoads(forwardSpeed);
         ApplySurfaceLoadVibration(normalLoads, forward, right, MathF.Abs(forwardSpeed));
-        UpdateRevLimiter(throttle, dt);
+        UpdateRevLimiter(throttle, forwardSpeed, dt);
         float totalDriveTorque = CalculateContinuousClutchDriveTorque(input, driveThrottle, forwardSpeed, dt);
 
         float[] driveTorques = DistributeDriveTorque(totalDriveTorque, normalLoads, driveThrottle);
         SteeringAngles steeringAngles = CalculateSteeringAngles(
             _filteredSteerInput,
             MathF.Abs(forwardSpeed),
-            CalculateSteeringBrakeAuthority(brake, input.Brake));
+            CalculateSteeringBrakeAuthority(brake, input.Brake),
+            driveThrottle);
         float[] brakeTorques = CalculateBrakeTorques(brake, input.Handbrake, MathF.Abs(forwardSpeed), MathF.Abs(_filteredSteerInput));
 
         float totalForceX = 0f;
@@ -309,11 +328,19 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         float gripUsageTotal = 0f;
         float drivenLongitudinalForce = 0f;
         float brakeLongitudinalForce = 0f;
+        float rearHandbrakeLockAmount = 0f;
+        float rearHandbrakeSlideIntensity = 0f;
+        float rearHandbrakeScreechFactor = 0f;
         bool absActive = false;
         int lockedWheelCount = 0;
         string weakestSurface = "ROAD";
         float weakestGrip = 1f;
-        float counterSteerRecoveryT = CalculateCounterSteerRecoveryT(_filteredSteerInput, forwardSpeed, lateralSpeed);
+        float projectedForwardForceLimitN = 0f;
+        _rpmScrubIsolationIntensity = 0f;
+        bool directRackHandling = _engineParameters.SteeringAssist.DirectRackInput;
+        float counterSteerRecoveryT = directRackHandling
+            ? 0f
+            : CalculateCounterSteerRecoveryT(_filteredSteerInput, forwardSpeed, lateralSpeed);
 
         for (int i = 0; i < _wheels.Length; i++)
         {
@@ -335,12 +362,19 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
                 wheel,
                 driveTorques[i],
                 brakeTorques[i],
+                input.Handbrake,
                 forward,
                 right,
                 forwardSpeed,
                 lateralSpeed,
+                MathF.Abs(_filteredSteerInput),
                 counterSteerRecoveryT,
                 dt);
+            if (wheel.RequestedLongitudinalForceN > 0f)
+            {
+                projectedForwardForceLimitN += wheel.RequestedLongitudinalForceN * MathF.Max(0f, MathF.Cos(wheel.SteerAngleRadians));
+            }
+
             totalForceX += force.BodyForceX;
             totalForceZ += force.BodyForceZ;
             float wheelYawTorque = wheel.LocalZ * force.BodyForceX - wheel.LocalX * force.BodyForceZ;
@@ -348,6 +382,12 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             slipRatioTotal += MathF.Abs(force.SlipRatio);
             slipAngleTotal += MathF.Abs(force.SlipAngleRadians);
             gripUsageTotal += force.GripUsage;
+            if (!IsFrontWheel(wheel.Corner))
+            {
+                rearHandbrakeLockAmount = MathF.Max(rearHandbrakeLockAmount, wheel.HandbrakeLockAmount);
+                rearHandbrakeSlideIntensity = MathF.Max(rearHandbrakeSlideIntensity, wheel.HandbrakeSlideIntensity);
+                rearHandbrakeScreechFactor = MathF.Max(rearHandbrakeScreechFactor, wheel.HandbrakeScreechFactor);
+            }
 
             if (MathF.Abs(driveTorques[i]) > 0.01f)
             {
@@ -372,6 +412,16 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             }
         }
 
+        _steeringForwardForceClampN = 0f;
+        if (driveThrottle > 0.05f &&
+            MathF.Abs(_filteredSteerInput) > 0.05f &&
+            projectedForwardForceLimitN > 0f &&
+            totalForceZ > projectedForwardForceLimitN)
+        {
+            _steeringForwardForceClampN = totalForceZ - projectedForwardForceLimitN;
+            totalForceZ = projectedForwardForceLimitN;
+        }
+
         totalForceZ += CalculateAeroDrag(forwardSpeed);
         AddTrackGravityForces(forward, right, ref totalForceZ, ref totalForceX);
         _loadTransferLongitudinalAcceleration = totalForceZ / MathF.Max(1f, _parameters.MassKg);
@@ -383,13 +433,20 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         bool passiveSlideRecoveryNeeded =
             MathF.Abs(lateralSpeed) > arcade.PassiveSlideRecoveryLateralSpeedMetersPerSecond ||
             MathF.Abs(State.YawRateRadiansPerSecond) > MathHelper.ToRadians(arcade.PassiveSlideRecoveryYawRateDegreesPerSecond);
-        bool stabilityAssistAllowed = State.WallContactCount == 0 &&
+        bool stabilityAssistAllowed = !directRackHandling &&
+                                      State.WallContactCount == 0 &&
                                       (MathF.Abs(_filteredSteerInput) > 0.05f ||
                                        driveThrottle > 0.05f ||
                                        brake > 0.05f ||
                                        input.Handbrake > 0.05f ||
                                        passiveSlideRecoveryNeeded);
         Vector2 worldAcceleration = (right * totalForceX + forward * totalForceZ) / _parameters.MassKg;
+        worldAcceleration = ApplyCorneringSpeedRetention(
+            worldAcceleration,
+            MathF.Abs(_filteredSteerInput),
+            driveThrottle,
+            brake,
+            input.Handbrake);
         if (stabilityAssistAllowed)
         {
             worldAcceleration += CalculateStabilityControlAcceleration(
@@ -407,7 +464,19 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
 
         float yawAcceleration = yawTorque / MathF.Max(1f, _parameters.YawInertiaKgM2);
         State.YawRateRadiansPerSecond += yawAcceleration * dt;
-        float yawDampingRate = CalculateYawDampingRate(forwardSpeed, lateralSpeed, averageSlipAngle, averageGripUsage);
+        ApplyLowSpeedPivotYawResponse(
+            (steeringAngles.FrontLeft + steeringAngles.FrontRight) * 0.5f,
+            forwardSpeed,
+            _filteredSteerInput,
+            dt);
+        float yawDampingRate = CalculateYawDampingRate(
+            forwardSpeed,
+            lateralSpeed,
+            averageSlipAngle,
+            averageGripUsage,
+            _filteredSteerInput,
+            driveThrottle,
+            brake);
         if (stabilityAssistAllowed)
         {
             yawDampingRate += CalculateStabilityControlYawDampingRate(
@@ -449,6 +518,11 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         State.LongitudinalLoadTransferN = _longitudinalLoadTransferN;
         State.FrontLateralLoadTransferN = _frontLateralLoadTransferN;
         State.RearLateralLoadTransferN = _rearLateralLoadTransferN;
+        State.FrontStaticAxleLoadN = _frontStaticAxleLoadN;
+        State.RearStaticAxleLoadN = _rearStaticAxleLoadN;
+        State.FrontAeroLoadN = _frontAeroLoadN;
+        State.RearAeroLoadN = _rearAeroLoadN;
+        State.FrontRollShare = _frontRollShare;
         State.SurfaceGrip = weakestGrip;
         State.SurfaceName = weakestSurface;
         State.Throttle = throttle;
@@ -459,6 +533,10 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         State.CounterSteerRecoveryIntensity = counterSteerRecoveryT;
         State.FrontLeftSteerAngleDegrees = MathHelper.ToDegrees(GetWheel(WheelCorner.FrontLeft).SteerAngleRadians);
         State.FrontRightSteerAngleDegrees = MathHelper.ToDegrees(GetWheel(WheelCorner.FrontRight).SteerAngleRadians);
+        State.SteeringFrontGripReserve = _steeringFrontGripReserve;
+        State.SteeringCommittedTurnAuthority = _steeringCommittedTurnAuthority;
+        State.SteeringSpeedMatchedMaxAngleDegrees = MathHelper.ToDegrees(_steeringSpeedMatchedMaxAngleRadians);
+        State.SteeringForwardForceClampN = _steeringForwardForceClampN;
         State.IsShifting = _shiftTimerSeconds > 0f;
         State.ShiftTimeRemainingSeconds = _shiftTimerSeconds;
         State.EngineBrakeTorqueNm = DoesTorqueOpposeTravel(totalDriveTorque, forwardSpeed)
@@ -468,6 +546,9 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         PublishEnginePowerState();
         State.FrontBrakeTorqueNm = brakeTorques[(int)WheelCorner.FrontLeft] + brakeTorques[(int)WheelCorner.FrontRight];
         State.RearBrakeTorqueNm = brakeTorques[(int)WheelCorner.RearLeft] + brakeTorques[(int)WheelCorner.RearRight];
+        State.RearHandbrakeLockAmount = rearHandbrakeLockAmount;
+        State.RearHandbrakeSlideIntensity = rearHandbrakeSlideIntensity;
+        State.RearHandbrakeScreechFactor = rearHandbrakeScreechFactor;
         State.AbsActive = absActive;
         State.LockedWheelCount = lockedWheelCount;
         State.DriveForce = drivenLongitudinalForce;
@@ -486,6 +567,22 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         State.FrontRightSlipRatio = GetWheel(WheelCorner.FrontRight).SlipRatio;
         State.RearLeftSlipRatio = GetWheel(WheelCorner.RearLeft).SlipRatio;
         State.RearRightSlipRatio = GetWheel(WheelCorner.RearRight).SlipRatio;
+        State.FrontLeftRelaxedLongitudinalSlipRatio = GetWheel(WheelCorner.FrontLeft).RelaxedLongitudinalSlipRatio;
+        State.FrontRightRelaxedLongitudinalSlipRatio = GetWheel(WheelCorner.FrontRight).RelaxedLongitudinalSlipRatio;
+        State.RearLeftRelaxedLongitudinalSlipRatio = GetWheel(WheelCorner.RearLeft).RelaxedLongitudinalSlipRatio;
+        State.RearRightRelaxedLongitudinalSlipRatio = GetWheel(WheelCorner.RearRight).RelaxedLongitudinalSlipRatio;
+        State.FrontLeftRelaxedLateralSlip = GetWheel(WheelCorner.FrontLeft).RelaxedLateralSlip;
+        State.FrontRightRelaxedLateralSlip = GetWheel(WheelCorner.FrontRight).RelaxedLateralSlip;
+        State.RearLeftRelaxedLateralSlip = GetWheel(WheelCorner.RearLeft).RelaxedLateralSlip;
+        State.RearRightRelaxedLateralSlip = GetWheel(WheelCorner.RearRight).RelaxedLateralSlip;
+        State.PeakRawSlipRatio = CalculatePeakRawSlipRatio();
+        State.PeakRelaxedLongitudinalSlipRatio = CalculatePeakRelaxedLongitudinalSlipRatio();
+        State.PeakRelaxedLateralSlip = CalculatePeakRelaxedLateralSlip();
+        State.FrontLeftWheelOmegaRadiansPerSecond = GetWheel(WheelCorner.FrontLeft).AngularVelocityRadiansPerSecond;
+        State.FrontRightWheelOmegaRadiansPerSecond = GetWheel(WheelCorner.FrontRight).AngularVelocityRadiansPerSecond;
+        State.RearLeftWheelOmegaRadiansPerSecond = GetWheel(WheelCorner.RearLeft).AngularVelocityRadiansPerSecond;
+        State.RearRightWheelOmegaRadiansPerSecond = GetWheel(WheelCorner.RearRight).AngularVelocityRadiansPerSecond;
+        PublishFrictionEllipseDiagnostics();
         State.FrontLeftSlipAngleDegrees = MathHelper.ToDegrees(GetWheel(WheelCorner.FrontLeft).SlipAngleRadians);
         State.FrontRightSlipAngleDegrees = MathHelper.ToDegrees(GetWheel(WheelCorner.FrontRight).SlipAngleRadians);
         State.RearLeftSlipAngleDegrees = MathHelper.ToDegrees(GetWheel(WheelCorner.RearLeft).SlipAngleRadians);
@@ -494,6 +591,21 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         State.FrontRightLongitudinalForceN = GetWheel(WheelCorner.FrontRight).LongitudinalForceN;
         State.RearLeftLongitudinalForceN = GetWheel(WheelCorner.RearLeft).LongitudinalForceN;
         State.RearRightLongitudinalForceN = GetWheel(WheelCorner.RearRight).LongitudinalForceN;
+        State.FrontLeftRequestedLongitudinalForceN = GetWheel(WheelCorner.FrontLeft).RequestedLongitudinalForceN;
+        State.FrontRightRequestedLongitudinalForceN = GetWheel(WheelCorner.FrontRight).RequestedLongitudinalForceN;
+        State.RearLeftRequestedLongitudinalForceN = GetWheel(WheelCorner.RearLeft).RequestedLongitudinalForceN;
+        State.RearRightRequestedLongitudinalForceN = GetWheel(WheelCorner.RearRight).RequestedLongitudinalForceN;
+        State.FrontLeftTyreScrubForceN = GetWheel(WheelCorner.FrontLeft).TyreScrubForceN;
+        State.FrontRightTyreScrubForceN = GetWheel(WheelCorner.FrontRight).TyreScrubForceN;
+        State.RearLeftTyreScrubForceN = GetWheel(WheelCorner.RearLeft).TyreScrubForceN;
+        State.RearRightTyreScrubForceN = GetWheel(WheelCorner.RearRight).TyreScrubForceN;
+        State.FrontLeftSteeringProjectionForceN = GetWheel(WheelCorner.FrontLeft).SteeringProjectionForceN;
+        State.FrontRightSteeringProjectionForceN = GetWheel(WheelCorner.FrontRight).SteeringProjectionForceN;
+        State.RearLeftSteeringProjectionForceN = GetWheel(WheelCorner.RearLeft).SteeringProjectionForceN;
+        State.RearRightSteeringProjectionForceN = GetWheel(WheelCorner.RearRight).SteeringProjectionForceN;
+        State.PeakTyreScrubForceN = CalculatePeakTyreScrubForce();
+        State.PeakSteeringProjectionForceN = CalculatePeakSteeringProjectionForce();
+        State.RpmScrubIsolationIntensity = _rpmScrubIsolationIntensity;
         State.FfLsdCornerExitBite = _ffLsdCornerExitBite;
         State.FfLsdInsideFrontMaxTorqueNm = _ffLsdInsideFrontMaxTorqueNm;
         State.FfLsdOutsideFrontMaxTorqueNm = _ffLsdOutsideFrontMaxTorqueNm;
@@ -502,6 +614,19 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         State.FfLsdFrontRightActualTorqueNm = _ffLsdFrontRightActualTorqueNm;
         State.FfLsdLowGripAnchor = _ffLsdLowGripAnchor;
         State.FrontDriveTorqueSteerYawMomentNm = _frontDriveTorqueSteerYawMomentNm;
+        State.FrontDifferentialCornerExitBite = _frontDifferentialCornerExitBite;
+        State.FrontDifferentialManagedAxleTorqueNm = _frontDifferentialTorqueResult.ManagedAxleTorqueNm;
+        State.FrontDifferentialLeftActualTorqueNm = _frontDifferentialTorqueResult.LeftWheelTorqueNm;
+        State.FrontDifferentialRightActualTorqueNm = _frontDifferentialTorqueResult.RightWheelTorqueNm;
+        State.FrontDifferentialLowGripAnchor = _frontDifferentialTorqueResult.LowGripAnchor;
+        State.RearDifferentialManagedAxleTorqueNm = _rearDifferentialTorqueResult.ManagedAxleTorqueNm;
+        State.RearDifferentialLeftActualTorqueNm = _rearDifferentialTorqueResult.LeftWheelTorqueNm;
+        State.RearDifferentialRightActualTorqueNm = _rearDifferentialTorqueResult.RightWheelTorqueNm;
+        State.RearDifferentialLowGripAnchor = _rearDifferentialTorqueResult.LowGripAnchor;
+        State.FrontLeftDriveTorqueNm = _lastDriveTorquesNm[(int)WheelCorner.FrontLeft];
+        State.FrontRightDriveTorqueNm = _lastDriveTorquesNm[(int)WheelCorner.FrontRight];
+        State.RearLeftDriveTorqueNm = _lastDriveTorquesNm[(int)WheelCorner.RearLeft];
+        State.RearRightDriveTorqueNm = _lastDriveTorquesNm[(int)WheelCorner.RearRight];
         State.FrontLeftLateralForceN = GetWheel(WheelCorner.FrontLeft).LateralForceN;
         State.FrontRightLateralForceN = GetWheel(WheelCorner.FrontRight).LateralForceN;
         State.RearLeftLateralForceN = GetWheel(WheelCorner.RearLeft).LateralForceN;
@@ -561,7 +686,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         State.CollisionActive = wallCollision.ContactCount > 0 || State.CrashFlashSeconds > 0f;
         UpdateShiftKickTimer(dt);
         UpdateDownshiftOverRevShockTimer(dt);
-
+        FinalizeLimiterAndOverRevRecovery(forwardSpeed);
     }
 
     private void StepRaceStartHold(VehicleInput input, float dt)
@@ -571,10 +696,10 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         UpdateGear(input, 0f);
 
         float throttle = State.Gear < 0 ? input.Reverse : input.Throttle;
-        UpdateSteeringInput(input.Steer, 0f, input.Brake, dt);
+        UpdateSteeringInput(input.Steer, 0f, input.Brake, input.Throttle, dt);
         UpdateBrakeInput(input.Brake, dt);
         UpdateHeldLaunchRpm(throttle, dt);
-        UpdateRevLimiter(throttle, dt);
+        UpdateRevLimiter(throttle, 0f, dt);
 
         State.Velocity = Vector2.Zero;
         State.YawRateRadiansPerSecond = 0f;
@@ -626,7 +751,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         Vector2 forward = GetForward();
         Vector2 right = GetRight();
         float[] normalLoads = CalculateNormalLoads(0f);
-        SteeringAngles steeringAngles = CalculateSteeringAngles(_filteredSteerInput, 0f, 0f);
+        SteeringAngles steeringAngles = CalculateSteeringAngles(_filteredSteerInput, 0f, 0f, input.Throttle);
         for (int i = 0; i < _wheels.Length; i++)
         {
             WheelRuntimeState wheel = _wheels[i];
@@ -657,10 +782,12 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         WheelRuntimeState wheel,
         float driveTorqueNm,
         float brakeTorqueNm,
+        float handbrakeInput,
         Vector2 forward,
         Vector2 right,
         float forwardSpeed,
         float lateralSpeed,
+        float absSteerInput,
         float counterSteerRecoveryT,
         float dt)
     {
@@ -677,6 +804,12 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         float wheelLongitudinalVelocity = localVelocityX * sinSteer + localVelocityZ * cosSteer;
         float wheelLateralVelocity = localVelocityX * cosSteer - localVelocityZ * sinSteer;
         float radius = wheel.Tyres.LoadedRadiusMeters;
+        UpdateTyreRelaxationState(wheel, wheelLongitudinalVelocity, wheelLateralVelocity, radius, dt);
+        bool isRearWheel = !IsFrontWheel(wheel.Corner);
+        float handbrakeRearTorqueNm = isRearWheel
+            ? _parameters.Brakes.HandbrakeRearTorqueNm * MathHelper.Clamp(handbrakeInput, 0f, 1f)
+            : 0f;
+        float serviceBrakeTorqueNm = MathF.Max(0f, brakeTorqueNm - handbrakeRearTorqueNm);
 
         RecoverFreeRollingWheelSpeed(
             wheel,
@@ -686,45 +819,68 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             radius,
             _engineParameters.VehicleSafety.MinimumSlipSpeedMetersPerSecond,
             dt);
+        RecoverReleasedHandbrakeWheelSpeed(
+            wheel,
+            surface,
+            handbrakeRearTorqueNm,
+            serviceBrakeTorqueNm,
+            wheelLongitudinalVelocity,
+            radius,
+            dt);
         float slipRatio = CalculateSlipRatio(
             wheel,
             wheelLongitudinalVelocity,
             radius,
             _engineParameters.VehicleSafety.MinimumSlipSpeedMetersPerSecond);
-        float activeSurfaceMu = CalculateActiveSurfaceMu(surface, slipRatio, wheelLongitudinalVelocity);
+        float stableLongitudinalSlipRatio = SelectStableLongitudinalSlipRatio(wheel, slipRatio, wheelLongitudinalVelocity);
+        float relaxedTotalSlip = MathF.Sqrt(
+            wheel.RelaxedLongitudinalSlipRatio * wheel.RelaxedLongitudinalSlipRatio +
+            wheel.RelaxedLateralSlip * wheel.RelaxedLateralSlip);
+        float activeSurfaceMu = CalculateActiveSurfaceMu(surface, relaxedTotalSlip, wheelLongitudinalVelocity);
         float slipAngle = MathHelper.Clamp(
             MathF.Atan2(wheelLateralVelocity, MathF.Max(1.5f, MathF.Abs(wheelLongitudinalVelocity))),
             -0.75f,
             0.75f);
 
         float gripLimit = CalculateGripLimit(wheel, activeSurfaceMu);
+        float ellipseShape = CalculateFrictionEllipseShape(surface);
         float wheelBrakeSign = SignWithFallback(wheel.AngularVelocityRadiansPerSecond, wheelLongitudinalVelocity);
-        float effectiveBrakeTorqueNm = ApplyAbs(wheel, brakeTorqueNm, slipRatio, wheelLongitudinalVelocity, dt);
+        float effectiveServiceBrakeTorqueNm = ApplyAbs(wheel, serviceBrakeTorqueNm, stableLongitudinalSlipRatio, wheelLongitudinalVelocity, dt);
+        float effectiveBrakeTorqueNm = effectiveServiceBrakeTorqueNm + handbrakeRearTorqueNm;
         float wheelRecoveryT = IsFrontWheel(wheel.Corner)
             ? counterSteerRecoveryT
             : counterSteerRecoveryT * 0.55f;
-        float tyreLongitudinalForce = CalculateLongitudinalTyreForce(wheel.Tyres, surface, slipRatio, gripLimit);
         float effectiveSlipAngle = UpdateRelaxedSlipAngle(wheel, slipAngle, wheelLongitudinalVelocity, wheelRecoveryT, dt);
-        float tyreLateralForce = CalculateLateralTyreForce(wheel.Tyres, effectiveSlipAngle, gripLimit, wheelRecoveryT);
-        tyreLateralForce += CalculateCamberThrust(wheel, gripLimit);
-        ApplyBrakeForcePriority(wheel, gripLimit, effectiveBrakeTorqueNm, wheelLongitudinalVelocity, ref tyreLongitudinalForce);
-        float combinedGripLimit = CalculateGtStyleCombinedGripLimit(
-            wheel,
-            gripLimit,
+        float requestedLongitudinalForce = CalculateRequestedLongitudinalTyreForce(
             driveTorqueNm,
             effectiveBrakeTorqueNm,
-            effectiveSlipAngle,
-            wheelRecoveryT);
-        float gripUsage = ApplyCombinedGripLimit(
-            _parameters.ArcadeHandling,
-            _engineParameters.StabilityAssist,
-            wheel.Tyres,
-            wheelLongitudinalVelocity,
+            wheelBrakeSign,
+            radius);
+        UnifiedTyreForceResult tyreForce = UpdateUnifiedTyreForce(
+            wheel,
+            gripLimit,
+            requestedLongitudinalForce,
+            ellipseShape,
+            CalculateFrictionEllipseSlidingFloor(),
+            CalculateLateralLongitudinalGripCoupling());
+        float tyreLateralForce = tyreForce.LateralForceN;
+        float tyreLongitudinalForce = tyreForce.LongitudinalForceN;
+        if (requestedLongitudinalForce > 0f)
+        {
+            tyreLongitudinalForce = RemoveSteeringProjectionDriveBoost(
+                tyreLongitudinalForce,
+                tyreLateralForce,
+                requestedLongitudinalForce,
+                sinSteer,
+                cosSteer);
+        }
+        tyreLongitudinalForce = PreventFreeRollingWheelPropulsion(
+            tyreLongitudinalForce,
+            driveTorqueNm,
             effectiveBrakeTorqueNm,
-            wheelRecoveryT,
-            combinedGripLimit,
-            ref tyreLongitudinalForce,
-            ref tyreLateralForce);
+            wheelLongitudinalVelocity);
+        float handbrakeLockAmount = CalculateRearHandbrakeLockAmount(isRearWheel, handbrakeInput, stableLongitudinalSlipRatio, wheelLongitudinalVelocity);
+        float gripUsage = tyreForce.GripUsage;
 
         UpdateSurfaceDragScale(wheel, surface, dt);
         float rollingResistanceForce =
@@ -747,7 +903,9 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             tyreLateralForce,
             wheelLateralVelocity,
             wheelLongitudinalVelocity,
-            wheel.Tyres.LateralScrubDragCoefficient);
+            wheel.Tyres.LateralScrubDragCoefficient,
+            CalculateMaximumTyreScrubDragForce(wheel, surface));
+        wheel.TyreScrubForceN = scrubLongitudinalForce;
 
         float wheelSurfaceSpeed = wheel.AngularVelocityRadiansPerSecond * radius;
         float wheelSpinDragTorque = CalculateWheelSpinDragTorque(
@@ -761,6 +919,15 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             wheelSpinDragTorque;
         float previousAngularVelocity = wheel.AngularVelocityRadiansPerSecond;
         wheel.AngularVelocityRadiansPerSecond += wheelTorque / MathF.Max(0.1f, CalculateEffectiveWheelInertia(wheel)) * dt;
+        if (ShouldSynchronizeTorqueBalancedDrivenWheel(wheel, driveTorqueNm, effectiveBrakeTorqueNm, requestedLongitudinalForce, tyreLongitudinalForce))
+        {
+            SynchronizeDrivenRollingWheelSpeed(
+                wheel,
+                driveTorqueNm,
+                wheelLongitudinalVelocity,
+                radius,
+                dt);
+        }
         SettleFreeRollingWheelSpeed(
             wheel,
             previousAngularVelocity,
@@ -805,12 +972,14 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             }
         }
 
-        if (MathF.Abs(wheelLongitudinalVelocity) < 0.15f &&
-            MathF.Abs(driveTorqueNm) < 0.1f &&
-            brakeTorqueNm < 0.1f)
-        {
-            wheel.AngularVelocityRadiansPerSecond = MathHelper.Lerp(wheel.AngularVelocityRadiansPerSecond, 0f, 0.08f);
-        }
+        SettleFreeWheelAtRest(
+            wheel,
+            driveTorqueNm,
+            brakeTorqueNm,
+            handbrakeInput,
+            wheelLongitudinalVelocity,
+            State.SpeedMetersPerSecond,
+            dt);
 
         float reportedSlipRatio = CalculateSlipRatio(
             wheel,
@@ -819,6 +988,9 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             _engineParameters.VehicleSafety.MinimumSlipSpeedMetersPerSecond);
         wheel.SlipRatio = reportedSlipRatio;
         wheel.SlipAngleRadians = effectiveSlipAngle;
+        wheel.HandbrakeLockAmount = handbrakeLockAmount;
+        wheel.HandbrakeSlideIntensity = CalculateRearHandbrakeSlideIntensity(surface, handbrakeLockAmount, wheelLongitudinalVelocity, wheelLateralVelocity);
+        wheel.HandbrakeScreechFactor = surface.HandbrakeScreechFactor;
         wheel.GripUsage = MathHelper.Clamp(gripUsage, 0f, 1.5f);
         wheel.IsLocked = effectiveBrakeTorqueNm > 1f &&
                          MathF.Abs(wheelLongitudinalVelocity) > _parameters.Brakes.Abs.MinimumSpeedMetersPerSecond &&
@@ -826,7 +998,16 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
 
         float totalLongitudinalForce = tyreLongitudinalForce + passiveLongitudinalForce + scrubLongitudinalForce;
         float totalLateralForce = tyreLateralForce + passiveLateralForce;
+        if (isRearWheel)
+        {
+            totalLateralForce = ApplyLowSpeedPivotRearLateralRelease(
+                totalLateralForce,
+                forwardSpeed,
+                absSteerInput,
+                _engineParameters.SteeringAssist);
+        }
         wheel.LongitudinalForceN = totalLongitudinalForce;
+        wheel.RequestedLongitudinalForceN = requestedLongitudinalForce;
         wheel.LateralForceN = totalLateralForce;
         wheel.SurfaceGrip = surface.Grip;
         wheel.StaticSurfaceMu = surface.StaticFrictionCoefficient;
@@ -837,7 +1018,23 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         wheel.SurfaceBlendWeight = surface.BlendWeight;
         wheel.SurfaceName = surface.Name;
         float bodyForceX = totalLongitudinalForce * sinSteer + totalLateralForce * cosSteer;
-        float bodyForceZ = totalLongitudinalForce * cosSteer - totalLateralForce * sinSteer;
+        float lateralProjectionZ = -totalLateralForce * sinSteer;
+        float lateralProjectionScale = requestedLongitudinalForce > 0f
+            ? _engineParameters.SteeringAssist.PoweredLateralForceForwardProjectionScale
+            : _engineParameters.SteeringAssist.LateralForceForwardProjectionScale;
+        lateralProjectionZ = ScaleSteeringLateralProjectionDrag(
+            lateralProjectionZ,
+            forwardSpeed,
+            lateralProjectionScale);
+        wheel.SteeringProjectionForceN = lateralProjectionZ;
+        float bodyForceZ = totalLongitudinalForce * cosSteer + lateralProjectionZ;
+        if (requestedLongitudinalForce > 0f)
+        {
+            float maximumBodyForwardForce =
+                requestedLongitudinalForce * cosSteer +
+                MathF.Min(0f, passiveLongitudinalForce + scrubLongitudinalForce);
+            bodyForceZ = MathF.Min(bodyForceZ, maximumBodyForwardForce);
+        }
 
         return new WheelForceResult(
             bodyForceX,
@@ -867,6 +1064,62 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         float slideT = MathHelper.Clamp((absSlip - optimalSlip) / 0.5f, 0f, 1f);
         float speedConfidence = SmoothStep(0.75f, 4.0f, MathF.Abs(wheelLongitudinalVelocity));
         return MathHelper.Lerp(staticMu, MathHelper.Lerp(staticMu, dynamicMu, slideT), speedConfidence);
+    }
+
+    private static float SelectStableLongitudinalSlipRatio(
+        WheelRuntimeState wheel,
+        float fallbackRawSlipRatio,
+        float wheelLongitudinalVelocity)
+    {
+        float relaxed = wheel.RelaxedLongitudinalSlipRatio;
+        if (float.IsNaN(relaxed) || float.IsInfinity(relaxed))
+        {
+            return fallbackRawSlipRatio;
+        }
+
+        float rawBlend = SmoothStep(1.4f, 5.5f, MathF.Abs(wheelLongitudinalVelocity));
+        return MathHelper.Lerp(relaxed, fallbackRawSlipRatio, rawBlend);
+    }
+
+    private static void SettleFreeWheelAtRest(
+        WheelRuntimeState wheel,
+        float driveTorqueNm,
+        float brakeTorqueNm,
+        float handbrakeInput,
+        float wheelLongitudinalVelocity,
+        float vehicleSpeedMetersPerSecond,
+        float dt)
+    {
+        if (MathF.Abs(driveTorqueNm) > 0.1f ||
+            brakeTorqueNm > 0.1f ||
+            handbrakeInput > 0.01f ||
+            vehicleSpeedMetersPerSecond >= 0.50f ||
+            MathF.Abs(wheelLongitudinalVelocity) >= 0.35f)
+        {
+            return;
+        }
+
+        if (vehicleSpeedMetersPerSecond < 0.05f && MathF.Abs(wheelLongitudinalVelocity) < 0.05f)
+        {
+            wheel.AngularVelocityRadiansPerSecond = 0f;
+            wheel.ResetTyreRelaxation();
+            return;
+        }
+
+        float settle = 1f - MathF.Exp(-MathHelper.Clamp(dt, 0f, 1f / 20f) * 42f);
+        wheel.AngularVelocityRadiansPerSecond = MathHelper.Lerp(
+            wheel.AngularVelocityRadiansPerSecond,
+            0f,
+            MathHelper.Clamp(settle, 0f, 1f));
+        if (MathF.Abs(wheel.AngularVelocityRadiansPerSecond) < 0.03f)
+        {
+            wheel.AngularVelocityRadiansPerSecond = 0f;
+        }
+
+        if (MathF.Abs(wheel.AngularVelocityRadiansPerSecond) < 0.35f)
+        {
+            wheel.ResetTyreRelaxation();
+        }
     }
 
     private static void UpdateSurfaceDragScale(WheelRuntimeState wheel, SurfaceSample surface, float dt)
@@ -905,6 +1158,326 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         }
 
         return 1f;
+    }
+
+    private static void UpdateTyreRelaxationState(
+        WheelRuntimeState wheel,
+        float wheelLongitudinalVelocity,
+        float wheelLateralVelocity,
+        float radius,
+        float dt)
+    {
+        float safeLength = MathF.Max(0.01f, wheel.TyreRelaxationLengthMeters);
+        float wheelSurfaceSpeed = wheel.AngularVelocityRadiansPerSecond * radius;
+        float slipVelocityLong = wheelSurfaceSpeed - wheelLongitudinalVelocity;
+        float slipVelocityLat = -wheelLateralVelocity;
+        float forwardSpeedMagnitude = MathF.Abs(wheelLongitudinalVelocity);
+        float contactSpeedMagnitude = MathF.Max(forwardSpeedMagnitude, MathF.Abs(wheelSurfaceSpeed));
+        float clampedDt = MathHelper.Clamp(dt, 0f, 1f / 20f);
+        float maxStableDamping = clampedDt > 0.0001f
+            ? 1.5f / clampedDt
+            : 1500f;
+        float rollingDamping = MathF.Min(forwardSpeedMagnitude / safeLength, maxStableDamping);
+        float staticCarcassDamping =
+            MathHelper.Lerp(28f, 0f, SmoothStep(0.15f, 1.8f, contactSpeedMagnitude));
+
+        float longDeflectionChange =
+            slipVelocityLong -
+            (rollingDamping + staticCarcassDamping) *
+            wheel.LongitudinalTyreDeflectionMeters;
+        float latDeflectionChange =
+            slipVelocityLat -
+            (rollingDamping + staticCarcassDamping) *
+            wheel.LateralTyreDeflectionMeters;
+
+        wheel.LongitudinalTyreDeflectionMeters += longDeflectionChange * clampedDt;
+        wheel.LateralTyreDeflectionMeters += latDeflectionChange * clampedDt;
+
+        float maxPhysicalStretch = MathF.Max(0.05f, radius * 1.5f);
+        wheel.LongitudinalTyreDeflectionMeters = MathHelper.Clamp(
+            wheel.LongitudinalTyreDeflectionMeters,
+            -maxPhysicalStretch,
+            maxPhysicalStretch);
+        wheel.LateralTyreDeflectionMeters = MathHelper.Clamp(
+            wheel.LateralTyreDeflectionMeters,
+            -maxPhysicalStretch,
+            maxPhysicalStretch);
+
+        wheel.RelaxedLongitudinalSlipRatio = MathHelper.Clamp(
+            wheel.LongitudinalTyreDeflectionMeters / safeLength,
+            -4f,
+            4f);
+        wheel.RelaxedLateralSlip = MathHelper.Clamp(
+            wheel.LateralTyreDeflectionMeters / safeLength,
+            -4f,
+            4f);
+    }
+
+    private float CalculatePeakRawSlipRatio()
+    {
+        float peak = 0f;
+        for (int i = 0; i < _wheels.Length; i++)
+        {
+            peak = MathF.Max(peak, MathF.Abs(_wheels[i].SlipRatio));
+        }
+
+        return peak;
+    }
+
+    private float CalculatePeakRelaxedLongitudinalSlipRatio()
+    {
+        float peak = 0f;
+        for (int i = 0; i < _wheels.Length; i++)
+        {
+            peak = MathF.Max(peak, MathF.Abs(_wheels[i].RelaxedLongitudinalSlipRatio));
+        }
+
+        return peak;
+    }
+
+    private float CalculatePeakRelaxedLateralSlip()
+    {
+        float peak = 0f;
+        for (int i = 0; i < _wheels.Length; i++)
+        {
+            peak = MathF.Max(peak, MathF.Abs(_wheels[i].RelaxedLateralSlip));
+        }
+
+        return peak;
+    }
+
+    private float CalculatePeakTyreScrubForce()
+    {
+        float peak = 0f;
+        for (int i = 0; i < _wheels.Length; i++)
+        {
+            peak = MathF.Max(peak, MathF.Abs(_wheels[i].TyreScrubForceN));
+        }
+
+        return peak;
+    }
+
+    private float CalculatePeakSteeringProjectionForce()
+    {
+        float peak = 0f;
+        for (int i = 0; i < _wheels.Length; i++)
+        {
+            peak = MathF.Max(peak, MathF.Abs(_wheels[i].SteeringProjectionForceN));
+        }
+
+        return peak;
+    }
+
+    private static float CalculateFrictionEllipseShape(SurfaceSample surface)
+    {
+        return 1f;
+    }
+
+    private float CalculateFrictionEllipseSlidingFloor()
+    {
+        return MathHelper.Clamp(_engineParameters.TyreForce.SlidingForceFloor, 0f, 1f);
+    }
+
+    private float CalculateLateralLongitudinalGripCoupling()
+    {
+        return MathHelper.Clamp(_engineParameters.TyreForce.LateralLongitudinalGripCoupling, 0f, 1f);
+    }
+
+    private float CalculateMaximumTyreScrubDragForce(WheelRuntimeState wheel, SurfaceSample surface)
+    {
+        float dynamicMu = MathF.Max(0.01f, surface.DynamicFrictionCoefficient);
+        float multiplier = MathHelper.Clamp(_engineParameters.TyreForce.ScrubDragLimitMultiplier, 0f, 2f);
+        return MathF.Max(0f, wheel.NormalLoadN) *
+               dynamicMu *
+               MathF.Max(0.01f, wheel.Tyres.PeakFriction) *
+               multiplier;
+    }
+
+    private static UnifiedTyreForceResult UpdateUnifiedTyreForce(
+        WheelRuntimeState wheel,
+        float gripLimitN,
+        float requestedLongitudinalForceN,
+        float tyreShape,
+        float slidingCurveFloor,
+        float lateralLongitudinalGripCoupling)
+    {
+        UnifiedTyreForceResult result = UnifiedTyreForceModel.CalculateFromRequest(
+            new TyreForceRequest(
+                gripLimitN,
+                requestedLongitudinalForceN,
+                wheel.RelaxedLongitudinalSlipRatio,
+                wheel.RelaxedLateralSlip,
+                MathF.Max(0.01f, wheel.Tyres.LongitudinalPeakSlipRatio),
+                MathF.Max(0.01f, wheel.Tyres.LateralPeakSlipAngleRadians)),
+            tyreShape,
+            slidingCurveFloor,
+            lateralLongitudinalGripCoupling);
+        UnifiedTyreForceDiagnostics diagnostics = result.Diagnostics;
+        wheel.FrictionEllipseTotalSlip = diagnostics.TotalSlip;
+        wheel.FrictionEllipseGripBudgetN = diagnostics.GripBudgetN;
+        wheel.FrictionEllipseLongitudinalShare = diagnostics.LongitudinalShare;
+        wheel.FrictionEllipseLateralShare = diagnostics.LateralShare;
+        wheel.FrictionEllipseLongitudinalForceN = diagnostics.LongitudinalForceN;
+        wheel.FrictionEllipseLateralForceN = diagnostics.LateralForceN;
+        wheel.FrictionEllipseTotalForceN = diagnostics.TotalForceN;
+        wheel.FrictionEllipseGripUsage = result.GripUsage;
+        return result;
+    }
+
+    private void PublishFrictionEllipseDiagnostics()
+    {
+        WheelRuntimeState fl = GetWheel(WheelCorner.FrontLeft);
+        WheelRuntimeState fr = GetWheel(WheelCorner.FrontRight);
+        WheelRuntimeState rl = GetWheel(WheelCorner.RearLeft);
+        WheelRuntimeState rr = GetWheel(WheelCorner.RearRight);
+
+        State.FrontLeftFrictionEllipseTotalSlip = fl.FrictionEllipseTotalSlip;
+        State.FrontRightFrictionEllipseTotalSlip = fr.FrictionEllipseTotalSlip;
+        State.RearLeftFrictionEllipseTotalSlip = rl.FrictionEllipseTotalSlip;
+        State.RearRightFrictionEllipseTotalSlip = rr.FrictionEllipseTotalSlip;
+        State.FrontLeftFrictionEllipseGripBudgetN = fl.FrictionEllipseGripBudgetN;
+        State.FrontRightFrictionEllipseGripBudgetN = fr.FrictionEllipseGripBudgetN;
+        State.RearLeftFrictionEllipseGripBudgetN = rl.FrictionEllipseGripBudgetN;
+        State.RearRightFrictionEllipseGripBudgetN = rr.FrictionEllipseGripBudgetN;
+        State.FrontLeftFrictionEllipseLongitudinalShare = fl.FrictionEllipseLongitudinalShare;
+        State.FrontRightFrictionEllipseLongitudinalShare = fr.FrictionEllipseLongitudinalShare;
+        State.RearLeftFrictionEllipseLongitudinalShare = rl.FrictionEllipseLongitudinalShare;
+        State.RearRightFrictionEllipseLongitudinalShare = rr.FrictionEllipseLongitudinalShare;
+        State.FrontLeftFrictionEllipseLateralShare = fl.FrictionEllipseLateralShare;
+        State.FrontRightFrictionEllipseLateralShare = fr.FrictionEllipseLateralShare;
+        State.RearLeftFrictionEllipseLateralShare = rl.FrictionEllipseLateralShare;
+        State.RearRightFrictionEllipseLateralShare = rr.FrictionEllipseLateralShare;
+        State.FrontLeftFrictionEllipseLongitudinalForceN = fl.FrictionEllipseLongitudinalForceN;
+        State.FrontRightFrictionEllipseLongitudinalForceN = fr.FrictionEllipseLongitudinalForceN;
+        State.RearLeftFrictionEllipseLongitudinalForceN = rl.FrictionEllipseLongitudinalForceN;
+        State.RearRightFrictionEllipseLongitudinalForceN = rr.FrictionEllipseLongitudinalForceN;
+        State.FrontLeftFrictionEllipseLateralForceN = fl.FrictionEllipseLateralForceN;
+        State.FrontRightFrictionEllipseLateralForceN = fr.FrictionEllipseLateralForceN;
+        State.RearLeftFrictionEllipseLateralForceN = rl.FrictionEllipseLateralForceN;
+        State.RearRightFrictionEllipseLateralForceN = rr.FrictionEllipseLateralForceN;
+        State.FrontLeftFrictionEllipseTotalForceN = fl.FrictionEllipseTotalForceN;
+        State.FrontRightFrictionEllipseTotalForceN = fr.FrictionEllipseTotalForceN;
+        State.RearLeftFrictionEllipseTotalForceN = rl.FrictionEllipseTotalForceN;
+        State.RearRightFrictionEllipseTotalForceN = rr.FrictionEllipseTotalForceN;
+        State.FrontLeftFrictionEllipseGripUsage = fl.FrictionEllipseGripUsage;
+        State.FrontRightFrictionEllipseGripUsage = fr.FrictionEllipseGripUsage;
+        State.RearLeftFrictionEllipseGripUsage = rl.FrictionEllipseGripUsage;
+        State.RearRightFrictionEllipseGripUsage = rr.FrictionEllipseGripUsage;
+        State.PeakFrictionEllipseTotalSlip = MathF.Max(
+            MathF.Max(fl.FrictionEllipseTotalSlip, fr.FrictionEllipseTotalSlip),
+            MathF.Max(rl.FrictionEllipseTotalSlip, rr.FrictionEllipseTotalSlip));
+        State.PeakFrictionEllipseGripUsage = MathF.Max(
+            MathF.Max(fl.FrictionEllipseGripUsage, fr.FrictionEllipseGripUsage),
+            MathF.Max(rl.FrictionEllipseGripUsage, rr.FrictionEllipseGripUsage));
+    }
+
+    private static float CalculateRequestedLongitudinalTyreForce(
+        float driveTorqueNm,
+        float brakeTorqueNm,
+        float wheelBrakeSign,
+        float radius)
+    {
+        if (radius <= 0.01f)
+        {
+            return 0f;
+        }
+
+        return (driveTorqueNm - wheelBrakeSign * brakeTorqueNm) / radius;
+    }
+
+    private static float RemoveSteeringProjectionDriveBoost(
+        float longitudinalForce,
+        float lateralForce,
+        float requestedLongitudinalForce,
+        float sinSteer,
+        float cosSteer)
+    {
+        if (requestedLongitudinalForce <= 0f || cosSteer <= 0.05f)
+        {
+            return longitudinalForce;
+        }
+
+        float currentBodyForwardForce = longitudinalForce * cosSteer - lateralForce * sinSteer;
+        float requestedBodyForwardForce = requestedLongitudinalForce * cosSteer;
+        if (currentBodyForwardForce <= requestedBodyForwardForce)
+        {
+            return longitudinalForce;
+        }
+
+        float excessForwardForce = currentBodyForwardForce - requestedBodyForwardForce;
+        return longitudinalForce - excessForwardForce / cosSteer;
+    }
+
+    private static float PreventFreeRollingWheelPropulsion(
+        float longitudinalForce,
+        float driveTorqueNm,
+        float brakeTorqueNm,
+        float wheelLongitudinalVelocity)
+    {
+        if (MathF.Abs(driveTorqueNm) > 0.1f ||
+            brakeTorqueNm > 0.1f ||
+            MathF.Abs(wheelLongitudinalVelocity) < 0.05f ||
+            longitudinalForce * wheelLongitudinalVelocity <= 0f)
+        {
+            return longitudinalForce;
+        }
+
+        return 0f;
+    }
+
+    private static bool ShouldSynchronizeTorqueBalancedDrivenWheel(
+        WheelRuntimeState wheel,
+        float driveTorqueNm,
+        float brakeTorqueNm,
+        float requestedLongitudinalForce,
+        float actualLongitudinalForce)
+    {
+        if (driveTorqueNm <= 0.1f || brakeTorqueNm > 0.1f)
+        {
+            return false;
+        }
+
+        if (MathF.Abs(requestedLongitudinalForce) <= 0.001f)
+        {
+            return false;
+        }
+
+        return MathF.Abs(actualLongitudinalForce - requestedLongitudinalForce) <=
+               MathF.Max(8f, MathF.Abs(requestedLongitudinalForce) * 0.03f);
+    }
+
+    private static void SynchronizeDrivenRollingWheelSpeed(
+        WheelRuntimeState wheel,
+        float driveTorqueNm,
+        float wheelLongitudinalVelocity,
+        float radius,
+        float dt)
+    {
+        if (driveTorqueNm <= 0.1f ||
+            radius <= 0.01f ||
+            MathF.Abs(wheelLongitudinalVelocity) < 0.5f)
+        {
+            return;
+        }
+
+        float targetRollingOmega = wheelLongitudinalVelocity / radius;
+        if (targetRollingOmega * wheel.AngularVelocityRadiansPerSecond < 0f)
+        {
+            return;
+        }
+
+        float currentSurfaceSpeed = wheel.AngularVelocityRadiansPerSecond * radius;
+        float targetSurfaceSpeed = targetRollingOmega * radius;
+        if (MathF.Abs(currentSurfaceSpeed) >= MathF.Abs(targetSurfaceSpeed))
+        {
+            return;
+        }
+
+        float catchUp = 1f - MathF.Exp(-MathF.Max(0f, dt) * 48f);
+        wheel.AngularVelocityRadiansPerSecond = MathHelper.Lerp(
+            wheel.AngularVelocityRadiansPerSecond,
+            targetRollingOmega,
+            MathHelper.Clamp(catchUp, 0f, 1f));
     }
 
     private static float CalculateSlipRatio(
@@ -961,6 +1534,89 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             wheel.AngularVelocityRadiansPerSecond,
             rollingAngularVelocity,
             MathHelper.Clamp(blend, 0f, 1f));
+    }
+
+    private void RecoverReleasedHandbrakeWheelSpeed(
+        WheelRuntimeState wheel,
+        SurfaceSample surface,
+        float handbrakeRearTorqueNm,
+        float serviceBrakeTorqueNm,
+        float wheelLongitudinalVelocity,
+        float radius,
+        float dt)
+    {
+        if (IsFrontWheel(wheel.Corner) ||
+            handbrakeRearTorqueNm > 0.1f ||
+            serviceBrakeTorqueNm > 0.1f ||
+            radius <= 0.01f)
+        {
+            return;
+        }
+
+        float targetAngularVelocity = MathF.Abs(wheelLongitudinalVelocity) < 0.12f
+            ? 0f
+            : wheelLongitudinalVelocity / radius;
+        float deltaOmega = targetAngularVelocity - wheel.AngularVelocityRadiansPerSecond;
+        if (MathF.Abs(deltaOmega) < 0.05f)
+        {
+            return;
+        }
+
+        float wheelInertia = MathF.Max(0.1f, CalculateEffectiveWheelInertia(wheel));
+        float rawRecoveryTorque =
+            deltaOmega *
+            MathF.Max(0f, surface.HandbrakeWheelSpinRecoveryRate) *
+            wheelInertia;
+        float maxFrictionTorque =
+            MathF.Max(0f, wheel.NormalLoadN) *
+            MathF.Max(0.01f, wheel.Tyres.PeakFriction * surface.DynamicFrictionCoefficient) *
+            radius;
+        float recoveryTorque = MathHelper.Clamp(rawRecoveryTorque, -maxFrictionTorque, maxFrictionTorque);
+        wheel.AngularVelocityRadiansPerSecond += recoveryTorque / wheelInertia * MathF.Max(0f, dt);
+
+        float correctedDeltaOmega = targetAngularVelocity - wheel.AngularVelocityRadiansPerSecond;
+        if (deltaOmega * correctedDeltaOmega <= 0f || MathF.Abs(correctedDeltaOmega * radius) < 0.12f)
+        {
+            wheel.AngularVelocityRadiansPerSecond = targetAngularVelocity;
+        }
+    }
+
+    private static float CalculateRearHandbrakeLockAmount(
+        bool isRearWheel,
+        float handbrakeInput,
+        float slipRatio,
+        float wheelLongitudinalVelocity)
+    {
+        if (!isRearWheel ||
+            handbrakeInput <= 0.01f ||
+            MathF.Abs(wheelLongitudinalVelocity) < 0.35f)
+        {
+            return 0f;
+        }
+
+        float brakingSlip = MathF.Max(0f, -slipRatio);
+        return SmoothStep(0.15f, 0.75f, brakingSlip) * MathHelper.Clamp(handbrakeInput, 0f, 1f);
+    }
+
+    private static float CalculateRearHandbrakeSlideIntensity(
+        SurfaceSample surface,
+        float lockAmount,
+        float wheelLongitudinalVelocity,
+        float wheelLateralVelocity)
+    {
+        if (lockAmount <= 0.001f)
+        {
+            return 0f;
+        }
+
+        float slideSpeed = MathF.Sqrt(wheelLongitudinalVelocity * wheelLongitudinalVelocity +
+                                      wheelLateralVelocity * wheelLateralVelocity);
+        return MathHelper.Clamp(
+            lockAmount *
+            SmoothStep(2.0f, 15.0f, slideSpeed) *
+            surface.HandbrakeScreechFactor,
+            0f,
+            1f);
     }
 
     private static void SettleFreeRollingWheelSpeed(
@@ -1068,103 +1724,6 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         return wheel.Tyres.PeakFriction * CalculateCamberGripMultiplier(wheel) * loadScale * surfaceGrip * MathF.Max(0f, wheel.NormalLoadN);
     }
 
-    private float CalculateGtStyleCombinedGripLimit(
-        WheelRuntimeState wheel,
-        float gripLimit,
-        float driveTorqueNm,
-        float brakeTorqueNm,
-        float slipAngleRadians,
-        float counterSteerRecoveryT)
-    {
-        float lateralDemand = SmoothStep(0.05f, 0.20f, MathF.Abs(slipAngleRadians));
-        ArcadeHandlingParameters arcade = _parameters.ArcadeHandling;
-        float poweredFrontAllowance = IsFrontWheel(wheel.Corner) &&
-                                      _parameters.DrivenWheels.IsDriven(wheel.Corner) &&
-                                      driveTorqueNm > 0.1f &&
-                                      brakeTorqueNm <= 0.1f
-            ? arcade.DrivenGripAllowance + _ffLsdCornerExitBite * 0.12f
-            : arcade.GenericGripAllowance;
-        float brakingAllowance = brakeTorqueNm > 0.1f
-            ? arcade.BrakingGripAllowance
-            : 0f;
-        float counterSteerAllowance = MathHelper.Clamp(counterSteerRecoveryT, 0f, 1f) *
-                                      MathF.Max(0f, _engineParameters.StabilityAssist.CounterSteerGripAllowance);
-        return gripLimit * (1f + lateralDemand * (MathF.Max(poweredFrontAllowance, brakingAllowance) + counterSteerAllowance));
-    }
-
-    private static void ApplyBrakeForcePriority(
-        WheelRuntimeState wheel,
-        float gripLimit,
-        float effectiveBrakeTorqueNm,
-        float wheelLongitudinalVelocity,
-        ref float tyreLongitudinalForce)
-    {
-        if (effectiveBrakeTorqueNm <= 0.1f ||
-            gripLimit <= 1f ||
-            MathF.Abs(wheelLongitudinalVelocity) < 0.5f)
-        {
-            return;
-        }
-
-        float brakeDirection = -MathF.Sign(wheelLongitudinalVelocity);
-        float currentBrakeForce = MathF.Max(0f, tyreLongitudinalForce * brakeDirection);
-        float requestedBrakeForce = effectiveBrakeTorqueNm / MathF.Max(0.05f, wheel.Tyres.LoadedRadiusMeters);
-        float demandT = SmoothStep(gripLimit * 0.10f, gripLimit * 0.90f, requestedBrakeForce);
-        float reservedShare = MathHelper.Lerp(0.22f, 0.58f, demandT);
-        float targetBrakeForce = MathF.Min(requestedBrakeForce, gripLimit * reservedShare);
-        if (currentBrakeForce >= targetBrakeForce)
-        {
-            return;
-        }
-
-        float blend = MathHelper.Lerp(0.28f, 0.54f, demandT);
-        tyreLongitudinalForce = brakeDirection * MathHelper.Lerp(currentBrakeForce, targetBrakeForce, blend);
-    }
-
-    private static float ApplyCombinedGripLimit(
-        ArcadeHandlingParameters arcade,
-        StabilityAssistParameters stability,
-        TyreAxleParameters tyres,
-        float wheelLongitudinalVelocity,
-        float effectiveBrakeTorqueNm,
-        float counterSteerRecoveryT,
-        float combinedGripLimit,
-        ref float tyreLongitudinalForce,
-        ref float tyreLateralForce)
-    {
-        float combinedForce = MathF.Sqrt(tyreLongitudinalForce * tyreLongitudinalForce + tyreLateralForce * tyreLateralForce);
-        float gripUsage = combinedGripLimit > 1f ? combinedForce / combinedGripLimit : 0f;
-        if (combinedForce <= combinedGripLimit || combinedForce <= 0.0001f)
-        {
-            return gripUsage;
-        }
-
-        float absoluteLongitudinalForce = MathF.Abs(tyreLongitudinalForce);
-        float absoluteLateralForce = MathF.Abs(tyreLateralForce);
-        float lateralDemandShare = absoluteLateralForce /
-                                   MathF.Max(0.0001f, absoluteLongitudinalForce + absoluteLateralForce);
-        float slidingMultiplier = MathHelper.Lerp(
-            MathHelper.Clamp(tyres.SlidingFrictionMultiplier, 0.25f, 1f),
-            MathHelper.Clamp(tyres.SlidingLateralFrictionMultiplier, 0.25f, 1f),
-            MathF.Sqrt(lateralDemandShare));
-        if (effectiveBrakeTorqueNm > 0.1f &&
-            MathF.Abs(wheelLongitudinalVelocity) > 0.5f &&
-            tyreLongitudinalForce * wheelLongitudinalVelocity < 0f)
-        {
-            slidingMultiplier = MathF.Max(slidingMultiplier, arcade.BrakingSlidingFrictionFloor);
-        }
-
-        float slidingRecovery = MathHelper.Clamp(counterSteerRecoveryT, 0f, 1f) *
-                                MathHelper.Clamp(stability.CounterSteerSlidingFrictionRecovery, 0f, 0.65f);
-        slidingMultiplier = MathHelper.Lerp(slidingMultiplier, 1f, slidingRecovery);
-
-        float slidingGripLimit = combinedGripLimit * slidingMultiplier;
-        float scale = slidingGripLimit / combinedForce;
-        tyreLongitudinalForce *= scale;
-        tyreLateralForce *= scale;
-        return gripUsage;
-    }
-
     private static float CalculateCamberGripMultiplier(WheelRuntimeState wheel)
     {
         float camberErrorDegrees = MathF.Abs(MathHelper.ToDegrees(wheel.EffectiveCamberRadians - wheel.Tyres.IdealCamberRadians));
@@ -1236,6 +1795,18 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         return corner is WheelCorner.FrontLeft or WheelCorner.FrontRight;
     }
 
+    private bool IsDrivenWheel(WheelCorner corner)
+    {
+        bool front = IsFrontWheel(corner);
+        return _parameters.DrivetrainLayout switch
+        {
+            DrivetrainLayout.FF => front,
+            DrivetrainLayout.FR => !front,
+            DrivetrainLayout.AWD => true,
+            _ => front
+        };
+    }
+
     private static WheelCorner GetOppositeWheelCorner(WheelCorner corner)
     {
         return corner switch
@@ -1246,85 +1817,6 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             WheelCorner.RearRight => WheelCorner.RearLeft,
             _ => corner
         };
-    }
-
-    private static float CalculateLongitudinalTyreForce(
-        TyreAxleParameters tyres,
-        SurfaceSample surface,
-        float slipRatio,
-        float gripLimit)
-    {
-        if (MathF.Abs(slipRatio) <= 0.0001f || gripLimit <= 0f)
-        {
-            return 0f;
-        }
-
-        float absSlip = MathF.Abs(slipRatio);
-        float peakSlip = MathF.Max(0.01f, surface.OptimalSlipRatio);
-        float slideSlip = MathF.Max(peakSlip + 0.01f, tyres.LongitudinalSlideSlipRatio);
-        float slidingGrip = MathHelper.Clamp(tyres.SlidingFrictionMultiplier, 0.25f, 1f);
-
-        float curveScale;
-        if (absSlip <= peakSlip)
-        {
-            float t = absSlip / peakSlip;
-            float riseShape = MathF.Max(0.01f, tyres.LongitudinalForceRiseShape);
-            curveScale = (1f - MathF.Exp(-riseShape * t)) / (1f - MathF.Exp(-riseShape));
-        }
-        else if (absSlip <= slideSlip)
-        {
-            float t = (absSlip - peakSlip) / (slideSlip - peakSlip);
-            curveScale = MathHelper.Lerp(1f, slidingGrip, t);
-        }
-        else
-        {
-            curveScale = slidingGrip;
-        }
-
-        float linearForce = MathF.Abs(tyres.LongitudinalStiffnessN * slipRatio);
-        float curveForce = gripLimit * curveScale;
-        return MathF.Sign(slipRatio) * MathF.Min(linearForce, curveForce);
-    }
-
-    private float CalculateLateralTyreForce(
-        TyreAxleParameters tyres,
-        float slipAngleRadians,
-        float gripLimit,
-        float counterSteerRecoveryT)
-    {
-        if (MathF.Abs(slipAngleRadians) <= 0.0001f || gripLimit <= 0f)
-        {
-            return 0f;
-        }
-
-        float absSlip = MathF.Abs(slipAngleRadians);
-        float peakSlip = MathF.Max(0.01f, tyres.LateralPeakSlipAngleRadians);
-        float slideSlip = MathF.Max(peakSlip + 0.01f, tyres.LateralSlideSlipAngleRadians);
-        float slidingGrip = MathHelper.Clamp(tyres.SlidingLateralFrictionMultiplier, 0.25f, 1f);
-        float slidingRecovery = MathHelper.Clamp(counterSteerRecoveryT, 0f, 1f) *
-                                MathHelper.Clamp(_engineParameters.StabilityAssist.CounterSteerSlidingFrictionRecovery, 0f, 0.65f);
-        slidingGrip = MathHelper.Lerp(slidingGrip, 1f, slidingRecovery);
-
-        float curveScale;
-        if (absSlip <= peakSlip)
-        {
-            float t = absSlip / peakSlip;
-            float riseShape = MathF.Max(0.01f, tyres.LateralForceRiseShape);
-            curveScale = (1f - MathF.Exp(-riseShape * t)) / (1f - MathF.Exp(-riseShape));
-        }
-        else if (absSlip <= slideSlip)
-        {
-            float t = (absSlip - peakSlip) / (slideSlip - peakSlip);
-            curveScale = MathHelper.Lerp(1f, slidingGrip, t);
-        }
-        else
-        {
-            curveScale = slidingGrip;
-        }
-
-        float linearForce = MathF.Abs(tyres.CorneringStiffnessNPerRad * slipAngleRadians);
-        float curveForce = gripLimit * curveScale;
-        return -MathF.Sign(slipAngleRadians) * MathF.Min(linearForce, curveForce);
     }
 
     private float UpdateRelaxedSlipAngle(
@@ -1350,7 +1842,10 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         float forwardSpeed,
         float lateralSpeed,
         float averageSlipAngleRadians,
-        float averageGripUsage)
+        float averageGripUsage,
+        float steerInput,
+        float driveThrottle,
+        float brake)
     {
         float speed = MathF.Sqrt(forwardSpeed * forwardSpeed + lateralSpeed * lateralSpeed);
         float speedT = MathHelper.Clamp((speed - 8f) / 32f, 0f, 1f);
@@ -1365,7 +1860,66 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         float gripT = MathHelper.Clamp((averageGripUsage - 0.55f) / 0.45f, 0f, 1f);
         float response = MathHelper.Clamp(_parameters.LateralGripResponse / 8.5f, 0.55f, 1.45f);
 
-        return (0.18f + speedT * 0.14f + slipT * gripT * 2.30f) * response;
+        float dampingRate = (0.18f + speedT * 0.14f + slipT * gripT * 2.30f) * response;
+        StabilityAssistParameters stability = _engineParameters.StabilityAssist;
+        if (MathF.Abs(steerInput) >= 0.05f &&
+            MathF.Abs(State.YawRateRadiansPerSecond) >= MathHelper.ToRadians(stability.MinimumYawRateDegreesPerSecond))
+        {
+            float requestedYawDirection = -MathF.Sign(steerInput);
+            float currentYawDirection = MathF.Sign(State.YawRateRadiansPerSecond);
+            if (requestedYawDirection * currentYawDirection > 0f)
+            {
+                float committedTurnT = SmoothStep(stability.CommittedTurnInputStart, stability.CommittedTurnInputEnd, MathF.Abs(steerInput));
+                float brakeT = SmoothStep(stability.BrakeBlendStart, stability.BrakeBlendEnd, CalculateCommittedTurnBrakeDampingInput(brake, steerInput));
+                float coastT = 1f - SmoothStep(0.01f, MathF.Max(0.02f, stability.CommittedTurnCoastThrottleEnd), driveThrottle);
+                float dampingReleaseT = MathF.Max(brakeT, coastT) * committedTurnT;
+                float dampingMultiplier = MathHelper.Lerp(
+                    1f,
+                    MathHelper.Clamp(stability.CommittedTurnCoastDampingMultiplier, 0f, 1f),
+                    dampingReleaseT);
+                dampingRate *= dampingMultiplier;
+            }
+        }
+
+        return dampingRate;
+    }
+
+    private Vector2 ApplyCorneringSpeedRetention(
+        Vector2 worldAcceleration,
+        float absSteerInput,
+        float driveThrottle,
+        float brake,
+        float handbrake)
+    {
+        TyreForceTuningParameters tyreForce = _engineParameters.TyreForce;
+        float retention = MathHelper.Clamp(tyreForce.CorneringSpeedRetention, 0f, 0.95f);
+        if (retention <= 0.001f ||
+            !_engineParameters.SteeringAssist.DirectRackInput ||
+            driveThrottle > 0.35f ||
+            brake > 0.01f ||
+            handbrake > 0.01f ||
+            State.Velocity.LengthSquared() < 1f)
+        {
+            return worldAcceleration;
+        }
+
+        float steerT = SmoothStep(
+            MathHelper.Clamp(tyreForce.CorneringSpeedRetentionSteerStart, 0f, 0.95f),
+            MathHelper.Clamp(tyreForce.CorneringSpeedRetentionSteerEnd, tyreForce.CorneringSpeedRetentionSteerStart + 0.001f, 1f),
+            absSteerInput);
+        if (steerT <= 0.001f)
+        {
+            return worldAcceleration;
+        }
+
+        Vector2 velocityDirection = Vector2.Normalize(State.Velocity);
+        float accelerationAlongVelocity = Vector2.Dot(worldAcceleration, velocityDirection);
+        if (accelerationAlongVelocity >= 0f)
+        {
+            return worldAcceleration;
+        }
+
+        return worldAcceleration - velocityDirection * accelerationAlongVelocity * retention * steerT;
     }
 
     private Vector2 CalculateStabilityControlAcceleration(
@@ -1457,7 +2011,12 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             if (requestedYawDirection * currentYawDirection > 0f)
             {
                 float committedTurnT = SmoothStep(stability.CommittedTurnInputStart, stability.CommittedTurnInputEnd, MathF.Abs(steerInput));
-                dampingRate *= MathHelper.Lerp(1f, stability.CommittedTurnBrakeDampingMultiplier, committedTurnT * brakeT);
+                float coastT = 1f - SmoothStep(0.01f, MathF.Max(0.02f, stability.CommittedTurnCoastThrottleEnd), driveThrottle);
+                float dampingReleaseT = committedTurnT * MathF.Max(brakeT, coastT);
+                float dampingMultiplier = brakeT >= coastT
+                    ? stability.CommittedTurnBrakeDampingMultiplier
+                    : stability.CommittedTurnCoastDampingMultiplier;
+                dampingRate *= MathHelper.Lerp(1f, MathHelper.Clamp(dampingMultiplier, 0f, 1f), dampingReleaseT);
             }
         }
 
@@ -1540,16 +2099,59 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         float lateralForce,
         float lateralVelocity,
         float longitudinalVelocity,
-        float scrubCoefficient)
+        float scrubCoefficient,
+        float maximumScrubDragForce)
     {
-        if (scrubCoefficient <= 0f || MathF.Abs(longitudinalVelocity) < 0.05f)
+        if (scrubCoefficient <= 0f ||
+            maximumScrubDragForce <= 0f ||
+            MathF.Abs(longitudinalVelocity) < 0.05f)
         {
             return 0f;
         }
 
         float scrubPower = MathF.Abs(lateralForce * lateralVelocity) * scrubCoefficient;
         float scrubForce = scrubPower / MathF.Max(2f, MathF.Abs(longitudinalVelocity));
+        scrubForce = MathF.Min(scrubForce, maximumScrubDragForce);
         return -MathF.Sign(longitudinalVelocity) * scrubForce;
+    }
+
+    private static float ScaleSteeringLateralProjectionDrag(
+        float lateralProjectionZ,
+        float forwardSpeed,
+        float projectionDragScale)
+    {
+        float scale = MathHelper.Clamp(projectionDragScale, 0f, 1f);
+        if (MathF.Abs(forwardSpeed) < 0.25f ||
+            MathF.Sign(lateralProjectionZ) == MathF.Sign(forwardSpeed))
+        {
+            return lateralProjectionZ;
+        }
+
+        return lateralProjectionZ * scale;
+    }
+
+    private static float ApplyLowSpeedPivotRearLateralRelease(
+        float rearLateralForce,
+        float forwardSpeed,
+        float absSteerInput,
+        SteeringAssistParameters steeringAssist)
+    {
+        float speedT = 1f - SmoothStep(
+            steeringAssist.LowSpeedPivotSpeedEndMetersPerSecond * 0.45f,
+            MathF.Max(0.5f, steeringAssist.LowSpeedPivotSpeedEndMetersPerSecond),
+            MathF.Abs(forwardSpeed));
+        float steerT = SmoothStep(
+            MathHelper.Clamp(steeringAssist.LowSpeedPivotSteerStart, 0f, 0.98f),
+            1f,
+            MathHelper.Clamp(absSteerInput, 0f, 1f));
+        float releaseT = speedT * steerT;
+        if (releaseT <= 0.001f)
+        {
+            return rearLateralForce;
+        }
+
+        float multiplier = MathHelper.Clamp(steeringAssist.LowSpeedPivotRearLateralMultiplier, 0.1f, 1f);
+        return rearLateralForce * MathHelper.Lerp(1f, multiplier, releaseT);
     }
 
     private float[] CalculateNormalLoads(float forwardSpeed)
@@ -1593,7 +2195,10 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
 
         float frontAeroLoad = -_parameters.FrontLiftFactor * speedSquared;
         float rearAeroLoad = -_parameters.RearLiftFactor * speedSquared;
-        float longitudinalTransfer = _parameters.MassKg * longitudinalAcceleration * _parameters.CenterOfGravityHeightMeters / _parameters.WheelbaseMeters;
+        float longitudinalTransfer = _parameters.MassKg *
+                                     longitudinalAcceleration *
+                                     _parameters.CenterOfGravityHeightMeters /
+                                     MathF.Max(0.5f, _parameters.WheelbaseMeters);
 
         float frontAxleLoad = MathF.Max(80f, frontStatic - longitudinalTransfer + frontAeroLoad);
         float rearAxleLoad = MathF.Max(80f, rearStatic + longitudinalTransfer + rearAeroLoad);
@@ -1602,7 +2207,10 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
                                    _parameters.FrontAntiRollBarRateNmPerRad;
         float rearRollStiffness = _parameters.RearSpringRateNPerM * _parameters.RearTrackMeters * _parameters.RearTrackMeters * 0.5f +
                                   _parameters.RearAntiRollBarRateNmPerRad;
-        float frontRollShare = frontRollStiffness / MathF.Max(1f, frontRollStiffness + rearRollStiffness);
+        float totalRollStiffness = frontRollStiffness + rearRollStiffness;
+        float frontRollShare = totalRollStiffness > 0.001f
+            ? frontRollStiffness / totalRollStiffness
+            : 0.5f;
 
         float totalLateralTransferMoment = _parameters.MassKg * lateralAcceleration * _parameters.CenterOfGravityHeightMeters;
         float frontLateralTransfer = totalLateralTransferMoment * frontRollShare / MathF.Max(0.4f, _parameters.FrontTrackMeters);
@@ -1612,6 +2220,11 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             _longitudinalLoadTransferN = longitudinalTransfer;
             _frontLateralLoadTransferN = frontLateralTransfer;
             _rearLateralLoadTransferN = rearLateralTransfer;
+            _frontStaticAxleLoadN = frontStatic;
+            _rearStaticAxleLoadN = rearStatic;
+            _frontAeroLoadN = frontAeroLoad;
+            _rearAeroLoadN = rearAeroLoad;
+            _frontRollShare = frontRollShare;
         }
 
         return
@@ -1679,7 +2292,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             }
 
             float multiplier = MathHelper.Clamp(1f - MathF.Abs(vibration), 0f, 1f);
-            normalLoads[i] = MathF.Max(0f, normalLoads[i] * multiplier);
+            normalLoads[i] = MathF.Max(50f, normalLoads[i] * multiplier);
             wheel.SurfaceLoadMultiplier = multiplier;
             wheel.CurbLoadMultiplier = isCurb || isCurbGrassBlend ? multiplier : 1f;
             wheel.SurfaceBlendWeight = surface.BlendWeight;
@@ -1735,6 +2348,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
     private float[] DistributeDriveTorque(float totalDriveTorque, float[] normalLoads, float driveThrottle)
     {
         float[] torques = new float[4];
+        Array.Fill(_lastDriveTorquesNm, 0f);
         _ffLsdCornerExitBite = 0f;
         _ffLsdInsideFrontMaxTorqueNm = 0f;
         _ffLsdOutsideFrontMaxTorqueNm = 0f;
@@ -1742,53 +2356,57 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         _ffLsdFrontLeftActualTorqueNm = 0f;
         _ffLsdFrontRightActualTorqueNm = 0f;
         _ffLsdLowGripAnchor = string.Empty;
+        _frontDifferentialCornerExitBite = 0f;
+        _frontDifferentialTorqueResult = default;
+        _rearDifferentialTorqueResult = default;
         _frontDriveTorqueSteerYawMomentNm = 0f;
         if (MathF.Abs(totalDriveTorque) < 0.001f || _parameters.DrivenWheels.Count == 0)
         {
             return torques;
         }
 
-        DistributeAxleTorque(WheelCorner.FrontLeft, WheelCorner.FrontRight);
-        DistributeAxleTorque(WheelCorner.RearLeft, WheelCorner.RearRight);
+        float frontShare = CalculateFrontTorqueShare();
+        float frontAxleTorque = totalDriveTorque * frontShare;
+        float rearAxleTorque = totalDriveTorque * (1f - frontShare);
+
+        _frontDifferentialTorqueResult = DistributeDrivenAxleTorque(
+            WheelCorner.FrontLeft,
+            WheelCorner.FrontRight,
+            frontAxleTorque,
+            _parameters.FrontDifferential,
+            normalLoads,
+            driveThrottle,
+            isSteeredAxle: true,
+            torques);
+        _rearDifferentialTorqueResult = DistributeDrivenAxleTorque(
+            WheelCorner.RearLeft,
+            WheelCorner.RearRight,
+            rearAxleTorque,
+            _parameters.RearDifferential,
+            normalLoads,
+            driveThrottle,
+            isSteeredAxle: false,
+            torques);
         DistributeSingleWheelTorque(WheelCorner.FrontLeft);
         DistributeSingleWheelTorque(WheelCorner.FrontRight);
         DistributeSingleWheelTorque(WheelCorner.RearLeft);
         DistributeSingleWheelTorque(WheelCorner.RearRight);
+        for (int i = 0; i < torques.Length; i++)
+        {
+            _lastDriveTorquesNm[i] = torques[i];
+        }
+
         return torques;
 
-        void DistributeAxleTorque(WheelCorner left, WheelCorner right)
+        float CalculateFrontTorqueShare()
         {
-            bool leftDriven = _parameters.DrivenWheels.IsDriven(left);
-            bool rightDriven = _parameters.DrivenWheels.IsDriven(right);
-            if (!leftDriven || !rightDriven)
+            return _parameters.DrivetrainLayout switch
             {
-                return;
-            }
-
-            float axleTorque = totalDriveTorque * 2f / _parameters.DrivenWheels.Count;
-            if (TryDistributeFfLsdFrontAxleTorque(left, right, axleTorque, normalLoads, driveThrottle, torques))
-            {
-                return;
-            }
-
-            float loadLeft = normalLoads[(int)left];
-            float loadRight = normalLoads[(int)right];
-            float leftShare = loadLeft / MathF.Max(1f, loadLeft + loadRight);
-            float torqueBias = MathF.Max(1f, _parameters.DifferentialTorqueBiasRatio);
-            float minShare = 1f / (1f + torqueBias);
-            float maxShare = torqueBias / (1f + torqueBias);
-            if (torqueBias <= 1.01f)
-            {
-                leftShare = 0.5f;
-            }
-            else
-            {
-                leftShare += CalculateLimitedSlipShareCorrection(left, right, totalDriveTorque);
-                leftShare = MathHelper.Clamp(leftShare, minShare, maxShare);
-            }
-
-            torques[(int)left] = axleTorque * leftShare;
-            torques[(int)right] = axleTorque * (1f - leftShare);
+                DrivetrainLayout.FF => 1f,
+                DrivetrainLayout.FR => 0f,
+                DrivetrainLayout.AWD => MathHelper.Clamp(_parameters.FrontTorqueShare, 0f, 1f),
+                _ => _parameters.DrivenWheels.RearLeft || _parameters.DrivenWheels.RearRight ? 0f : 1f
+            };
         }
 
         void DistributeSingleWheelTorque(WheelCorner corner)
@@ -1803,77 +2421,85 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         }
     }
 
-    private bool TryDistributeFfLsdFrontAxleTorque(
+    private AxleTorqueResult DistributeDrivenAxleTorque(
         WheelCorner left,
         WheelCorner right,
         float axleTorque,
+        DifferentialParameters differential,
         float[] normalLoads,
         float driveThrottle,
+        bool isSteeredAxle,
         float[] torques)
     {
-        if (left is not WheelCorner.FrontLeft ||
-            right is not WheelCorner.FrontRight ||
-            axleTorque <= 0.001f ||
-            !_parameters.DrivenWheels.IsDriven(WheelCorner.FrontLeft) ||
-            !_parameters.DrivenWheels.IsDriven(WheelCorner.FrontRight) ||
-            _parameters.DrivenWheels.IsDriven(WheelCorner.RearLeft) ||
-            _parameters.DrivenWheels.IsDriven(WheelCorner.RearRight))
+        if (!_parameters.DrivenWheels.IsDriven(left) ||
+            !_parameters.DrivenWheels.IsDriven(right) ||
+            MathF.Abs(axleTorque) <= 0.001f)
         {
-            return false;
+            return default;
         }
 
-        WheelRuntimeState leftWheel = GetWheel(WheelCorner.FrontLeft);
-        WheelRuntimeState rightWheel = GetWheel(WheelCorner.FrontRight);
-        float leftMaxTorque = CalculateWheelTractiveTorqueCapacity(leftWheel, normalLoads[(int)WheelCorner.FrontLeft]);
-        float rightMaxTorque = CalculateWheelTractiveTorqueCapacity(rightWheel, normalLoads[(int)WheelCorner.FrontRight]);
-        float highestCapacity = MathF.Max(leftMaxTorque, rightMaxTorque);
-        float capacityDifferenceT = highestCapacity > 1f
-            ? MathF.Abs(leftMaxTorque - rightMaxTorque) / highestCapacity
-            : 0f;
-        bool lsdDemand =
-            MathF.Abs(_filteredSteerInput) > 0.04f ||
-            capacityDifferenceT > 0.05f ||
-            MathF.Abs(leftWheel.SlipRatio - rightWheel.SlipRatio) > 0.025f;
-        if (!lsdDemand)
-        {
-            return false;
-        }
-
+        WheelRuntimeState leftWheel = GetWheel(left);
+        WheelRuntimeState rightWheel = GetWheel(right);
+        float leftMaxTorque = CalculateWheelTractiveTorqueCapacity(leftWheel, normalLoads[(int)left]);
+        float rightMaxTorque = CalculateWheelTractiveTorqueCapacity(rightWheel, normalLoads[(int)right]);
         bool leftIsAnchor = leftMaxTorque <= rightMaxTorque;
-        WheelCorner anchor = leftIsAnchor ? WheelCorner.FrontLeft : WheelCorner.FrontRight;
-        WheelCorner highGrip = leftIsAnchor ? WheelCorner.FrontRight : WheelCorner.FrontLeft;
+        WheelCorner anchor = leftIsAnchor ? left : right;
+        WheelCorner highGrip = leftIsAnchor ? right : left;
         WheelRuntimeState anchorWheel = leftIsAnchor ? leftWheel : rightWheel;
         WheelRuntimeState highGripWheel = leftIsAnchor ? rightWheel : leftWheel;
         float lowGripAnchorMaxTorque = leftIsAnchor ? leftMaxTorque : rightMaxTorque;
         float highGripWheelMaxTorque = leftIsAnchor ? rightMaxTorque : leftMaxTorque;
-        float torqueBias = MathF.Max(1f, _parameters.DifferentialTorqueBiasRatio);
-        float preloadTorque = MathF.Max(0f, _parameters.DifferentialPreloadTorqueNm);
+        float torqueBias = MathF.Max(1f, differential.TorqueBiasRatio);
+        float preloadTorque = MathF.Max(0f, differential.PreloadTorqueNm);
         float highGripViaLsdMax = MathF.Min(highGripWheelMaxTorque, (lowGripAnchorMaxTorque + preloadTorque) * torqueBias);
         float managedAxleTorque = lowGripAnchorMaxTorque + highGripViaLsdMax;
         if (managedAxleTorque <= 1f)
         {
-            return false;
+            float halfTorque = axleTorque * 0.5f;
+            torques[(int)left] = halfTorque;
+            torques[(int)right] = halfTorque;
+            return new AxleTorqueResult(halfTorque, halfTorque, 0f, 0f, 0f, string.Empty);
         }
 
-        _ffLsdInsideFrontMaxTorqueNm = lowGripAnchorMaxTorque;
-        _ffLsdOutsideFrontMaxTorqueNm = highGripViaLsdMax;
-        _ffLsdManagedFrontAxleTorqueNm = managedAxleTorque;
-        _ffLsdLowGripAnchor = anchor.ToString();
-        _ffLsdCornerExitBite = CalculateFfLsdCornerExitBite(anchorWheel, highGripWheel, axleTorque, managedAxleTorque, driveThrottle);
-
-        float actualAxleTorque = MathF.Min(axleTorque, managedAxleTorque);
+        float torqueSign = MathF.Sign(axleTorque);
+        float requestedAxleTorque = MathF.Abs(axleTorque);
+        float actualAxleTorque = MathF.Min(requestedAxleTorque, managedAxleTorque);
         float torqueScale = MathHelper.Clamp(actualAxleTorque / managedAxleTorque, 0f, 1f);
-        float anchorActualTorque = lowGripAnchorMaxTorque * torqueScale;
-        float highGripActualTorque = highGripViaLsdMax * torqueScale;
+        float anchorActualTorque = lowGripAnchorMaxTorque * torqueScale * torqueSign;
+        float highGripActualTorque = highGripViaLsdMax * torqueScale * torqueSign;
 
         torques[(int)anchor] = anchorActualTorque;
         torques[(int)highGrip] = highGripActualTorque;
-        _ffLsdFrontLeftActualTorqueNm = torques[(int)WheelCorner.FrontLeft];
-        _ffLsdFrontRightActualTorqueNm = torques[(int)WheelCorner.FrontRight];
-        float leftDriveForce = _ffLsdFrontLeftActualTorqueNm / MathF.Max(0.05f, leftWheel.Tyres.LoadedRadiusMeters);
-        float rightDriveForce = _ffLsdFrontRightActualTorqueNm / MathF.Max(0.05f, rightWheel.Tyres.LoadedRadiusMeters);
-        _frontDriveTorqueSteerYawMomentNm = (leftDriveForce - rightDriveForce) * _parameters.FrontTrackMeters * 0.5f;
-        return true;
+        if (left is WheelCorner.FrontLeft && right is WheelCorner.FrontRight)
+        {
+            _ffLsdInsideFrontMaxTorqueNm = lowGripAnchorMaxTorque;
+            _ffLsdOutsideFrontMaxTorqueNm = highGripViaLsdMax;
+            _ffLsdManagedFrontAxleTorqueNm = managedAxleTorque;
+            _ffLsdLowGripAnchor = anchor.ToString();
+            _ffLsdFrontLeftActualTorqueNm = torques[(int)WheelCorner.FrontLeft];
+            _ffLsdFrontRightActualTorqueNm = torques[(int)WheelCorner.FrontRight];
+            _frontDifferentialCornerExitBite = isSteeredAxle
+                ? CalculateDifferentialCornerExitBite(
+                    anchorWheel,
+                    highGripWheel,
+                    requestedAxleTorque,
+                    managedAxleTorque,
+                    driveThrottle,
+                    differential)
+                : 0f;
+            _ffLsdCornerExitBite = _frontDifferentialCornerExitBite;
+            float leftDriveForce = _ffLsdFrontLeftActualTorqueNm / MathF.Max(0.05f, leftWheel.Tyres.LoadedRadiusMeters);
+            float rightDriveForce = _ffLsdFrontRightActualTorqueNm / MathF.Max(0.05f, rightWheel.Tyres.LoadedRadiusMeters);
+            _frontDriveTorqueSteerYawMomentNm = (leftDriveForce - rightDriveForce) * _parameters.FrontTrackMeters * 0.5f;
+        }
+
+        return new AxleTorqueResult(
+            torques[(int)left],
+            torques[(int)right],
+            managedAxleTorque,
+            lowGripAnchorMaxTorque,
+            highGripViaLsdMax,
+            anchor.ToString());
     }
 
     private static float CalculateWheelTractiveTorqueCapacity(WheelRuntimeState wheel, float normalLoadN)
@@ -1885,19 +2511,20 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         return MathF.Max(0f, normalLoadN * mu * MathF.Max(0.05f, wheel.Tyres.LoadedRadiusMeters));
     }
 
-    private float CalculateFfLsdCornerExitBite(
+    private float CalculateDifferentialCornerExitBite(
         WheelRuntimeState insideWheel,
         WheelRuntimeState outsideWheel,
         float requestedAxleTorque,
         float managedAxleTorque,
-        float driveThrottle)
+        float driveThrottle,
+        DifferentialParameters differential)
     {
         float throttleT = SmoothStep(0.18f, 0.85f, driveThrottle);
         float rpmT = SmoothStep(4500f, MathF.Max(5000f, _parameters.PowerRedlineRpm), State.Rpm);
         float vtecT = _parameters.VtecEnabled
             ? SmoothStep(_parameters.VtecActivationRpm - 300f, _parameters.VtecActivationRpm + 700f, State.Rpm)
             : 0f;
-        float lsdT = MathHelper.Clamp((_parameters.DifferentialTorqueBiasRatio - 1f) / 2.2f, 0f, 1f);
+        float lsdT = MathHelper.Clamp((differential.TorqueBiasRatio - 1f) / 2.2f, 0f, 1f);
         float steerT = SmoothStep(0.10f, 0.70f, MathF.Abs(_filteredSteerInput));
         float torqueDemandT = SmoothStep(managedAxleTorque * 0.35f, managedAxleTorque, requestedAxleTorque);
         float insideDriveSlip = MathF.Max(0f, insideWheel.SlipRatio);
@@ -1953,50 +2580,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             return 0f;
         }
 
-        DigitalThrottleAssistParameters assist = _engineParameters.DigitalThrottleAssist;
-        float speed = MathF.Abs(forwardSpeed);
-        if (speed < assist.FullThrottleBelowSpeedMetersPerSecond)
-        {
-            return requestedThrottle;
-        }
-
-        float drivenGripUsage = 0f;
-        float drivenSlipRatio = 0f;
-        int drivenWheelCount = 0;
-        foreach (WheelRuntimeState wheel in _wheels)
-        {
-            if (!_parameters.DrivenWheels.IsDriven(wheel.Corner))
-            {
-                continue;
-            }
-
-            drivenGripUsage = MathF.Max(drivenGripUsage, wheel.GripUsage);
-            drivenSlipRatio = MathF.Max(drivenSlipRatio, MathF.Max(0f, wheel.SlipRatio));
-            drivenWheelCount++;
-        }
-
-        if (drivenWheelCount == 0)
-        {
-            return requestedThrottle;
-        }
-
-        float speedT = SmoothStep(assist.SpeedBlendStartMetersPerSecond, assist.SpeedBlendEndMetersPerSecond, speed);
-        float steerT = SmoothStep(assist.SteeringBlendStart, assist.SteeringBlendEnd, MathF.Abs(_filteredSteerInput));
-        if (steerT <= 0.001f && speed < assist.StraightLaunchBypassSpeedMetersPerSecond)
-        {
-            return requestedThrottle;
-        }
-
-        float gripT = SmoothStep(assist.GripUsageBlendStart, assist.GripUsageBlendEnd, drivenGripUsage);
-        float slipT = SmoothStep(assist.SlipRatioBlendStart, assist.SlipRatioBlendEnd, drivenSlipRatio);
-        float cornerLimit = MathHelper.Lerp(
-            1f,
-            MathHelper.Lerp(assist.CornerLimitLowSpeed, assist.CornerLimitHighSpeed, speedT),
-            steerT);
-        float tractionDemand = MathF.Max(slipT, gripT * assist.TractionDemandGripScale);
-        float tractionLimit = MathHelper.Lerp(1f, assist.TractionLimitFloor, tractionDemand);
-        float assistLimit = MathHelper.Clamp(MathF.Min(cornerLimit, tractionLimit), assist.MinimumAssistLimit, 1f);
-        return MathF.Min(requestedThrottle, assistLimit);
+        return MathHelper.Clamp(requestedThrottle, 0f, 1f);
     }
 
     private float ApplyDigitalBrakeAssist(float requestedBrake, float forwardSpeed)
@@ -2051,7 +2635,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             brakes.BrakeBiasFront);
         float handbrakeRearTorquePerWheel = brakes.HandbrakeRearTorqueNm * MathF.Max(0f, handbrake);
 
-        if (_digitalBrakeAssistActive && brake > 0.01f)
+        if (brake > 0.01f)
         {
             DigitalBrakeAssistParameters assist = _engineParameters.DigitalBrakeAssist;
             float speedT = SmoothStep(assist.SpeedBlendStartMetersPerSecond, assist.SpeedBlendEndMetersPerSecond, speed);
@@ -2122,7 +2706,10 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         float minimumSpeed = abs.MinimumSpeedMetersPerSecond;
         float minimumPressureRatio = abs.MinimumPressureRatio;
 
-        if (_digitalBrakeAssistActive)
+        bool corneringBrakeControlActive =
+            MathF.Abs(_filteredSteerInput) > _engineParameters.DigitalBrakeAssist.SteeringBlendStart &&
+            MathF.Abs(wheelLongitudinalVelocity) > _engineParameters.DigitalBrakeAssist.AbsMinimumSpeedMetersPerSecond;
+        if (_digitalBrakeAssistActive || corneringBrakeControlActive)
         {
             enabled = true;
             DigitalBrakeAssistParameters assist = _engineParameters.DigitalBrakeAssist;
@@ -2164,18 +2751,23 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         return requestedBrakeTorqueNm * wheel.AbsPressureRatio;
     }
 
-    private SteeringAngles CalculateSteeringAngles(float steerInput, float speedMetersPerSecond, float brake)
+    private SteeringAngles CalculateSteeringAngles(float steerInput, float speedMetersPerSecond, float brake, float throttle)
     {
         float steeringWheelHalfLockRadians = MathHelper.ToRadians(_parameters.SteeringWheelLockDegrees * 0.5f);
         float ratioLimitedRoadAngle = steeringWheelHalfLockRadians / MathF.Max(1f, _parameters.SteeringRatio);
         float mechanicalMaxAngle = MathF.Min(_parameters.MaxSteerAngleRadians, ratioLimitedRoadAngle);
-        float assistT = CalculateSteeringSpeedT(speedMetersPerSecond);
-        float lockMultiplier = MathHelper.Lerp(1f, MathHelper.Clamp(_parameters.SteeringHighSpeedLockMultiplier, 0.1f, 1f), assistT);
-        float assistedMaxAngle = mechanicalMaxAngle * lockMultiplier;
-        float speedMatchedMaxAngle = CalculateSpeedMatchedSteeringAngle(mechanicalMaxAngle, speedMetersPerSecond);
-        float inputFilteredMaxAngle = MathF.Min(assistedMaxAngle, speedMatchedMaxAngle);
+        SteeringAssistParameters steeringAssist = _engineParameters.SteeringAssist;
+        _steeringFrontGripReserve = CalculatePreviousFrameFrontGripReserve();
+        _steeringCommittedTurnAuthority = SmoothStep(
+            steeringAssist.CommittedTurnInputStart,
+            steeringAssist.CommittedTurnInputEnd,
+            MathF.Abs(steerInput));
+        float shapedSteerInput = steeringAssist.DirectRackInput
+            ? steerInput
+            : ApplyHighSpeedSteeringInputCurve(steerInput, speedMetersPerSecond, throttle, brake);
+        float availableRoadAngle = CalculateSpeedMatchedSteeringAngle(mechanicalMaxAngle, speedMetersPerSecond, steerInput);
         // With the current MonoGame camera/world convention, a visual right turn is negative yaw.
-        float baseAngle = -steerInput * inputFilteredMaxAngle;
+        float baseAngle = -shapedSteerInput * availableRoadAngle;
         if (MathF.Abs(baseAngle) < 0.0001f)
         {
             return new SteeringAngles(0f, 0f);
@@ -2192,30 +2784,112 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             : new SteeringAngles(MathHelper.Lerp(baseAngle, inner, ackermannBlend), MathHelper.Lerp(baseAngle, outer, ackermannBlend));
     }
 
-    private float CalculateSpeedMatchedSteeringAngle(float mechanicalMaxAngle, float speedMetersPerSecond)
+    private float CalculateSpeedMatchedSteeringAngle(float mechanicalMaxAngle, float speedMetersPerSecond, float steerInput)
     {
-        float referenceSpeed = MathF.Max(2.0f, _parameters.SteeringLowSpeedReferenceMetersPerSecond);
-        float speed = MathF.Max(referenceSpeed, speedMetersPerSecond);
-        float targetLateralAcceleration = MathF.Max(0.1f, _parameters.SteeringTargetLateralAccelerationG) * Gravity;
-        float curvatureAngle = MathF.Atan(_parameters.WheelbaseMeters * targetLateralAcceleration / MathF.Max(1f, speed * speed));
         SteeringAssistParameters steeringAssist = _engineParameters.SteeringAssist;
-        float highSpeedSlipT = SmoothStep(
-            steeringAssist.SpeedMatchedSlipStartMetersPerSecond,
-            steeringAssist.SpeedMatchedSlipEndMetersPerSecond,
-            speed);
-        float slipAllowance = _parameters.FrontTyres.LateralPeakSlipAngleRadians *
-                              MathHelper.Clamp(_parameters.SteeringPeakSlipAngleFraction, 0f, 1.2f) *
-                              MathHelper.Lerp(
-                                  steeringAssist.LowSpeedSlipAllowanceMultiplier,
-                                  steeringAssist.HighSpeedSlipAllowanceMultiplier,
-                                  highSpeedSlipT);
-        float lowSpeedMinimumAngle = MathHelper.Clamp(_parameters.SteeringMinimumHighSpeedAngleRadians, 0.01f, mechanicalMaxAngle);
-        float highSpeedMinimumAngle = MathHelper.Clamp(
-            MathHelper.ToRadians(steeringAssist.HighSpeedMinimumRoadWheelAngleDegrees),
-            0.01f,
-            mechanicalMaxAngle);
-        float minimumAngle = MathHelper.Lerp(lowSpeedMinimumAngle, highSpeedMinimumAngle, highSpeedSlipT);
-        return MathHelper.Clamp(curvatureAngle + slipAllowance, minimumAngle, mechanicalMaxAngle);
+        _steeringFrontGripReserve = CalculatePreviousFrameFrontGripReserve();
+        _steeringCommittedTurnAuthority = SmoothStep(
+            steeringAssist.CommittedTurnInputStart,
+            steeringAssist.CommittedTurnInputEnd,
+            MathF.Abs(steerInput));
+        if (steeringAssist.DirectRackInput)
+        {
+            float speedT = SmoothStep(
+                MathF.Max(0f, steeringAssist.SpeedMatchedSlipStartMetersPerSecond),
+                MathF.Max(steeringAssist.SpeedMatchedSlipStartMetersPerSecond + 0.1f, steeringAssist.SpeedMatchedSlipEndMetersPerSecond),
+                MathF.Abs(speedMetersPerSecond));
+            float highSpeedAngle = MathF.Max(
+                MathHelper.ToRadians(MathF.Max(0f, steeringAssist.HighSpeedMinimumRoadWheelAngleDegrees)),
+                mechanicalMaxAngle * MathHelper.Clamp(steeringAssist.HighSpeedSlipAllowanceMultiplier, 0.05f, 1f));
+            float availableAngle = MathHelper.Lerp(
+                mechanicalMaxAngle,
+                MathHelper.Clamp(highSpeedAngle, 0f, mechanicalMaxAngle),
+                speedT);
+            _steeringSpeedMatchedMaxAngleRadians = availableAngle;
+            return availableAngle;
+        }
+
+        _steeringSpeedMatchedMaxAngleRadians = mechanicalMaxAngle;
+        return mechanicalMaxAngle;
+    }
+
+    private float ApplyHighSpeedSteeringInputCurve(float steerInput, float speedMetersPerSecond, float throttle, float brake)
+    {
+        if (MathF.Abs(steerInput) <= 0.0001f)
+        {
+            return 0f;
+        }
+
+        SteeringAssistParameters steeringAssist = _engineParameters.SteeringAssist;
+        float curveStartSpeed = MathF.Max(6f, steeringAssist.SpeedMatchedSlipStartMetersPerSecond * 0.55f);
+        float curveEndSpeed = MathF.Max(curveStartSpeed + 4f, steeringAssist.SpeedMatchedSlipStartMetersPerSecond * 1.15f);
+        float speedT = SmoothStep(
+            curveStartSpeed,
+            curveEndSpeed,
+            MathF.Abs(speedMetersPerSecond));
+        float exponent = MathHelper.Lerp(
+            1f,
+            MathHelper.Clamp(steeringAssist.HighSpeedInputCurveExponent, 0.35f, 3f),
+            speedT);
+        float committedTurnT = SmoothStep(
+            steeringAssist.CommittedTurnInputStart,
+            steeringAssist.CommittedTurnInputEnd,
+            MathF.Abs(steerInput));
+        float lowThrottleT = 1f - SmoothStep(0.01f, MathF.Max(0.02f, steeringAssist.DecelAuthorityThrottleEnd), throttle);
+        float brakeT = SmoothStep(0.03f, 0.35f, brake);
+        float decelTurnT = MathHelper.Clamp(committedTurnT * MathF.Max(lowThrottleT, brakeT) * speedT, 0f, 1f);
+        exponent = MathHelper.Lerp(
+            exponent,
+            MathHelper.Clamp(steeringAssist.DecelInputCurveExponent, 0.35f, MathF.Max(0.35f, exponent)),
+            decelTurnT);
+        return MathF.Sign(steerInput) * MathF.Pow(MathF.Abs(steerInput), exponent);
+    }
+
+    private float CalculatePreviousFrameFrontGripReserve()
+    {
+        WheelRuntimeState frontLeft = GetWheel(WheelCorner.FrontLeft);
+        WheelRuntimeState frontRight = GetWheel(WheelCorner.FrontRight);
+        float peakFrontGripUsage = MathF.Max(frontLeft.GripUsage, frontRight.GripUsage);
+        if (peakFrontGripUsage <= 0.001f)
+        {
+            return 1f;
+        }
+
+        return MathHelper.Clamp(1f - peakFrontGripUsage, 0f, 1f);
+    }
+
+    private void ApplyLowSpeedPivotYawResponse(
+        float averageFrontSteerAngleRadians,
+        float forwardSpeed,
+        float steerInput,
+        float dt)
+    {
+        SteeringAssistParameters steeringAssist = _engineParameters.SteeringAssist;
+        float pivotSpeedEnd = MathF.Max(0.5f, steeringAssist.LowSpeedPivotSpeedEndMetersPerSecond);
+        float speedT = 1f - SmoothStep(
+            2f,
+            pivotSpeedEnd * 1.75f,
+            MathF.Abs(forwardSpeed));
+        float steerT = SmoothStep(
+            MathHelper.Clamp(steeringAssist.LowSpeedPivotSteerStart * 0.55f, 0f, 0.98f),
+            1f,
+            MathF.Abs(steerInput));
+        float pivotT = speedT * steerT;
+        if (pivotT <= 0.001f || MathF.Abs(averageFrontSteerAngleRadians) <= 0.001f)
+        {
+            return;
+        }
+
+        float targetYawRate = forwardSpeed *
+                              MathF.Tan(averageFrontSteerAngleRadians) /
+                              MathF.Max(0.8f, _parameters.WheelbaseMeters);
+        float yawLimit = MathHelper.ToRadians(MathF.Max(20f, steeringAssist.LowSpeedPivotMaxYawRateDegreesPerSecond));
+        targetYawRate = MathHelper.Clamp(targetYawRate, -yawLimit, yawLimit);
+        float blend = 1f - MathF.Exp(-MathF.Max(0f, steeringAssist.LowSpeedPivotYawResponse) * pivotT * dt);
+        State.YawRateRadiansPerSecond = MathHelper.Lerp(
+            State.YawRateRadiansPerSecond,
+            targetYawRate,
+            MathHelper.Clamp(blend, 0f, 1f));
     }
 
     private float CalculateSteeringSpeedT(float speedMetersPerSecond)
@@ -2224,7 +2898,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         return MathHelper.Clamp((speedMetersPerSecond - _parameters.SteeringFullLockSpeedMetersPerSecond) / assistRange, 0f, 1f);
     }
 
-    private void UpdateSteeringInput(float targetInput, float speedMetersPerSecond, float brake, float dt)
+    private void UpdateSteeringInput(float targetInput, float speedMetersPerSecond, float brake, float throttle, float dt)
     {
         float delta = targetInput - _filteredSteerInput;
         if (MathF.Abs(delta) <= 0.0001f)
@@ -2243,24 +2917,47 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             ? _parameters.SteeringHighSpeedReturnRateMultiplier
             : _parameters.SteeringHighSpeedInputRateMultiplier;
         SteeringAssistParameters steeringAssist = _engineParameters.SteeringAssist;
-        float brakeAuthorityT =
-            SmoothStep(steeringAssist.InputBrakeAuthorityStart, steeringAssist.InputBrakeAuthorityEnd, brake) *
-            SmoothStep(
-                steeringAssist.InputBrakeAuthoritySpeedStartMetersPerSecond,
-                steeringAssist.InputBrakeAuthoritySpeedEndMetersPerSecond,
-                speedMetersPerSecond);
-        float brakingMultiplierFloor = returningToCenter
-            ? steeringAssist.BrakingReturnMultiplierFloor
-            : steeringAssist.BrakingInputMultiplierFloor;
-        highSpeedMultiplier = MathHelper.Lerp(
-            highSpeedMultiplier,
-            MathF.Max(highSpeedMultiplier, brakingMultiplierFloor),
-            brakeAuthorityT);
-        float rate = baseRate * MathHelper.Lerp(
-            1f,
-            MathHelper.Clamp(highSpeedMultiplier, 0.05f, 1.15f),
-            CalculateSteeringSpeedT(speedMetersPerSecond));
-        rate *= MathHelper.Lerp(1f, steeringAssist.BrakingInputRateBoost, brakeAuthorityT);
+        float brakeAuthorityT = 0f;
+        float decelAuthorityT = 0f;
+        float rate = baseRate;
+        if (!steeringAssist.DirectRackInput)
+        {
+            brakeAuthorityT =
+                SmoothStep(steeringAssist.InputBrakeAuthorityStart, steeringAssist.InputBrakeAuthorityEnd, brake) *
+                SmoothStep(
+                    steeringAssist.InputBrakeAuthoritySpeedStartMetersPerSecond,
+                    steeringAssist.InputBrakeAuthoritySpeedEndMetersPerSecond,
+                    speedMetersPerSecond);
+            float brakingMultiplierFloor = returningToCenter
+                ? steeringAssist.BrakingReturnMultiplierFloor
+                : steeringAssist.BrakingInputMultiplierFloor;
+            highSpeedMultiplier = MathHelper.Lerp(
+                highSpeedMultiplier,
+                MathF.Max(highSpeedMultiplier, brakingMultiplierFloor),
+                brakeAuthorityT);
+            float committedTurnT = SmoothStep(
+                steeringAssist.CommittedTurnInputStart,
+                steeringAssist.CommittedTurnInputEnd,
+                MathF.Abs(targetInput));
+            float lowThrottleT = 1f - SmoothStep(0.01f, MathF.Max(0.02f, steeringAssist.DecelAuthorityThrottleEnd), throttle);
+            decelAuthorityT =
+                committedTurnT *
+                lowThrottleT *
+                SmoothStep(
+                    steeringAssist.InputBrakeAuthoritySpeedStartMetersPerSecond,
+                    steeringAssist.InputBrakeAuthoritySpeedEndMetersPerSecond,
+                    speedMetersPerSecond);
+            highSpeedMultiplier = MathHelper.Lerp(
+                highSpeedMultiplier,
+                MathF.Max(highSpeedMultiplier, steeringAssist.BrakingInputMultiplierFloor),
+                decelAuthorityT);
+            rate *= MathHelper.Lerp(
+                1f,
+                MathHelper.Clamp(highSpeedMultiplier, 0.05f, 1.15f),
+                CalculateSteeringSpeedT(speedMetersPerSecond));
+            rate *= MathHelper.Lerp(1f, steeringAssist.BrakingInputRateBoost, brakeAuthorityT);
+            rate *= MathHelper.Lerp(1f, steeringAssist.DecelInputRateBoost, decelAuthorityT);
+        }
         float maxStep = MathF.Max(0f, rate) * dt;
         _filteredSteerInput += MathHelper.Clamp(delta, -maxStep, maxStep);
     }
@@ -2362,7 +3059,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             ? 0f
             : transmissionRpm >= 0f
                 ? transmissionRpm
-                : CalculateDrivenTransmissionRpm(gearRatio);
+                : CalculateDrivenTransmissionRpm(gearRatio, forwardSpeed);
         EnginePowerUnitPhase phase = CalculateEnginePowerUnitPhase(throttle, forwardSpeed, forceNeutral);
         float phaseProgress = CalculateEnginePowerUnitPhaseProgress(phase);
         float drivenSlipRatio = forceNeutral ? 0f : CalculateDrivenAverageDriveSlipRatio();
@@ -2514,7 +3211,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         {
             float brakingTorque = CalculateEngineBrakingTorque(forwardSpeed, dt);
             float brakingGearRatio = GetCurrentGearRatio();
-            float brakingGearboxInputRpm = brakingGearRatio > 0.0001f ? CalculateDrivenTransmissionRpm(brakingGearRatio) : 0f;
+            float brakingGearboxInputRpm = brakingGearRatio > 0.0001f ? CalculateDrivenTransmissionRpm(brakingGearRatio, forwardSpeed) : 0f;
             bool clutchLocked = brakingGearRatio > 0f && MathF.Abs(forwardSpeed) > 0.8f;
             if (clutchLocked)
             {
@@ -2551,7 +3248,11 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             return 0f;
         }
 
-        float gearboxInputRpm = CalculateDrivenTransmissionRpm(gearRatio);
+        float gearboxInputRpm = CalculateDrivenTransmissionRpm(gearRatio, forwardSpeed);
+        if (MathF.Abs(forwardSpeed) > 12f)
+        {
+            gearboxInputRpm = CalculateRoadSpeedRpmForGear(State.Gear, forwardSpeed, GetCurrentRpmCeiling());
+        }
         float gearboxInputOmega = RpmToOmega(gearboxInputRpm);
         float slipOmega = State.EngineOmegaRadiansPerSecond - gearboxInputOmega;
         float speed = MathF.Abs(forwardSpeed);
@@ -2773,10 +3474,11 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             : MathF.Max(0f, State.AverageSlipRatio);
     }
 
-    private float CalculateDrivenTransmissionRpm(float gearRatio)
+    private float CalculateDrivenTransmissionRpm(float gearRatio, float forwardSpeed)
     {
         float drivenWheelSpeed = 0f;
         int drivenCount = 0;
+        float rpmReferenceSpeed = CalculateRoadSpeedRpmReferenceSpeed(State.Gear, forwardSpeed);
 
         foreach (WheelRuntimeState wheel in _wheels)
         {
@@ -2785,13 +3487,51 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
                 continue;
             }
 
-            drivenWheelSpeed += MathF.Abs(wheel.AngularVelocityRadiansPerSecond);
+            float rollingOmega = rpmReferenceSpeed / MathF.Max(0.1f, _parameters.WheelRadiusMeters);
+            float measuredOmega = MathF.Abs(wheel.AngularVelocityRadiansPerSecond);
+            if (MathF.Abs(forwardSpeed) > 12f)
+            {
+                float speedReference = MathF.Max(
+                    _engineParameters.VehicleSafety.MinimumSlipSpeedMetersPerSecond,
+                    rpmReferenceSpeed);
+                float allowedSlipOmega =
+                    MathF.Max(0.01f, wheel.Tyres.LongitudinalPeakSlipRatio) *
+                    1.35f *
+                    speedReference /
+                    MathF.Max(0.1f, _parameters.WheelRadiusMeters);
+                float lowerOmega = MathF.Max(0f, rollingOmega - allowedSlipOmega);
+                float rpmScrubIsolationT = SmoothStep(
+                    MathF.Max(0f, _engineParameters.TyreForce.ScrubRpmIsolationSlipStart),
+                    MathF.Max(
+                        _engineParameters.TyreForce.ScrubRpmIsolationSlipStart + 0.01f,
+                        _engineParameters.TyreForce.ScrubRpmIsolationSlipEnd),
+                    MathF.Abs(wheel.RelaxedLateralSlip));
+                if (rpmScrubIsolationT > 0f)
+                {
+                    float maximumSpeedDrop = MathF.Max(0f, _engineParameters.TyreForce.ScrubRpmIsolationMaximumSpeedDropMetersPerSecond);
+                    float isolatedLowerOmega =
+                        MathF.Max(0f, rpmReferenceSpeed - maximumSpeedDrop) /
+                        MathF.Max(0.1f, _parameters.WheelRadiusMeters);
+                    lowerOmega = MathHelper.Lerp(
+                        lowerOmega,
+                        MathF.Max(lowerOmega, isolatedLowerOmega),
+                        rpmScrubIsolationT);
+                    _rpmScrubIsolationIntensity = MathF.Max(_rpmScrubIsolationIntensity, rpmScrubIsolationT);
+                }
+
+                measuredOmega = MathHelper.Clamp(
+                    measuredOmega,
+                    lowerOmega,
+                    rollingOmega + allowedSlipOmega);
+            }
+
+            drivenWheelSpeed += measuredOmega;
             drivenCount++;
         }
 
         if (drivenCount == 0)
         {
-            drivenWheelSpeed = State.SpeedMetersPerSecond / MathF.Max(0.1f, _parameters.WheelRadiusMeters);
+            drivenWheelSpeed = rpmReferenceSpeed / MathF.Max(0.1f, _parameters.WheelRadiusMeters);
             drivenCount = 1;
         }
 
@@ -2965,7 +3705,15 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
 
         if (_manualTransmission)
         {
-            if (input.ShiftUpRequested && State.Gear < _parameters.ForwardGearRatios.Length)
+            if (MathF.Abs(forwardSpeed) < 1.25f && State.Gear > 1 && input.Throttle > 0.08f)
+            {
+                RequestShift(1, _parameters.ManualShiftTimeSeconds, forwardSpeed, input.Throttle);
+            }
+            else if (MathF.Abs(forwardSpeed) < 0.35f && State.Gear > 1 && input.Throttle <= 0.08f)
+            {
+                RequestShift(1, _parameters.ManualShiftTimeSeconds, forwardSpeed, input.Throttle);
+            }
+            else if (input.ShiftUpRequested && State.Gear < _parameters.ForwardGearRatios.Length)
             {
                 RequestShift(State.Gear + 1, _parameters.ManualShiftTimeSeconds, forwardSpeed, input.Throttle);
             }
@@ -3137,11 +3885,23 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             return _parameters.IdleRpm;
         }
 
-        float wheelRpm = MathF.Abs(forwardSpeed) /
+        float rpmReferenceSpeed = CalculateRoadSpeedRpmReferenceSpeed(gear, forwardSpeed);
+        float wheelRpm = rpmReferenceSpeed /
                          MathF.Max(0.05f, _parameters.WheelRadiusMeters) /
                          MathF.Tau *
                          60f;
         return wheelRpm * ratio * _parameters.FinalDriveRatio;
+    }
+
+    private float CalculateRoadSpeedRpmReferenceSpeed(int gear, float forwardSpeed)
+    {
+        float forwardMagnitude = MathF.Abs(forwardSpeed);
+        if (gear <= 0)
+        {
+            return forwardMagnitude;
+        }
+
+        return MathF.Max(forwardMagnitude, State.SpeedMetersPerSecond);
     }
 
     private static float RpmToOmega(float rpm)
@@ -3225,7 +3985,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             pedal > 0.20f &&
             input.Brake < 0.05f)
         {
-            float drivenTransmissionRpm = MathHelper.Clamp(CalculateDrivenTransmissionRpm(ratio), _parameters.IdleRpm, limiterCeiling);
+            float drivenTransmissionRpm = MathHelper.Clamp(CalculateDrivenTransmissionRpm(ratio, forwardSpeed), _parameters.IdleRpm, limiterCeiling);
             if (State.Gear == 1 && State.SpeedMetersPerSecond < 18f)
             {
                 float speed = MathF.Abs(forwardSpeed);
@@ -3322,7 +4082,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         float crankRpm = MathHelper.Clamp(enginePower.CrankRpm, _parameters.IdleRpm, rpmCeiling);
         float transmissionRpm = enginePower.TransmissionRpm > 0f
             ? enginePower.TransmissionRpm
-            : CalculateDrivenTransmissionRpm(gearRatio);
+            : CalculateDrivenTransmissionRpm(gearRatio, forwardSpeed);
         State.Rpm = crankRpm;
         State.ClutchSlipRpm = crankRpm - MathF.Max(0f, transmissionRpm);
         float roadSpeedRpm = CalculateRoadSpeedRpmForGear(State.Gear, forwardSpeed, GetMechanicalOverRevCeiling());
@@ -3426,10 +4186,40 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         return MathHelper.Lerp(closedThrottleTorque, poweredTorque, throttleT);
     }
 
-    private void UpdateRevLimiter(float throttle, float dt)
+    private void UpdateRevLimiter(float throttle, float forwardSpeed, float dt)
     {
-        bool mechanicalLimiterContact = State.MechanicalOverRevActive && State.MechanicalOverRevRpm > 25f;
-        if (throttle <= 0.05f || State.Rpm <= _parameters.RevLimiterResumeRpm)
+        float absoluteForwardSpeed = MathF.Abs(forwardSpeed);
+        float bounceRpm = MathF.Max(80f, _parameters.RevLimiterBounceRpm);
+        bool stoppedBelowLimiter =
+            absoluteForwardSpeed <= 0.35f &&
+            State.Rpm <= _parameters.LimiterHardCutRpm - bounceRpm;
+        if (stoppedBelowLimiter)
+        {
+            ClearRevLimiterPresentationState();
+            return;
+        }
+
+        float roadCoupledRpm = State.Gear > 0
+            ? CalculateRoadSpeedRpmForGearUnclamped(State.Gear, forwardSpeed)
+            : _parameters.IdleRpm;
+        bool roadSpeedLimiterContact =
+            throttle > 0.05f &&
+            State.Gear > 0 &&
+            absoluteForwardSpeed > 0.45f &&
+            roadCoupledRpm >= _parameters.LimiterHardCutRpm - 2f;
+        bool mechanicalLimiterContact =
+            absoluteForwardSpeed > 0.45f &&
+            roadCoupledRpm > _parameters.LimiterHardCutRpm + 25f;
+        if (throttle <= 0.05f)
+        {
+            _revLimiterCutting = false;
+        }
+        else if (roadSpeedLimiterContact || mechanicalLimiterContact)
+        {
+            _revLimiterCutting = true;
+        }
+        else if (State.Rpm <= _parameters.RevLimiterResumeRpm ||
+                 State.Rpm < _parameters.LimiterHardCutRpm - 80f)
         {
             _revLimiterCutting = false;
         }
@@ -3438,21 +4228,29 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             _revLimiterCutting = true;
         }
 
-        State.RevLimiterActive = _revLimiterCutting || mechanicalLimiterContact;
+        State.RevLimiterActive = _revLimiterCutting ||
+                                 roadSpeedLimiterContact ||
+                                 mechanicalLimiterContact;
         State.LimiterTorqueMultiplier = State.RevLimiterActive
             ? 0f
             : 1f;
-        UpdateRevLimiterBounceIntensity(throttle, dt);
+        UpdateRevLimiterBounceIntensity(throttle, absoluteForwardSpeed, dt);
     }
 
-    private void UpdateRevLimiterBounceIntensity(float throttle, float dt)
+    private void UpdateRevLimiterBounceIntensity(float throttle, float absoluteForwardSpeed, float dt)
     {
         float bounceRpm = MathF.Max(80f, _parameters.RevLimiterBounceRpm);
         bool throttleLimiterRegion = throttle > 0.05f &&
                                      State.Rpm >= _parameters.LimiterHardCutRpm - bounceRpm * 1.45f &&
                                      State.Rpm >= _parameters.RevLimiterResumeRpm;
-        float mechanicalLimiterStress = State.MechanicalOverRevActive
-            ? CalculateMechanicalLimiterContactIntensity(_parameters.LimiterHardCutRpm + State.MechanicalOverRevRpm)
+        float movingStressGate = SmoothStep(0.35f, 1.25f, absoluteForwardSpeed);
+        bool mechanicalLimiterRegion =
+            State.RevLimiterActive &&
+            State.MechanicalOverRevActive &&
+            State.Rpm >= _parameters.LimiterHardCutRpm - bounceRpm * 1.45f &&
+            State.Rpm >= _parameters.RevLimiterResumeRpm;
+        float mechanicalLimiterStress = mechanicalLimiterRegion
+            ? CalculateMechanicalLimiterContactIntensity(_parameters.LimiterHardCutRpm + State.MechanicalOverRevRpm) * movingStressGate
             : 0f;
         if (!throttleLimiterRegion && mechanicalLimiterStress <= 0f)
         {
@@ -3486,6 +4284,75 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             proximity * cutWeight * (0.38f + impulse * 0.62f),
             0f,
             1f);
+    }
+
+    private void ClearRevLimiterPresentationState()
+    {
+        _revLimiterCutting = false;
+        _revLimiterChatterPhaseSeconds = 0f;
+        State.RevLimiterActive = false;
+        State.LimiterTorqueMultiplier = 1f;
+        State.RevLimiterBounceIntensity = 0f;
+        State.RevLimiterBouncePhase = 0f;
+        State.MechanicalOverRevActive = false;
+        State.MechanicalOverRevRpm = 0f;
+        State.MechanicalOverRevSeverity = 0f;
+        State.PowertrainShockIntensity = MathF.Max(0f, State.ShiftKickIntensity);
+    }
+
+    private void ClearPendingDownshiftOverRevState()
+    {
+        _pendingDownshiftOverRevRpm = 0f;
+        _pendingDownshiftOverRevSeverity = 0f;
+        _downshiftOverRevBrakeSeconds = 0f;
+        _downshiftOverRevBrakeDurationSeconds = 0f;
+        _downshiftOverRevBrakeSeverity = 0f;
+    }
+
+    private void FinalizeLimiterAndOverRevRecovery(float forwardSpeed)
+    {
+        bool hasRecoverableLimiterState =
+            _revLimiterCutting ||
+            State.RevLimiterActive ||
+            State.RevLimiterBounceIntensity > 0.001f ||
+            State.MechanicalOverRevActive ||
+            State.MechanicalOverRevRpm > 0.1f ||
+            State.MechanicalOverRevSeverity > 0.001f ||
+            _pendingDownshiftOverRevSeverity > 0.001f ||
+            _downshiftOverRevBrakeSeconds > 0.001f;
+        if (!hasRecoverableLimiterState)
+        {
+            return;
+        }
+
+        float absoluteForwardSpeed = MathF.Abs(forwardSpeed);
+        float bounceRpm = MathF.Max(80f, _parameters.RevLimiterBounceRpm);
+        float roadCoupledRpm = State.Gear > 0
+            ? CalculateRoadSpeedRpmForGearUnclamped(State.Gear, forwardSpeed)
+            : _parameters.IdleRpm;
+        bool roadStillForcesOverRev =
+            State.Gear > 0 &&
+            absoluteForwardSpeed > 0.45f &&
+            roadCoupledRpm > _parameters.LimiterHardCutRpm + 25f;
+
+        if (roadStillForcesOverRev)
+        {
+            return;
+        }
+
+        bool stationary = absoluteForwardSpeed <= 0.35f;
+        bool drivetrainSettled = State.Gear <= 0 || absoluteForwardSpeed < 0.15f;
+        bool rpmRecovered =
+            State.Rpm <= _parameters.RevLimiterResumeRpm ||
+            State.Rpm <= _parameters.LimiterHardCutRpm - bounceRpm;
+
+        if (!stationary && !drivetrainSettled && !rpmRecovered)
+        {
+            return;
+        }
+
+        ClearRevLimiterPresentationState();
+        ClearPendingDownshiftOverRevState();
     }
 
     private void ApplyIdleCrankCycleBounce(VehicleInput input, float dt)
@@ -3535,9 +4402,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
 
     private float GetCurrentRpmCeiling()
     {
-        return _revLimiterCutting
-            ? MathF.Max(_parameters.IdleRpm, _parameters.LimiterHardCutRpm - _parameters.RevLimiterBounceRpm)
-            : _parameters.LimiterHardCutRpm;
+        return _parameters.LimiterHardCutRpm;
     }
 
     private float GetShiftRpmCeiling()
@@ -3585,18 +4450,7 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
 
     private float CalculateMechanicalLimiterBounceRpm(float contactIntensity)
     {
-        float cycle = _revLimiterChatterPhaseSeconds - MathF.Floor(_revLimiterChatterPhaseSeconds);
-        float cutPulse = SmoothStep(0.08f, 0.16f, cycle) *
-                         (1f - SmoothStep(0.36f, 0.78f, cycle));
-        float secondaryCutPulse = SmoothStep(0.54f, 0.60f, cycle) *
-                                  (1f - SmoothStep(0.66f, 0.90f, cycle)) *
-                                  0.35f;
-        float bounceDepthRpm = MathF.Max(150f, _parameters.RevLimiterBounceRpm * 1.45f);
-        float dip = MathF.Max(cutPulse, secondaryCutPulse) * MathHelper.Clamp(contactIntensity, 0f, 1f);
-        return MathHelper.Clamp(
-            _parameters.LimiterHardCutRpm - bounceDepthRpm * dip,
-            _parameters.RevLimiterResumeRpm,
-            _parameters.LimiterHardCutRpm);
+        return _parameters.LimiterHardCutRpm;
     }
 
     private float CalculateShiftKickSeverity(
@@ -3612,22 +4466,16 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
             return 0f;
         }
 
-        float throttleT = SmoothStep(0.34f, 0.92f, MathHelper.Clamp(throttle, 0f, 1f));
-        if (throttleT <= 0.001f)
-        {
-            return 0f;
-        }
-
-        float rpmDelta = MathF.Abs(MathF.Max(targetRpm, forcedTargetRpm) - currentRpm);
-        float rpmDeltaT = SmoothStep(650f, 2600f, rpmDelta);
-        float highRpmT = SmoothStep(_parameters.PowerRedlineRpm * 0.54f, _parameters.PowerRedlineRpm * 0.96f, currentRpm);
-        float gearStepT = MathHelper.Clamp(MathF.Abs(targetGear - previousGear) / 2f, 0.45f, 1f);
-        bool upshift = targetGear > previousGear;
-        float directionScale = upshift ? 1f : 0.72f;
-        return MathHelper.Clamp(
-            throttleT * directionScale * gearStepT * (0.28f + rpmDeltaT * 0.46f + highRpmT * 0.22f),
-            0f,
-            0.82f);
+        return ShiftShockModel.Calculate(new ShiftShockInput(
+            previousGear,
+            targetGear,
+            throttle,
+            currentRpm,
+            targetRpm,
+            forcedTargetRpm,
+            GetGearRatio(previousGear),
+            GetGearRatio(targetGear),
+            _parameters));
     }
 
     private void EngagePendingShiftKick()
@@ -4256,6 +5104,32 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
 
         public float SlipRatio { get; set; }
 
+        public float LongitudinalTyreDeflectionMeters { get; set; }
+
+        public float LateralTyreDeflectionMeters { get; set; }
+
+        public float RelaxedLongitudinalSlipRatio { get; set; }
+
+        public float RelaxedLateralSlip { get; set; }
+
+        public float TyreRelaxationLengthMeters { get; set; } = 0.12f;
+
+        public float FrictionEllipseTotalSlip { get; set; }
+
+        public float FrictionEllipseGripBudgetN { get; set; }
+
+        public float FrictionEllipseLongitudinalShare { get; set; }
+
+        public float FrictionEllipseLateralShare { get; set; }
+
+        public float FrictionEllipseLongitudinalForceN { get; set; }
+
+        public float FrictionEllipseLateralForceN { get; set; }
+
+        public float FrictionEllipseTotalForceN { get; set; }
+
+        public float FrictionEllipseGripUsage { get; set; }
+
         public float SlipAngleRadians { get; set; }
 
         public float RelaxedSlipAngleRadians { get; set; }
@@ -4270,6 +5144,12 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
 
         public float LongitudinalForceN { get; set; }
 
+        public float RequestedLongitudinalForceN { get; set; }
+
+        public float TyreScrubForceN { get; set; }
+
+        public float SteeringProjectionForceN { get; set; }
+
         public float LateralForceN { get; set; }
 
         public float SurfaceGrip { get; set; } = 1f;
@@ -4283,6 +5163,12 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         public float ActiveSurfaceMu { get; set; } = 1f;
 
         public float DisplacementDragForceN { get; set; }
+
+        public float HandbrakeLockAmount { get; set; }
+
+        public float HandbrakeSlideIntensity { get; set; }
+
+        public float HandbrakeScreechFactor { get; set; } = 1f;
 
         public float CurbLoadMultiplier { get; set; } = 1f;
 
@@ -4299,5 +5185,21 @@ public sealed class SimpleVehicleSimulator : IVehicleSimulator
         public bool AbsActive { get; set; }
 
         public bool IsLocked { get; set; }
+
+        public void ResetTyreRelaxation()
+        {
+            LongitudinalTyreDeflectionMeters = 0f;
+            LateralTyreDeflectionMeters = 0f;
+            RelaxedLongitudinalSlipRatio = 0f;
+            RelaxedLateralSlip = 0f;
+            FrictionEllipseTotalSlip = 0f;
+            FrictionEllipseGripBudgetN = 0f;
+            FrictionEllipseLongitudinalShare = 0f;
+            FrictionEllipseLateralShare = 0f;
+            FrictionEllipseLongitudinalForceN = 0f;
+            FrictionEllipseLateralForceN = 0f;
+            FrictionEllipseTotalForceN = 0f;
+            FrictionEllipseGripUsage = 0f;
+        }
     }
 }

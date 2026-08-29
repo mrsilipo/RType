@@ -35,6 +35,7 @@ internal static class VehicleBuildDefinitionLoader
         JsonElement gearbox = catalogs.Require(ReadString(drivetrain, string.Empty, "gearbox"));
         JsonElement finalDrive = catalogs.Require(ReadString(drivetrain, string.Empty, "finalDrive"));
         JsonElement differential = catalogs.Require(ReadString(drivetrain, string.Empty, "differential"));
+        string gearboxType = ReadString(gearbox, "manual", "data", "type");
         float swapKitMassKg = SumCatalogWeights(catalogs, swapKitIds.Values);
         JsonElement frontSuspension = catalogs.Require(ReadString(suspension, string.Empty, "front"));
         JsonElement rearSuspension = catalogs.Require(ReadString(suspension, string.Empty, "rear"));
@@ -112,6 +113,7 @@ internal static class VehicleBuildDefinitionLoader
             {
                 GearboxId = ReadString(gearbox, string.Empty, "id"),
                 GearboxName = ReadString(gearbox, string.Empty, "displayName"),
+                GearboxType = gearboxType,
                 ReverseGearRatio = MathF.Abs(RequireNonZero(gearbox, "data", "reverseRatio")),
                 ForwardGearRatios = ReadForwardRatios(gearbox),
                 FinalDriveId = ReadString(finalDrive, string.Empty, "id"),
@@ -123,6 +125,11 @@ internal static class VehicleBuildDefinitionLoader
                 TransmissionEfficiency = RequireRange(gearbox, 0.1f, 1f, "data", "efficiency"),
                 ManualShiftTimeSeconds = RequirePositive(gearbox, "data", "manualShiftTimeSeconds"),
                 AutomaticShiftTimeSeconds = RequirePositive(gearbox, "data", "automaticShiftTimeSeconds"),
+                ShiftShockMultiplier = ReadSingle(
+                    gearbox,
+                    CalculateDefaultGearboxShiftShockMultiplier(gearboxType),
+                    "data",
+                    "shiftShockMultiplier"),
                 DownshiftOverRevToleranceRpm = RequirePositive(gearbox, "data", "downshiftOverRevToleranceRpm"),
                 DownshiftMechanicalOverRevLimitRpm = RequirePositive(gearbox, "data", "downshiftMechanicalOverRevLimitRpm"),
                 DownshiftOverRevBrakeMultiplier = RequirePositive(gearbox, "data", "downshiftOverRevBrakeMultiplier"),
@@ -325,6 +332,7 @@ internal static class VehicleBuildDefinitionLoader
             ClutchCouplingRate = engineAssembly.ClutchCouplingRate,
             ClutchEngagementSharpness = engineAssembly.ClutchEngagementSharpness,
             ClutchSlipDamping = engineAssembly.ClutchSlipDamping,
+            ClutchShiftKickIntensity = engineAssembly.ClutchShiftKickIntensity,
             ClutchLowSpeedAssistStrength = engineAssembly.ClutchLowSpeedAssistStrength,
             ClutchBiteInputStartMultiplier = engineAssembly.ClutchBiteInputStartMultiplier,
             ClutchLaunchAssistExponent = engineAssembly.ClutchLaunchAssistExponent,
@@ -341,6 +349,8 @@ internal static class VehicleBuildDefinitionLoader
             AutomaticMinimumUpshiftSpeedMetersPerSecond = build.Handling.AutomaticMinimumUpshiftSpeedKph / 3.6f,
             ManualShiftTimeSeconds = build.Drivetrain.ManualShiftTimeSeconds,
             AutomaticShiftTimeSeconds = build.Drivetrain.AutomaticShiftTimeSeconds,
+            GearboxType = build.Drivetrain.GearboxType,
+            GearboxShiftShockMultiplier = build.Drivetrain.ShiftShockMultiplier,
             DownshiftOverRevToleranceRpm = build.Drivetrain.DownshiftOverRevToleranceRpm,
             DownshiftMechanicalOverRevLimitRpm = build.Drivetrain.DownshiftMechanicalOverRevLimitRpm,
             DownshiftOverRevBrakeMultiplier = build.Drivetrain.DownshiftOverRevBrakeMultiplier,
@@ -379,6 +389,10 @@ internal static class VehicleBuildDefinitionLoader
             RearSuspensionGeometry = BuildSuspensionGeometry(build.Chassis.RearSuspensionHardPoints, build.Suspension, false),
             DifferentialTorqueBiasRatio = build.Drivetrain.DifferentialTorqueBiasRatio,
             DifferentialPreloadTorqueNm = build.Drivetrain.DifferentialPreloadTorqueNm,
+            DrivetrainLayout = ReadDrivetrainLayout(build.DrivetrainLayout),
+            FrontTorqueShare = CalculateFrontTorqueShare(ReadDrivetrainLayout(build.DrivetrainLayout)),
+            FrontDifferential = BuildDifferentialParameters(build.Drivetrain, ReadDrivetrainLayout(build.DrivetrainLayout), frontAxle: true),
+            RearDifferential = BuildDifferentialParameters(build.Drivetrain, ReadDrivetrainLayout(build.DrivetrainLayout), frontAxle: false),
             WheelInertiaKgM2 = EstimateWheelInertia(build),
             DrivenWheels = ReadDrivenWheels(build.DrivetrainLayout),
             FrontTyres = BuildTyres(build.Tyres, true),
@@ -572,12 +586,57 @@ internal static class VehicleBuildDefinitionLoader
 
     private static DrivenWheelSet ReadDrivenWheels(string layout)
     {
+        return ReadDrivetrainLayout(layout) switch
+        {
+            DrivetrainLayout.FF => new DrivenWheelSet(true, true, false, false),
+            DrivetrainLayout.FR => new DrivenWheelSet(false, false, true, true),
+            DrivetrainLayout.AWD => new DrivenWheelSet(true, true, true, true),
+            _ => new DrivenWheelSet(true, true, false, false)
+        };
+    }
+
+    private static DrivetrainLayout ReadDrivetrainLayout(string layout)
+    {
         return layout.Trim().ToUpperInvariant() switch
         {
-            "FF" => new DrivenWheelSet(true, true, false, false),
-            "FR" or "MR" or "RR" => new DrivenWheelSet(false, false, true, true),
-            "AWD" or "4WD" => new DrivenWheelSet(true, true, true, true),
-            _ => new DrivenWheelSet(true, true, false, false)
+            "FR" or "MR" or "RR" => DrivetrainLayout.FR,
+            "AWD" or "4WD" => DrivetrainLayout.AWD,
+            _ => DrivetrainLayout.FF
+        };
+    }
+
+    private static float CalculateFrontTorqueShare(DrivetrainLayout layout)
+    {
+        return layout switch
+        {
+            DrivetrainLayout.FF => 1f,
+            DrivetrainLayout.FR => 0f,
+            DrivetrainLayout.AWD => 0.5f,
+            _ => 1f
+        };
+    }
+
+    private static DifferentialParameters BuildDifferentialParameters(
+        ResolvedDrivetrainBuild drivetrain,
+        DrivetrainLayout layout,
+        bool frontAxle)
+    {
+        bool legacyDiffAppliesToAxle = layout switch
+        {
+            DrivetrainLayout.FF => frontAxle,
+            DrivetrainLayout.FR => !frontAxle,
+            DrivetrainLayout.AWD => true,
+            _ => frontAxle
+        };
+        if (!legacyDiffAppliesToAxle)
+        {
+            return DifferentialParameters.Open;
+        }
+
+        return new DifferentialParameters
+        {
+            TorqueBiasRatio = drivetrain.DifferentialTorqueBiasRatio,
+            PreloadTorqueNm = drivetrain.DifferentialPreloadTorqueNm
         };
     }
 
@@ -655,6 +714,13 @@ internal static class VehicleBuildDefinitionLoader
         }
 
         return total > 0f ? total : 0.0015f;
+    }
+
+    private static float CalculateDefaultGearboxShiftShockMultiplier(string gearboxType)
+    {
+        return gearboxType.Equals("dogbox", StringComparison.OrdinalIgnoreCase)
+            ? 1.18f
+            : 0.82f;
     }
 
     private static float RequirePositive(JsonElement root, params string[] path)
@@ -1018,6 +1084,7 @@ internal sealed class ResolvedDrivetrainBuild
 {
     public string GearboxId { get; init; } = string.Empty;
     public string GearboxName { get; init; } = string.Empty;
+    public string GearboxType { get; init; } = "manual";
     public float ReverseGearRatio { get; init; }
     public float[] ForwardGearRatios { get; init; } = [];
     public string FinalDriveId { get; init; } = string.Empty;
@@ -1029,6 +1096,7 @@ internal sealed class ResolvedDrivetrainBuild
     public float TransmissionEfficiency { get; init; }
     public float ManualShiftTimeSeconds { get; init; }
     public float AutomaticShiftTimeSeconds { get; init; }
+    public float ShiftShockMultiplier { get; init; } = 1f;
     public float DownshiftOverRevToleranceRpm { get; init; }
     public float DownshiftMechanicalOverRevLimitRpm { get; init; }
     public float DownshiftOverRevBrakeMultiplier { get; init; }

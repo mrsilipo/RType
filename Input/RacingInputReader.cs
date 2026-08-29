@@ -6,6 +6,10 @@ namespace RType.Input;
 
 public sealed class RacingInputReader
 {
+    private const float DigitalBrakeInitialPressure = 0.35f;
+    private const float DigitalBrakeFullPressureSeconds = 0.65f;
+    private const float MaximumInputDeltaSeconds = 1f / 20f;
+
     private readonly ControlScheme _scheme;
     private readonly PlayerIndex _playerIndex;
     private readonly GamePadAxis _gamePadSteeringAxis;
@@ -13,6 +17,8 @@ public sealed class RacingInputReader
     private readonly float _triggerPressedThreshold;
     private KeyboardState _previousKeyboard;
     private GamePadState _previousGamePad;
+    private long _previousReadTimestamp;
+    private float _digitalBrakeHoldSeconds;
 
     public RacingInputReader(ControlScheme scheme)
     {
@@ -26,12 +32,13 @@ public sealed class RacingInputReader
 
     public RacingControls Read()
     {
+        float dt = CalculateInputDeltaSeconds();
         KeyboardState keyboard = Keyboard.GetState();
         GamePadState gamePad = GamePad.GetState(_playerIndex);
 
         float steer = ReadSteering(keyboard, gamePad);
         float throttle = ReadActionValue(keyboard, gamePad, actions => actions.Accelerate, out bool digitalThrottleActive);
-        float brake = ReadActionValue(keyboard, gamePad, actions => actions.Brake, out bool digitalBrakeActive);
+        float brake = ReadBrakeActionValue(keyboard, gamePad, dt, out bool digitalBrakeActive);
         float handbrake = ReadActionValue(keyboard, gamePad, actions => actions.Handbrake, out _);
         float reverse = ReadActionValue(keyboard, gamePad, actions => actions.Reverse, out _);
 
@@ -82,6 +89,20 @@ public sealed class RacingInputReader
         _previousKeyboard = keyboard;
         _previousGamePad = gamePad;
         return controls;
+    }
+
+    private float CalculateInputDeltaSeconds()
+    {
+        long now = System.Diagnostics.Stopwatch.GetTimestamp();
+        if (_previousReadTimestamp == 0)
+        {
+            _previousReadTimestamp = now;
+            return 1f / 60f;
+        }
+
+        float dt = (float)((now - _previousReadTimestamp) / (double)System.Diagnostics.Stopwatch.Frequency);
+        _previousReadTimestamp = now;
+        return MathHelper.Clamp(dt, 0f, MaximumInputDeltaSeconds);
     }
 
     private float ReadSteering(KeyboardState keyboard, GamePadState gamePad)
@@ -151,6 +172,31 @@ public sealed class RacingInputReader
         }
 
         return MathHelper.Clamp(value, 0f, 1f);
+    }
+
+    private float ReadBrakeActionValue(KeyboardState keyboard, GamePadState gamePad, float dt, out bool digitalActive)
+    {
+        InputBinding keyboardBinding = _scheme.Keyboard.Actions.Brake;
+        InputBinding gamePadBinding = _scheme.GamePad.Actions.Brake;
+        digitalActive = AnyKeyDown(keyboard, keyboardBinding.Keys) || AnyButtonDown(gamePad, gamePadBinding.Buttons);
+
+        float triggerValue = 0f;
+        foreach (string triggerName in gamePadBinding.Triggers)
+        {
+            triggerValue = MathF.Max(triggerValue, ReadTrigger(gamePad, ParseTrigger(triggerName)));
+        }
+
+        if (!digitalActive)
+        {
+            _digitalBrakeHoldSeconds = 0f;
+            return MathHelper.Clamp(triggerValue, 0f, 1f);
+        }
+
+        _digitalBrakeHoldSeconds += MathHelper.Clamp(dt, 0f, MaximumInputDeltaSeconds);
+        float holdT = MathHelper.Clamp(_digitalBrakeHoldSeconds / DigitalBrakeFullPressureSeconds, 0f, 1f);
+        float shapedHold = holdT * holdT * (3f - 2f * holdT);
+        float digitalValue = MathHelper.Lerp(DigitalBrakeInitialPressure, 1f, shapedHold);
+        return MathHelper.Clamp(MathF.Max(triggerValue, digitalValue), 0f, 1f);
     }
 
     private bool WasActionPressed(KeyboardState keyboard, GamePadState gamePad, Func<RacingActionMap, InputBinding> actionSelector)

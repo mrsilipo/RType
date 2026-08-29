@@ -42,6 +42,12 @@
       },
       "vibrationSecondaryAmplitude": {
         "value": 0
+      },
+      "handbrakeScreechFactor": {
+        "value": 1
+      },
+      "handbrakeWheelSpinRecoveryRate": {
+        "value": 24
       }
     },
     "curb": {
@@ -84,6 +90,12 @@
       },
       "vibrationSecondaryAmplitude": {
         "value": 0
+      },
+      "handbrakeScreechFactor": {
+        "value": 0.85
+      },
+      "handbrakeWheelSpinRecoveryRate": {
+        "value": 22
       }
     },
     "grass": {
@@ -126,6 +138,12 @@
       },
       "vibrationSecondaryAmplitude": {
         "value": 0.12
+      },
+      "handbrakeScreechFactor": {
+        "value": 0.12
+      },
+      "handbrakeWheelSpinRecoveryRate": {
+        "value": 9
       }
     },
     "dirt": {
@@ -168,6 +186,12 @@
       },
       "vibrationSecondaryAmplitude": {
         "value": 0.09
+      },
+      "handbrakeScreechFactor": {
+        "value": 0.18
+      },
+      "handbrakeWheelSpinRecoveryRate": {
+        "value": 12
       }
     }
   }

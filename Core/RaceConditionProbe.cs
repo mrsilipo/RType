@@ -33,6 +33,8 @@ public static class RaceConditionProbe
 
         const float dt = 1f / 120f;
         bool limiterActive = false;
+        float maximumActualRpm = 0f;
+        float minimumDisplayedRpm = float.MaxValue;
         float maximumDisplayedRpm = 0f;
         float maximumSpeedDisplayError = 0f;
         float minimumLimiterTorqueMultiplier = 1f;
@@ -49,6 +51,8 @@ public static class RaceConditionProbe
                 limiterActive = true;
                 fuelCutWhileLimited = MathF.Max(fuelCutWhileLimited, state.EnginePowerUnitFuelCutBlend);
                 minimumLimiterTorqueMultiplier = MathF.Min(minimumLimiterTorqueMultiplier, state.LimiterTorqueMultiplier);
+                maximumActualRpm = MathF.Max(maximumActualRpm, state.Rpm);
+                minimumDisplayedRpm = MathF.Min(minimumDisplayedRpm, state.DisplayedRpm);
                 maximumDisplayedRpm = MathF.Max(maximumDisplayedRpm, state.DisplayedRpm);
                 maximumSpeedDisplayError = MathF.Max(
                     maximumSpeedDisplayError,
@@ -66,9 +70,21 @@ public static class RaceConditionProbe
             throw new InvalidOperationException($"Race condition probe failed: limiter did not hold hard cut. FuelCut {fuelCutWhileLimited:0.00}, torque multiplier {minimumLimiterTorqueMultiplier:0.000}.");
         }
 
+        if (maximumActualRpm > parameters.LimiterHardCutRpm + 0.5f)
+        {
+            throw new InvalidOperationException($"Race condition probe failed: actual RPM exceeded hard cut. Actual {maximumActualRpm:0}, cut {parameters.LimiterHardCutRpm:0}.");
+        }
+
         if (maximumDisplayedRpm > parameters.LimiterHardCutRpm + 0.5f)
         {
             throw new InvalidOperationException($"Race condition probe failed: displayed RPM exceeded hard cut. Display {maximumDisplayedRpm:0}, cut {parameters.LimiterHardCutRpm:0}.");
+        }
+
+        float minimumAllowedDisplayedRpm = parameters.LimiterHardCutRpm -
+                                          RevLimiterPresentationRules.CalculateBounceDepthRpm(parameters.LimiterHardCutRpm) * 0.35f;
+        if (minimumDisplayedRpm < minimumAllowedDisplayedRpm)
+        {
+            throw new InvalidOperationException($"Race condition probe failed: displayed RPM fell too far during limiter. Min {minimumDisplayedRpm:0}, expected >= {minimumAllowedDisplayedRpm:0}.");
         }
 
         if (maximumSpeedDisplayError > 0.001f)
@@ -78,7 +94,7 @@ public static class RaceConditionProbe
 
         Console.WriteLine(
             $"limiter race sync: active={limiterActive}, cut={parameters.LimiterHardCutRpm:0}rpm, " +
-            $"maxDisplay={maximumDisplayedRpm:0}rpm, fuelCut={fuelCutWhileLimited:0.00}, " +
+            $"actualMax={maximumActualRpm:0}rpm, display={minimumDisplayedRpm:0}-{maximumDisplayedRpm:0}rpm, fuelCut={fuelCutWhileLimited:0.00}, " +
             $"torqueMultMin={minimumLimiterTorqueMultiplier:0.000}, speedDisplayError={maximumSpeedDisplayError:0.0000}m/s");
     }
 

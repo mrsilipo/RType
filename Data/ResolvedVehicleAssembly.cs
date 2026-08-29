@@ -77,6 +77,7 @@ internal sealed class ResolvedEngineAssembly
     public float ClutchCouplingRate { get; init; }
     public float ClutchEngagementSharpness { get; init; } = 1f;
     public float ClutchSlipDamping { get; init; } = 1f;
+    public float ClutchShiftKickIntensity { get; init; } = 0.75f;
     public float ClutchLowSpeedAssistStrength { get; init; } = 0.65f;
     public float ClutchBiteInputStartMultiplier { get; init; } = 0.35f;
     public float ClutchLaunchAssistExponent { get; init; } = 0.55f;

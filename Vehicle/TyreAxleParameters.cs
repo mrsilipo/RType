@@ -24,7 +24,7 @@ public sealed class TyreAxleParameters
 
     public float RelaxationLengthMeters { get; init; } = 0.45f;
 
-    public float LateralScrubDragCoefficient { get; init; } = 0.32f;
+    public float LateralScrubDragCoefficient { get; init; } = 0.08f;
 
     public float IdealCamberRadians { get; init; } = -0.02f;
 
