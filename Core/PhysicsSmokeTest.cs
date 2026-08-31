@@ -1517,9 +1517,9 @@ public static class PhysicsSmokeTest
         }
 
         if (state.DisplayedRpm > parameters.LimiterHardCutRpm + 0.5f ||
-            state.DisplayedRpm < parameters.LimiterHardCutRpm - RevLimiterPresentationRules.CalculateBounceDepthRpm(parameters.LimiterHardCutRpm) * 0.35f)
+            state.DisplayedRpm < parameters.LimiterHardCutRpm - RevLimiterPresentationRules.CalculateBounceDepthRpm(parameters.LimiterHardCutRpm) * 0.62f)
         {
-            throw new InvalidOperationException($"Physics smoke test failed: limiter tach display was not pinned near hard cut. Displayed {state.DisplayedRpm:0}, cut {parameters.LimiterHardCutRpm:0}.");
+            throw new InvalidOperationException($"Physics smoke test failed: limiter tach display was outside limiter bounce range. Displayed {state.DisplayedRpm:0}, cut {parameters.LimiterHardCutRpm:0}.");
         }
     }
 

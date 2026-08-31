@@ -271,8 +271,8 @@ public static class ClassicFourWheelProbe
         VehicleState state = simulator.State;
         Console.WriteLine(
             $"  sign: rightInput forceLatAccel={state.PhysicalLoadTransferLateralAcceleration:0.00}m/s2 bodyLatAccel={state.LateralAcceleration:0.00}m/s2 yaw={MathHelper.ToDegrees(state.YawRateRadiansPerSecond):0.00}deg/s headingDelta={MathHelper.ToDegrees(state.HeadingRadians - startHeading):0.00}deg");
-        Require(state.PhysicalLoadTransferLateralAcceleration < -0.05f, "right steering must generate right-turn physical lateral acceleration in the existing world/render convention.");
-        Require(state.YawRateRadiansPerSecond < -0.01f, "right steering must generate rightward yaw in the existing world/render convention.");
+        Require(state.PhysicalLoadTransferLateralAcceleration > 0.05f, "right steering must generate right-turn physical lateral acceleration in the game +X convention.");
+        Require(state.YawRateRadiansPerSecond > 0.01f, "right steering must generate rightward positive yaw in the game +X convention.");
         RequireFinite(state);
     }
 
@@ -400,6 +400,8 @@ public static class ClassicFourWheelProbe
     {
         ClassicFourWheelVehicleSimulator coast = CreateSimulator(parameters, engineParameters);
         ClassicFourWheelVehicleSimulator throttle = CreateSimulator(parameters, engineParameters);
+        coast.State.Gear = Math.Min(3, parameters.ForwardGearRatios.Length);
+        throttle.State.Gear = coast.State.Gear;
         coast.State.Velocity = new Vector2(0f, 24f);
         throttle.State.Velocity = new Vector2(0f, 24f);
 

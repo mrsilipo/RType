@@ -1,0 +1,1435 @@
+{
+  "source_object": "WALL_FENCES_FENCE_MELBOURNE_0",
+  "object_dimensions_m": [
+    859.372742,
+    616.178345,
+    5.522578
+  ],
+  "object_bbox_min_m": [
+    -107.27948,
+    -317.600128,
+    -1.046489
+  ],
+  "object_bbox_max_m": [
+    752.093262,
+    298.578247,
+    4.476089
+  ],
+  "object_bbox_center_m": [
+    322.406891,
+    -9.510941,
+    1.7148
+  ],
+  "vertex_count": 19292,
+  "triangle_count": 9608,
+  "material_slots": [
+    "FENCE_MELBOURNE"
+  ],
+  "connected_component_count": 4842,
+  "classification_counts": {
+    "fence_panel_candidate": 227,
+    "small_detail": 4615
+  },
+  "panel_or_run_candidates": [
+    {
+      "component_index": 3168,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        103.058022,
+        235.292786,
+        0.659428
+      ],
+      "bbox_max": [
+        106.852867,
+        235.444122,
+        3.38852
+      ],
+      "bbox_center": [
+        104.955444,
+        235.368454,
+        2.023974
+      ],
+      "dimensions": [
+        3.794846,
+        0.151337,
+        2.729093
+      ],
+      "height": 2.729093,
+      "horizontal_long": 3.794846,
+      "horizontal_short": 0.151337,
+      "z_min": 0.659428,
+      "z_max": 3.38852,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 3170,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        103.058022,
+        235.292786,
+        0.659428
+      ],
+      "bbox_max": [
+        106.852867,
+        235.444122,
+        3.38852
+      ],
+      "bbox_center": [
+        104.955444,
+        235.368454,
+        2.023974
+      ],
+      "dimensions": [
+        3.794846,
+        0.151337,
+        2.729093
+      ],
+      "height": 2.729093,
+      "horizontal_long": 3.794846,
+      "horizontal_short": 0.151337,
+      "z_min": 0.659428,
+      "z_max": 3.38852,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 2299,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        281.359375,
+        96.597534,
+        0.627253
+      ],
+      "bbox_max": [
+        281.392883,
+        100.391983,
+        3.354509
+      ],
+      "bbox_center": [
+        281.376129,
+        98.494759,
+        1.990881
+      ],
+      "dimensions": [
+        0.033508,
+        3.794449,
+        2.727256
+      ],
+      "height": 2.727256,
+      "horizontal_long": 3.794449,
+      "horizontal_short": 0.033508,
+      "z_min": 0.627253,
+      "z_max": 3.354509,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 2301,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        281.359375,
+        96.597534,
+        0.627253
+      ],
+      "bbox_max": [
+        281.392883,
+        100.391983,
+        3.354509
+      ],
+      "bbox_center": [
+        281.376129,
+        98.494759,
+        1.990881
+      ],
+      "dimensions": [
+        0.033508,
+        3.794449,
+        2.727256
+      ],
+      "height": 2.727256,
+      "horizontal_long": 3.794449,
+      "horizontal_short": 0.033508,
+      "z_min": 0.627253,
+      "z_max": 3.354509,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 2295,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        281.377045,
+        92.605843,
+        0.565747
+      ],
+      "bbox_max": [
+        281.42923,
+        96.387856,
+        3.292566
+      ],
+      "bbox_center": [
+        281.403137,
+        94.496849,
+        1.929156
+      ],
+      "dimensions": [
+        0.052185,
+        3.782013,
+        2.726819
+      ],
+      "height": 2.726819,
+      "horizontal_long": 3.782013,
+      "horizontal_short": 0.052185,
+      "z_min": 0.565747,
+      "z_max": 3.292566,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 2297,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        281.377045,
+        92.605843,
+        0.565747
+      ],
+      "bbox_max": [
+        281.42923,
+        96.387856,
+        3.292566
+      ],
+      "bbox_center": [
+        281.403137,
+        94.496849,
+        1.929156
+      ],
+      "dimensions": [
+        0.052185,
+        3.782013,
+        2.726819
+      ],
+      "height": 2.726819,
+      "horizontal_long": 3.782013,
+      "horizontal_short": 0.052185,
+      "z_min": 0.565747,
+      "z_max": 3.292566,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 2303,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        281.31369,
+        100.601654,
+        0.689218
+      ],
+      "bbox_max": [
+        281.361237,
+        104.383682,
+        3.413201
+      ],
+      "bbox_center": [
+        281.337463,
+        102.492668,
+        2.05121
+      ],
+      "dimensions": [
+        0.047546,
+        3.782028,
+        2.723983
+      ],
+      "height": 2.723983,
+      "horizontal_long": 3.782028,
+      "horizontal_short": 0.047546,
+      "z_min": 0.689218,
+      "z_max": 3.413201,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 2305,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        281.31369,
+        100.601654,
+        0.689218
+      ],
+      "bbox_max": [
+        281.361237,
+        104.383682,
+        3.413201
+      ],
+      "bbox_center": [
+        281.337463,
+        102.492668,
+        2.05121
+      ],
+      "dimensions": [
+        0.047546,
+        3.782028,
+        2.723983
+      ],
+      "height": 2.723983,
+      "horizontal_long": 3.782028,
+      "horizontal_short": 0.047546,
+      "z_min": 0.689218,
+      "z_max": 3.413201,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 2291,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        281.422699,
+        88.594772,
+        0.509118
+      ],
+      "bbox_max": [
+        281.507935,
+        92.38372,
+        3.23118
+      ],
+      "bbox_center": [
+        281.465332,
+        90.489243,
+        1.870149
+      ],
+      "dimensions": [
+        0.085236,
+        3.788948,
+        2.722062
+      ],
+      "height": 2.722062,
+      "horizontal_long": 3.788948,
+      "horizontal_short": 0.085236,
+      "z_min": 0.509118,
+      "z_max": 3.23118,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 2293,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        281.422699,
+        88.594772,
+        0.509261
+      ],
+      "bbox_max": [
+        281.507935,
+        92.38372,
+        3.23118
+      ],
+      "bbox_center": [
+        281.465332,
+        90.489243,
+        1.870221
+      ],
+      "dimensions": [
+        0.085236,
+        3.788948,
+        2.721919
+      ],
+      "height": 2.721919,
+      "horizontal_long": 3.788948,
+      "horizontal_short": 0.085236,
+      "z_min": 0.509261,
+      "z_max": 3.23118,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 3715,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        675.32843,
+        -199.960098,
+        -0.227174
+      ],
+      "bbox_max": [
+        675.480469,
+        -196.189087,
+        2.494332
+      ],
+      "bbox_center": [
+        675.404419,
+        -198.074585,
+        1.133579
+      ],
+      "dimensions": [
+        0.152039,
+        3.771011,
+        2.721505
+      ],
+      "height": 2.721505,
+      "horizontal_long": 3.771011,
+      "horizontal_short": 0.152039,
+      "z_min": -0.227174,
+      "z_max": 2.494332,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 3717,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        675.32843,
+        -199.960098,
+        -0.227174
+      ],
+      "bbox_max": [
+        675.480469,
+        -196.189087,
+        2.494332
+      ],
+      "bbox_center": [
+        675.404419,
+        -198.074585,
+        1.133579
+      ],
+      "dimensions": [
+        0.152039,
+        3.771011,
+        2.721505
+      ],
+      "height": 2.721505,
+      "horizontal_long": 3.771011,
+      "horizontal_short": 0.152039,
+      "z_min": -0.227174,
+      "z_max": 2.494332,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 3172,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        107.066399,
+        235.462845,
+        0.604506
+      ],
+      "bbox_max": [
+        110.799622,
+        235.911728,
+        3.324735
+      ],
+      "bbox_center": [
+        108.933014,
+        235.687286,
+        1.964621
+      ],
+      "dimensions": [
+        3.733223,
+        0.448883,
+        2.720229
+      ],
+      "height": 2.720229,
+      "horizontal_long": 3.733223,
+      "horizontal_short": 0.448883,
+      "z_min": 0.604506,
+      "z_max": 3.324735,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 3174,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        107.066399,
+        235.462845,
+        0.604506
+      ],
+      "bbox_max": [
+        110.799622,
+        235.911728,
+        3.324735
+      ],
+      "bbox_center": [
+        108.933014,
+        235.687286,
+        1.964621
+      ],
+      "dimensions": [
+        3.733223,
+        0.448883,
+        2.720229
+      ],
+      "height": 2.720229,
+      "horizontal_long": 3.733223,
+      "horizontal_short": 0.448883,
+      "z_min": 0.604506,
+      "z_max": 3.324735,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 2307,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        281.225708,
+        104.593353,
+        0.747481
+      ],
+      "bbox_max": [
+        281.315552,
+        108.382309,
+        3.463435
+      ],
+      "bbox_center": [
+        281.27063,
+        106.487831,
+        2.105458
+      ],
+      "dimensions": [
+        0.089844,
+        3.788956,
+        2.715953
+      ],
+      "height": 2.715953,
+      "horizontal_long": 3.788956,
+      "horizontal_short": 0.089844,
+      "z_min": 0.747481,
+      "z_max": 3.463435,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 2309,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        281.225708,
+        104.593353,
+        0.747481
+      ],
+      "bbox_max": [
+        281.315552,
+        108.382309,
+        3.463435
+      ],
+      "bbox_center": [
+        281.27063,
+        106.487831,
+        2.105458
+      ],
+      "dimensions": [
+        0.089844,
+        3.788956,
+        2.715953
+      ],
+      "height": 2.715953,
+      "horizontal_long": 3.788956,
+      "horizontal_short": 0.089844,
+      "z_min": 0.747481,
+      "z_max": 3.463435,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 4583,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        493.331177,
+        -259.441956,
+        -0.548303
+      ],
+      "bbox_max": [
+        493.54306,
+        -255.651657,
+        2.167367
+      ],
+      "bbox_center": [
+        493.437134,
+        -257.546814,
+        0.809532
+      ],
+      "dimensions": [
+        0.211884,
+        3.790298,
+        2.71567
+      ],
+      "height": 2.71567,
+      "horizontal_long": 3.790298,
+      "horizontal_short": 0.211884,
+      "z_min": -0.548303,
+      "z_max": 2.167367,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 4585,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        493.331177,
+        -259.441956,
+        -0.548303
+      ],
+      "bbox_max": [
+        493.54306,
+        -255.651657,
+        2.167367
+      ],
+      "bbox_center": [
+        493.437134,
+        -257.546814,
+        0.809532
+      ],
+      "dimensions": [
+        0.211884,
+        3.790298,
+        2.71567
+      ],
+      "height": 2.71567,
+      "horizontal_long": 3.790298,
+      "horizontal_short": 0.211884,
+      "z_min": -0.548303,
+      "z_max": 2.167367,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 1525,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        -13.26077,
+        47.087601,
+        0.301231
+      ],
+      "bbox_max": [
+        -13.012586,
+        50.857262,
+        3.015134
+      ],
+      "bbox_center": [
+        -13.136678,
+        48.972431,
+        1.658183
+      ],
+      "dimensions": [
+        0.248184,
+        3.769661,
+        2.713903
+      ],
+      "height": 2.713903,
+      "horizontal_long": 3.769661,
+      "horizontal_short": 0.248184,
+      "z_min": 0.301231,
+      "z_max": 3.015134,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 1527,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        -13.26077,
+        47.087601,
+        0.301231
+      ],
+      "bbox_max": [
+        -13.012586,
+        50.857262,
+        3.015134
+      ],
+      "bbox_center": [
+        -13.136678,
+        48.972431,
+        1.658183
+      ],
+      "dimensions": [
+        0.248184,
+        3.769661,
+        2.713903
+      ],
+      "height": 2.713903,
+      "horizontal_long": 3.769661,
+      "horizontal_short": 0.248184,
+      "z_min": 0.301231,
+      "z_max": 3.015134,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 2287,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        281.506073,
+        84.623848,
+        0.462623
+      ],
+      "bbox_max": [
+        281.645111,
+        88.385101,
+        3.175125
+      ],
+      "bbox_center": [
+        281.575592,
+        86.504471,
+        1.818874
+      ],
+      "dimensions": [
+        0.139038,
+        3.761253,
+        2.712502
+      ],
+      "height": 2.712502,
+      "horizontal_long": 3.761253,
+      "horizontal_short": 0.139038,
+      "z_min": 0.462623,
+      "z_max": 3.175125,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 2289,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        281.506073,
+        84.623848,
+        0.462623
+      ],
+      "bbox_max": [
+        281.645111,
+        88.385101,
+        3.175125
+      ],
+      "bbox_center": [
+        281.575592,
+        86.504471,
+        1.818874
+      ],
+      "dimensions": [
+        0.139038,
+        3.761253,
+        2.712502
+      ],
+      "height": 2.712502,
+      "horizontal_long": 3.761253,
+      "horizontal_short": 0.139038,
+      "z_min": 0.462623,
+      "z_max": 3.175125,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 3719,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        675.321899,
+        -203.949036,
+        -0.270192
+      ],
+      "bbox_max": [
+        675.416443,
+        -200.184967,
+        2.439149
+      ],
+      "bbox_center": [
+        675.369141,
+        -202.067001,
+        1.084479
+      ],
+      "dimensions": [
+        0.094543,
+        3.764069,
+        2.70934
+      ],
+      "height": 2.70934,
+      "horizontal_long": 3.764069,
+      "horizontal_short": 0.094543,
+      "z_min": -0.270192,
+      "z_max": 2.439149,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 3721,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        675.321899,
+        -203.949036,
+        -0.270192
+      ],
+      "bbox_max": [
+        675.416443,
+        -200.184967,
+        2.439149
+      ],
+      "bbox_center": [
+        675.369141,
+        -202.067001,
+        1.084479
+      ],
+      "dimensions": [
+        0.094543,
+        3.764069,
+        2.70934
+      ],
+      "height": 2.70934,
+      "horizontal_long": 3.764069,
+      "horizontal_short": 0.094543,
+      "z_min": -0.270192,
+      "z_max": 2.439149,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 2219,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        82.806992,
+        235.602402,
+        0.771753
+      ],
+      "bbox_max": [
+        86.588181,
+        235.692215,
+        3.479931
+      ],
+      "bbox_center": [
+        84.697586,
+        235.647308,
+        2.125842
+      ],
+      "dimensions": [
+        3.781189,
+        0.089813,
+        2.708179
+      ],
+      "height": 2.708179,
+      "horizontal_long": 3.781189,
+      "horizontal_short": 0.089813,
+      "z_min": 0.771753,
+      "z_max": 3.479931,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 2221,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        82.806992,
+        235.602402,
+        0.771753
+      ],
+      "bbox_max": [
+        86.588181,
+        235.692215,
+        3.479931
+      ],
+      "bbox_center": [
+        84.697586,
+        235.647308,
+        2.125842
+      ],
+      "dimensions": [
+        3.781189,
+        0.089813,
+        2.708179
+      ],
+      "height": 2.708179,
+      "horizontal_long": 3.781189,
+      "horizontal_short": 0.089813,
+      "z_min": 0.771753,
+      "z_max": 3.479931,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 2311,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        281.07666,
+        108.604439,
+        0.796946
+      ],
+      "bbox_max": [
+        281.236877,
+        112.387848,
+        3.500331
+      ],
+      "bbox_center": [
+        281.156769,
+        110.49614,
+        2.148639
+      ],
+      "dimensions": [
+        0.160217,
+        3.783409,
+        2.703385
+      ],
+      "height": 2.703385,
+      "horizontal_long": 3.783409,
+      "horizontal_short": 0.160217,
+      "z_min": 0.796946,
+      "z_max": 3.500331,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 2313,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        281.07666,
+        108.604439,
+        0.796946
+      ],
+      "bbox_max": [
+        281.236877,
+        112.387848,
+        3.500331
+      ],
+      "bbox_center": [
+        281.156769,
+        110.49614,
+        2.148639
+      ],
+      "dimensions": [
+        0.160217,
+        3.783409,
+        2.703385
+      ],
+      "height": 2.703385,
+      "horizontal_long": 3.783409,
+      "horizontal_short": 0.160217,
+      "z_min": 0.796946,
+      "z_max": 3.500331,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 2215,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        78.816902,
+        235.673447,
+        0.736299
+      ],
+      "bbox_max": [
+        82.581589,
+        235.72583,
+        3.438405
+      ],
+      "bbox_center": [
+        80.699249,
+        235.699646,
+        2.087352
+      ],
+      "dimensions": [
+        3.764687,
+        0.052383,
+        2.702106
+      ],
+      "height": 2.702106,
+      "horizontal_long": 3.764687,
+      "horizontal_short": 0.052383,
+      "z_min": 0.736299,
+      "z_max": 3.438405,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 2217,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        78.816902,
+        235.673447,
+        0.736299
+      ],
+      "bbox_max": [
+        82.581589,
+        235.72583,
+        3.438405
+      ],
+      "bbox_center": [
+        80.699249,
+        235.699646,
+        2.087352
+      ],
+      "dimensions": [
+        3.764687,
+        0.052383,
+        2.702106
+      ],
+      "height": 2.702106,
+      "horizontal_long": 3.764687,
+      "horizontal_short": 0.052383,
+      "z_min": 0.736299,
+      "z_max": 3.438405,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 3723,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        675.30957,
+        -207.939438,
+        -0.305076
+      ],
+      "bbox_max": [
+        675.409912,
+        -204.173935,
+        2.396417
+      ],
+      "bbox_center": [
+        675.359741,
+        -206.056686,
+        1.045671
+      ],
+      "dimensions": [
+        0.100342,
+        3.765503,
+        2.701493
+      ],
+      "height": 2.701493,
+      "horizontal_long": 3.765503,
+      "horizontal_short": 0.100342,
+      "z_min": -0.305076,
+      "z_max": 2.396417,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 3725,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        675.30957,
+        -207.939438,
+        -0.305076
+      ],
+      "bbox_max": [
+        675.409912,
+        -204.173935,
+        2.396417
+      ],
+      "bbox_center": [
+        675.359741,
+        -206.056686,
+        1.045671
+      ],
+      "dimensions": [
+        0.100342,
+        3.765503,
+        2.701493
+      ],
+      "height": 2.701493,
+      "horizontal_long": 3.765503,
+      "horizontal_short": 0.100342,
+      "z_min": -0.305076,
+      "z_max": 2.396417,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 2564,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        118.185532,
+        262.004822,
+        0.883161
+      ],
+      "bbox_max": [
+        121.932175,
+        262.379669,
+        3.582951
+      ],
+      "bbox_center": [
+        120.058853,
+        262.192261,
+        2.233056
+      ],
+      "dimensions": [
+        3.746643,
+        0.374847,
+        2.69979
+      ],
+      "height": 2.69979,
+      "horizontal_long": 3.746643,
+      "horizontal_short": 0.374847,
+      "z_min": 0.883161,
+      "z_max": 3.582951,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 2566,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        118.185532,
+        262.004822,
+        0.883161
+      ],
+      "bbox_max": [
+        121.932175,
+        262.379669,
+        3.582951
+      ],
+      "bbox_center": [
+        120.058853,
+        262.192261,
+        2.233056
+      ],
+      "dimensions": [
+        3.746643,
+        0.374847,
+        2.69979
+      ],
+      "height": 2.69979,
+      "horizontal_long": 3.746643,
+      "horizontal_short": 0.374847,
+      "z_min": 0.883161,
+      "z_max": 3.582951,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 2283,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        281.64325,
+        80.648735,
+        0.431213
+      ],
+      "bbox_max": [
+        281.859802,
+        84.401718,
+        3.129518
+      ],
+      "bbox_center": [
+        281.751526,
+        82.525223,
+        1.780366
+      ],
+      "dimensions": [
+        0.216553,
+        3.752983,
+        2.698305
+      ],
+      "height": 2.698305,
+      "horizontal_long": 3.752983,
+      "horizontal_short": 0.216553,
+      "z_min": 0.431213,
+      "z_max": 3.129518,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 2285,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        281.64325,
+        80.648735,
+        0.431213
+      ],
+      "bbox_max": [
+        281.859802,
+        84.401718,
+        3.129518
+      ],
+      "bbox_center": [
+        281.751526,
+        82.525223,
+        1.780366
+      ],
+      "dimensions": [
+        0.216553,
+        3.752983,
+        2.698305
+      ],
+      "height": 2.698305,
+      "horizontal_long": 3.752983,
+      "horizontal_short": 0.216553,
+      "z_min": 0.431213,
+      "z_max": 3.129518,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 2560,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        122.162216,
+        261.814819,
+        0.915186
+      ],
+      "bbox_max": [
+        125.927246,
+        261.983429,
+        3.612451
+      ],
+      "bbox_center": [
+        124.044731,
+        261.899109,
+        2.263818
+      ],
+      "dimensions": [
+        3.76503,
+        0.16861,
+        2.697265
+      ],
+      "height": 2.697265,
+      "horizontal_long": 3.76503,
+      "horizontal_short": 0.16861,
+      "z_min": 0.915186,
+      "z_max": 3.612451,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 2562,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        122.162216,
+        261.814819,
+        0.915186
+      ],
+      "bbox_max": [
+        125.927246,
+        261.983429,
+        3.612451
+      ],
+      "bbox_center": [
+        124.044731,
+        261.899109,
+        2.263818
+      ],
+      "dimensions": [
+        3.76503,
+        0.16861,
+        2.697265
+      ],
+      "height": 2.697265,
+      "horizontal_long": 3.76503,
+      "horizontal_short": 0.16861,
+      "z_min": 0.915186,
+      "z_max": 3.612451,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 2556,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        126.161942,
+        261.805847,
+        0.944887
+      ],
+      "bbox_max": [
+        129.924118,
+        261.86908,
+        3.641368
+      ],
+      "bbox_center": [
+        128.04303,
+        261.837463,
+        2.293128
+      ],
+      "dimensions": [
+        3.762177,
+        0.063232,
+        2.696481
+      ],
+      "height": 2.696481,
+      "horizontal_long": 3.762177,
+      "horizontal_short": 0.063232,
+      "z_min": 0.944887,
+      "z_max": 3.641368,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    },
+    {
+      "component_index": 2558,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        126.161942,
+        261.805847,
+        0.944887
+      ],
+      "bbox_max": [
+        129.924118,
+        261.86908,
+        3.641368
+      ],
+      "bbox_center": [
+        128.04303,
+        261.837463,
+        2.293128
+      ],
+      "dimensions": [
+        3.762177,
+        0.063232,
+        2.696481
+      ],
+      "height": 2.696481,
+      "horizontal_long": 3.762177,
+      "horizontal_short": 0.063232,
+      "z_min": 0.944887,
+      "z_max": 3.641368,
+      "materials": [
+        "FENCE_MELBOURNE"
+      ],
+      "classification": "fence_panel_candidate"
+    }
+  ]
+}

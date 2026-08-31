@@ -1,0 +1,221 @@
+{
+  "schemaVersion": 1,
+  "id": "classic_four_wheel_physics_lateral_damping_half",
+  "handlingModel": {
+    "value": "classicFourWheel"
+  },
+  "physics": {
+    "fixedTickRateHz": {
+      "value": 120
+    },
+    "maximumFrameTimeSeconds": {
+      "value": 0.1
+    },
+    "maximumTicksPerUpdate": {
+      "value": 12
+    }
+  },
+  "vehicleSafety": {
+    "minimumSlipSpeedMetersPerSecond": {
+      "value": 2.0
+    },
+    "maximumReverseSpeedMetersPerSecond": {
+      "value": 13.5
+    },
+    "maximumForwardSpeedMetersPerSecond": {
+      "value": 70.0
+    }
+  },
+  "classicFourWheel": {
+    "steering": {
+      "zeroKmhAngleDegrees": {
+        "value": 26.0
+      },
+      "sixtyKmhAngleDegrees": {
+        "value": 12.5
+      },
+      "oneTwentyKmhAngleDegrees": {
+        "value": 11.5
+      },
+      "twoHundredKmhAngleDegrees": {
+        "value": 6.0
+      },
+      "steerSpeedDegreesPerSecond": {
+        "value": 145.0
+      },
+      "returnSpeedDegreesPerSecond": {
+        "value": 115.0
+      },
+      "physicalEnvelopeBlendStartKmh": {
+        "value": 40.0
+      },
+      "physicalEnvelopeFullKmh": {
+        "value": 95.0
+      },
+      "normalLateralAccelerationG": {
+        "value": 1.15
+      },
+      "overdriveLateralAccelerationG": {
+        "value": 1.4
+      },
+      "normalCommand": {
+        "value": 0.75
+      },
+      "minimumHighSpeedAngleDegrees": {
+        "value": 0.35
+      },
+      "normalPeakSlipFraction": {
+        "value": 0.08
+      },
+      "overdrivePeakSlipFraction": {
+        "value": 0.3
+      },
+      "transientPeakSlipFraction": {
+        "value": 0.32
+      },
+      "transientBoostSeconds": {
+        "value": 0.42
+      },
+      "digitalInitialCommandRatePerSecond": {
+        "value": 5.2
+      },
+      "digitalSustainedCommandRatePerSecond": {
+        "value": 7.8
+      },
+      "digitalRiseAccelerationSeconds": {
+        "value": 0.14
+      },
+      "digitalReleaseCommandRatePerSecond": {
+        "value": 8.0
+      },
+      "digitalCounterSteerRateMultiplier": {
+        "value": 3.0
+      }
+    },
+    "frontTyres": {
+      "corneringStiffness": {
+        "value": 9.0
+      },
+      "peakSlipAngleDegrees": {
+        "value": 9.5
+      },
+      "falloffSlipAngleDegrees": {
+        "value": 44.0
+      },
+      "maxGrip": {
+        "value": 1.25
+      },
+      "slidingGrip": {
+        "value": 0.9
+      },
+      "relaxationLengthMeters": {
+        "value": 0.18
+      }
+    },
+    "rearTyres": {
+      "corneringStiffness": {
+        "value": 3.2
+      },
+      "peakSlipAngleDegrees": {
+        "value": 24.0
+      },
+      "falloffSlipAngleDegrees": {
+        "value": 38.0
+      },
+      "maxGrip": {
+        "value": 0.9
+      },
+      "slidingGrip": {
+        "value": 0.72
+      },
+      "relaxationLengthMeters": {
+        "value": 0.24
+      }
+    },
+    "yaw": {
+      "inertiaScale": {
+        "value": 2.45
+      },
+      "damping": {
+        "value": 1.85
+      },
+      "lateralVelocityDamping": {
+        "value": 0.8
+      }
+    },
+    "gripBudget": {
+      "combinedGripExponent": {
+        "value": 2.35
+      },
+      "brakingSteeringLateralPriority": {
+        "value": 0.65
+      },
+      "brakingSteeringPrioritySteerStart": {
+        "value": 0.2
+      },
+      "brakingSteeringPrioritySteerEnd": {
+        "value": 0.85
+      },
+      "brakingSteeringPriorityBrakeStart": {
+        "value": 0.1
+      },
+      "brakingSteeringPriorityBrakeEnd": {
+        "value": 0.75
+      },
+      "brakingSteeringFrontBrakeMultiplier": {
+        "value": 0.72
+      },
+      "brakingSteeringRearBrakeMultiplier": {
+        "value": 0.18
+      },
+      "brakePressureFrontTargetGripUsage": {
+        "value": 0.94
+      },
+      "brakePressureRearTargetGripUsage": {
+        "value": 0.82
+      },
+      "brakePressureApplyRatePerSecond": {
+        "value": 14.0
+      },
+      "brakePressureReleaseRatePerSecond": {
+        "value": 38.0
+      },
+      "brakePressureMinimumRatio": {
+        "value": 0.1
+      },
+      "brakePressureMinimumSpeedMetersPerSecond": {
+        "value": 2.0
+      }
+    },
+    "chassisLoadTransfer": {
+      "enabled": {
+        "value": true
+      },
+      "longitudinalNaturalFrequencyHz": {
+        "value": 5.5
+      },
+      "longitudinalDampingRatio": {
+        "value": 0.72
+      },
+      "lateralNaturalFrequencyHz": {
+        "value": 4.2
+      },
+      "lateralDampingRatio": {
+        "value": 0.7
+      }
+    },
+    "lowSpeed": {
+      "slipSpeedFloorMetersPerSecond": {
+        "value": 3.4
+      }
+    },
+    "resistance": {
+      "rollingResistanceMultiplier": {
+        "value": 1.0
+      },
+      "aeroDragMultiplier": {
+        "value": 1.0
+      }
+    }
+  }
+}

@@ -81,7 +81,7 @@ public static class RaceConditionProbe
         }
 
         float minimumAllowedDisplayedRpm = parameters.LimiterHardCutRpm -
-                                          RevLimiterPresentationRules.CalculateBounceDepthRpm(parameters.LimiterHardCutRpm) * 0.35f;
+                                          RevLimiterPresentationRules.CalculateBounceDepthRpm(parameters.LimiterHardCutRpm) * 0.62f;
         if (minimumDisplayedRpm < minimumAllowedDisplayedRpm)
         {
             throw new InvalidOperationException($"Race condition probe failed: displayed RPM fell too far during limiter. Min {minimumDisplayedRpm:0}, expected >= {minimumAllowedDisplayedRpm:0}.");

@@ -8,7 +8,6 @@ public sealed class ChaseCamera
 {
     private const float StationarySettleSpeedMetersPerSecond = 0.50f;
     private const float StationarySettleYawRateRadiansPerSecond = 0.04f;
-    private const float ReverseCameraFlipSpeedMetersPerSecond = 1.00f;
     private const float PowertrainPresentationShakeScale = 0.50f;
 
     private static readonly ChaseCameraProfile Chase1Profile = new(
@@ -81,9 +80,31 @@ public sealed class ChaseCamera
     public string ModeName => Mode switch
     {
         CameraMode.InCar => "IN CAR",
+        CameraMode.FixedDiagnostic => "FIXED",
         CameraMode.Chase2 => "CHASE 2",
         _ => "CHASE 1"
     };
+
+    public static ChaseCameraIntentDebug GetIntentDebug(VehicleState vehicle, bool lookBehind)
+    {
+        float signedForwardSpeed = Vector2.Dot(vehicle.Velocity, new Vector2(vehicle.Forward.X, vehicle.Forward.Z));
+        Vector3 forward = vehicle.Forward;
+        if (lookBehind)
+        {
+            forward = -forward;
+        }
+
+        string reason = lookBehind
+            ? "manual-look-behind"
+            : "vehicle-forward";
+        return new ChaseCameraIntentDebug(
+            signedForwardSpeed,
+            vehicle.Gear,
+            lookBehind,
+            vehicle.Gear < 0,
+            reason,
+            GetSafeHorizontal(forward, Vector3.Forward));
+    }
 
     public void SetMode(CameraMode mode, VehicleState vehicle, bool reset)
     {
@@ -124,7 +145,8 @@ public sealed class ChaseCamera
         Mode = Mode switch
         {
             CameraMode.Chase1 => CameraMode.Chase2,
-            CameraMode.Chase2 => CameraMode.InCar,
+            CameraMode.Chase2 => CameraMode.FixedDiagnostic,
+            CameraMode.FixedDiagnostic => CameraMode.InCar,
             _ => CameraMode.Chase1
         };
         Reset(vehicle);
@@ -146,6 +168,12 @@ public sealed class ChaseCamera
             return;
         }
 
+        if (Mode == CameraMode.FixedDiagnostic)
+        {
+            ResetFixedDiagnostic(vehicle);
+            return;
+        }
+
         ChaseCameraProfile profile = GetChaseProfile();
         Vector3 forward = GetSafeHorizontal(vehicle.Forward, Vector3.Forward);
         _smoothedChaseForward = forward;
@@ -164,6 +192,12 @@ public sealed class ChaseCamera
             return;
         }
 
+        if (Mode == CameraMode.FixedDiagnostic)
+        {
+            Projection = CreateProjection(54f);
+            return;
+        }
+
         ChaseCameraProfile profile = GetChaseProfile();
         float clampedDt = MathHelper.Clamp(dt, 0f, 1f / 20f);
         float speed = vehicle.SpeedMetersPerSecond;
@@ -172,8 +206,9 @@ public sealed class ChaseCamera
             MathF.Abs(vehicle.YawRateRadiansPerSecond) < StationarySettleYawRateRadiansPerSecond &&
             !vehicle.CollisionActive;
 
-        Vector3 baseForward = GetCameraIntentForward(vehicle, lookBehind, out bool reversing);
-        Vector3 baseRight = lookBehind ? -vehicle.Right : reversing ? -vehicle.Right : vehicle.Right;
+        ChaseCameraIntentDebug intent = GetIntentDebug(vehicle, lookBehind);
+        Vector3 baseForward = intent.Forward;
+        Vector3 baseRight = lookBehind ? -vehicle.Right : vehicle.Right;
         baseRight = GetSafeHorizontal(baseRight, Vector3.Right);
 
         if (!stationarySettled || lookBehind)
@@ -206,12 +241,13 @@ public sealed class ChaseCamera
         desiredTarget -= _smoothedChaseForward * downshiftPull * (Mode == CameraMode.Chase2 ? 0.30f : 0.20f);
         desiredPosition += _smoothedChaseForward * _impactImpulse;
 
-        if (!lookBehind && !reversing && speed > 3f)
+        if (!lookBehind)
         {
             float lateralSpeed = Vector2.Dot(vehicle.Velocity, new Vector2(vehicle.Right.X, vehicle.Right.Z));
             float forwardSpeed = Vector2.Dot(vehicle.Velocity, new Vector2(vehicle.Forward.X, vehicle.Forward.Z));
             float slipAngle = MathHelper.Clamp(MathF.Atan2(lateralSpeed, MathF.Max(1f, MathF.Abs(forwardSpeed))), -0.70f, 0.70f);
-            desiredTarget += _smoothedChaseRight * slipAngle * profile.DriftLookAheadFactor;
+            float slipLookAheadFade = SmoothStep(2.25f, 4.50f, speed);
+            desiredTarget += _smoothedChaseRight * slipAngle * profile.DriftLookAheadFactor * slipLookAheadFade;
         }
 
         desiredPosition = ApplyGroundClearance(desiredPosition, track, profile);
@@ -243,6 +279,15 @@ public sealed class ChaseCamera
     {
         (Position, Target, _, _, Vector3 up) = CalculateInCarPose(vehicle, false);
         View = Matrix.CreateLookAt(Position, Target, up);
+    }
+
+    private void ResetFixedDiagnostic(VehicleState vehicle)
+    {
+        Vector3 anchor = vehicle.Position;
+        Position = anchor + new Vector3(0f, 8.5f, -10.5f);
+        Target = anchor + new Vector3(0f, 0.35f, 0f);
+        Projection = CreateProjection(54f);
+        View = Matrix.CreateLookAt(Position, Target, Vector3.Up);
     }
 
     private void UpdateInCar(VehicleState vehicle, float dt, bool lookBehind)
@@ -279,20 +324,6 @@ public sealed class ChaseCamera
             _aspectRatio,
             0.1f,
             360f);
-    }
-
-    private static Vector3 GetCameraIntentForward(VehicleState vehicle, bool lookBehind, out bool reversing)
-    {
-        float signedForwardSpeed = Vector2.Dot(vehicle.Velocity, new Vector2(vehicle.Forward.X, vehicle.Forward.Z));
-        reversing = signedForwardSpeed < -2f ||
-            vehicle.Gear < 0 && signedForwardSpeed < -ReverseCameraFlipSpeedMetersPerSecond;
-        Vector3 forward = reversing ? -vehicle.Forward : vehicle.Forward;
-        if (lookBehind)
-        {
-            forward = -forward;
-        }
-
-        return GetSafeHorizontal(forward, Vector3.Forward);
     }
 
     private static Vector3 SmoothDirection(Vector3 current, Vector3 target, float blend)
@@ -547,3 +578,11 @@ public sealed class ChaseCamera
         float MinimumGroundClearance,
         float ImpactImpulseStrength);
 }
+
+public readonly record struct ChaseCameraIntentDebug(
+    float SignedForwardSpeedMetersPerSecond,
+    int Gear,
+    bool ManualLookBehind,
+    bool Reversing,
+    string Reason,
+    Vector3 Forward);

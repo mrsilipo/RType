@@ -1,0 +1,150 @@
+{
+  "source_object": "WALL_FENCES_FENCE_MELBOURNE_0",
+  "target_component": {
+    "component_index": 3168,
+    "vertex_count": 4,
+    "polygon_count": 2,
+    "triangle_count": 2,
+    "bbox_min": [
+      103.058022,
+      235.292786,
+      0.659428
+    ],
+    "bbox_max": [
+      106.852867,
+      235.444122,
+      3.38852
+    ],
+    "bbox_center": [
+      104.955444,
+      235.368454,
+      2.023974
+    ],
+    "dimensions": [
+      3.794846,
+      0.151337,
+      2.729093
+    ]
+  },
+  "target_bbox_min": [
+    103.058022,
+    235.292786,
+    0.659428
+  ],
+  "target_bbox_max": [
+    106.852867,
+    235.444122,
+    3.38852
+  ],
+  "nearby_component_count": 4,
+  "nearby_components": [
+    {
+      "component_index": 3168,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        103.058022,
+        235.292786,
+        0.659428
+      ],
+      "bbox_max": [
+        106.852867,
+        235.444122,
+        3.38852
+      ],
+      "bbox_center": [
+        104.955444,
+        235.368454,
+        2.023974
+      ],
+      "dimensions": [
+        3.794846,
+        0.151337,
+        2.729093
+      ],
+      "distance_to_target_center": 0.0
+    },
+    {
+      "component_index": 3170,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        103.058022,
+        235.292786,
+        0.659428
+      ],
+      "bbox_max": [
+        106.852867,
+        235.444122,
+        3.38852
+      ],
+      "bbox_center": [
+        104.955444,
+        235.368454,
+        2.023974
+      ],
+      "dimensions": [
+        3.794846,
+        0.151337,
+        2.729093
+      ],
+      "distance_to_target_center": 0.0
+    },
+    {
+      "component_index": 3167,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        103.110878,
+        235.292786,
+        3.328551
+      ],
+      "bbox_max": [
+        106.852867,
+        235.977692,
+        3.976622
+      ],
+      "bbox_center": [
+        104.981873,
+        235.635239,
+        3.652587
+      ],
+      "dimensions": [
+        3.741989,
+        0.684906,
+        0.648071
+      ],
+      "distance_to_target_center": 1.650531
+    },
+    {
+      "component_index": 3169,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_min": [
+        103.110878,
+        235.292786,
+        3.328551
+      ],
+      "bbox_max": [
+        106.852867,
+        235.977692,
+        3.976622
+      ],
+      "bbox_center": [
+        104.981873,
+        235.635239,
+        3.652587
+      ],
+      "dimensions": [
+        3.741989,
+        0.684906,
+        0.648071
+      ],
+      "distance_to_target_center": 1.650531
+    }
+  ]
+}

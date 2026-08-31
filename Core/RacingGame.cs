@@ -76,6 +76,7 @@ public sealed class RacingGame : Game
     private RTypeEngineRoomScreen? _engineRoom;
     private RaceSession? _raceSession;
     private readonly RaceRunTelemetryLogger _telemetryLogger = new();
+    private readonly LowSpeedJoltRecorder _lowSpeedJoltRecorder = new();
 
     private VehicleInput _latestInput;
     private RacingControls _latestControls;
@@ -774,6 +775,7 @@ public sealed class RacingGame : Game
                 UpdateVehiclePresentation(dt);
                 _camera?.Update(_vehicle.State, dt, _latestControls.LookBehind, _track);
                 _telemetryLogger.Log(_raceElapsed, dt, _latestInput, _vehicle.State);
+                _lowSpeedJoltRecorder.Update(_raceElapsed, dt, _latestInput, _vehicle.State);
                 if (_raceSession?.State.Finished == true)
                 {
                     _telemetryLogger.Stop();

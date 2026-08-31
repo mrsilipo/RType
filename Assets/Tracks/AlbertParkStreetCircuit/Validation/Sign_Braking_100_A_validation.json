@@ -1,0 +1,257 @@
+{
+  "roster_id": "AP-0039",
+  "asset_name": "Sign_Braking_100_A",
+  "source_object": "distance_100_left002_MELBOURNE_0",
+  "manual_reference_blend": "C:\\Monogames\\GranTurismo\\Assets\\Tracks\\AlbertParkStreetCircuit\\Review\\Sign_Braking_100_A_manual_reference.blend",
+  "source": {
+    "reference_blend": {
+      "object_name": "Sign_Braking_100_A",
+      "mesh_name": "Sign_Braking_100_A_Mesh",
+      "location": [
+        0.0,
+        -0.0,
+        -0.0
+      ],
+      "rotation_degrees": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "bbox_min_m": [
+        -0.805229,
+        -0.049624,
+        -0.003935
+      ],
+      "bbox_max_m": [
+        0.91431,
+        0.056629,
+        1.434026
+      ],
+      "bbox_center_m": [
+        0.054541,
+        0.003502,
+        0.715045
+      ],
+      "dimensions_m": [
+        1.719538,
+        0.106253,
+        1.437962
+      ],
+      "vertex_count": 72,
+      "triangle_count": 36,
+      "materials": [
+        "Sign_Braking_100_Face",
+        "Sign_Back_Edge_OffWhite"
+      ]
+    },
+    "bake": {
+      "normalization_offset_m": [
+        -0.054541,
+        -0.003502,
+        0.003935
+      ],
+      "orientation_source": "user_corrected_review_blend",
+      "operation": "Copied edited mesh in world space, translated vertices to center X/Y and min Z=0, then reset object transform."
+    },
+    "orientation_convention": {
+      "up_axis": "+Z",
+      "forward_axis": "-Y",
+      "width_axis": "X",
+      "depth_axis": "Y",
+      "vertical_axis": "Z",
+      "basis": "Derived from the user-corrected AP-0039 braking marker: the readable sign faces are perpendicular to Y, with the primary readable face normal aligned to -Y.",
+      "forward_face_material": "Sign_Braking_100_Face",
+      "measured_forward_face_normal": [
+        0.001837,
+        -0.999997,
+        0.001498
+      ],
+      "forward_axis_error_radians": 0.002367
+    },
+    "normalized": {
+      "bbox_min_m": [
+        -0.859769,
+        -0.053126,
+        0.0
+      ],
+      "bbox_max_m": [
+        0.859769,
+        0.053126,
+        1.437962
+      ],
+      "bbox_center_m": [
+        0.0,
+        0.0,
+        0.718981
+      ],
+      "dimensions_m": [
+        1.719538,
+        0.106253,
+        1.437962
+      ],
+      "vertex_count": 72,
+      "triangle_count": 36,
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_degrees": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": [
+        "Sign_Braking_100_Face",
+        "Sign_Back_Edge_OffWhite"
+      ],
+      "material_details": [
+        {
+          "name": "Sign_Braking_100_Face",
+          "polygon_count": 4,
+          "base_color": [
+            0.8,
+            0.8,
+            0.8,
+            1.0
+          ],
+          "metallic": 0.0,
+          "roughness": 0.72
+        },
+        {
+          "name": "Sign_Back_Edge_OffWhite",
+          "polygon_count": 32,
+          "base_color": [
+            0.82,
+            0.78,
+            0.68,
+            1.0
+          ],
+          "metallic": 0.0,
+          "roughness": 0.74
+        }
+      ],
+      "material_weighted_normals": {
+        "Sign_Braking_100_Face": [
+          0.096087,
+          0.744122,
+          -0.661097
+        ],
+        "Sign_Back_Edge_OffWhite": [
+          -0.001685,
+          0.001679,
+          0.999997
+        ]
+      }
+    }
+  },
+  "export": {
+    "glb": "C:\\Monogames\\GranTurismo\\Assets\\Tracks\\AlbertParkStreetCircuit\\Extracted\\Signs\\Sign_Braking_100_A.glb",
+    "review_blend": "C:\\Monogames\\GranTurismo\\Assets\\Tracks\\AlbertParkStreetCircuit\\Review\\Sign_Braking_100_A_review.blend",
+    "report_json": "C:\\Monogames\\GranTurismo\\Assets\\Tracks\\AlbertParkStreetCircuit\\Validation\\Sign_Braking_100_A_validation.json",
+    "report_md": "C:\\Monogames\\GranTurismo\\Assets\\Tracks\\AlbertParkStreetCircuit\\Validation\\Sign_Braking_100_A_validation.md"
+  },
+  "validation": {
+    "mesh_object_count": 1,
+    "objects": [
+      {
+        "name": "Sign_Braking_100_A",
+        "mesh_name": "Sign_Braking_100_A_Mesh",
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_degrees": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "bbox_min_m": [
+          -0.859769,
+          -0.053126,
+          0.0
+        ],
+        "bbox_max_m": [
+          0.859769,
+          0.053126,
+          1.437962
+        ],
+        "bbox_center_m": [
+          0.0,
+          0.0,
+          0.718981
+        ],
+        "dimensions_m": [
+          1.719538,
+          0.106253,
+          1.437962
+        ],
+        "vertex_count": 72,
+        "triangle_count": 36,
+        "materials": [
+          "Sign_Braking_100_Face",
+          "Sign_Back_Edge_OffWhite"
+        ],
+        "material_details": [
+          {
+            "name": "Sign_Braking_100_Face",
+            "polygon_count": 4,
+            "base_color": [
+              0.8,
+              0.8,
+              0.8,
+              1.0
+            ],
+            "metallic": 0.0,
+            "roughness": 0.72
+          },
+          {
+            "name": "Sign_Back_Edge_OffWhite",
+            "polygon_count": 32,
+            "base_color": [
+              0.82,
+              0.78,
+              0.68,
+              1.0
+            ],
+            "metallic": 0.0,
+            "roughness": 0.74
+          }
+        ],
+        "forward_face_normal": [
+          0.001837,
+          -0.999997,
+          0.001498
+        ]
+      }
+    ],
+    "images": [
+      {
+        "name": "Sign_Braking_100_Texture",
+        "size": [
+          256,
+          256
+        ],
+        "packed": true
+      }
+    ],
+    "passed": true,
+    "failures": []
+  }
+}

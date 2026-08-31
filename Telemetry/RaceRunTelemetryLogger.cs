@@ -62,6 +62,13 @@ public sealed class RaceRunTelemetryLogger : IDisposable
             "previous_physics_rpm",
             "physics_tick_alpha",
             "rev_limiter_active",
+            "rev_limiter_cut_timer_s",
+            "rev_limiter_restore_timer_s",
+            "rev_limiter_torque_multiplier",
+            "rev_limiter_wheel_implied_rpm",
+            "rev_limiter_torque_rpm",
+            "rev_limiter_engine_torque_nm",
+            "rev_limiter_delivered_wheel_force_n",
             "clutch_slip_rpm",
             "speed_kph",
             "forward_speed_ms",
@@ -104,6 +111,15 @@ public sealed class RaceRunTelemetryLogger : IDisposable
             "classic_rear_follow_accel_deg_s2",
             "classic_body_slip_damping_force_n",
             "classic_cornering_cleanup_speed_retention_force_n",
+            "classic_target_long_transfer_n",
+            "classic_actual_long_transfer_n",
+            "classic_long_transfer_velocity_nps",
+            "classic_target_front_lat_transfer_n",
+            "classic_actual_front_lat_transfer_n",
+            "classic_front_lat_transfer_velocity_nps",
+            "classic_target_rear_lat_transfer_n",
+            "classic_actual_rear_lat_transfer_n",
+            "classic_rear_lat_transfer_velocity_nps",
             "engine_power_unit_active",
             "engine_power_unit_drive_torque_nm",
             "engine_power_unit_engine_drive_torque_nm",
@@ -143,6 +159,14 @@ public sealed class RaceRunTelemetryLogger : IDisposable
             "fr_slip_ratio",
             "rl_slip_ratio",
             "rr_slip_ratio",
+            "fl_brake_pressure_ratio",
+            "fr_brake_pressure_ratio",
+            "rl_brake_pressure_ratio",
+            "rr_brake_pressure_ratio",
+            "fl_brake_pressure_regulator_active",
+            "fr_brake_pressure_regulator_active",
+            "rl_brake_pressure_regulator_active",
+            "rr_brake_pressure_regulator_active",
             "fl_slip_angle_deg",
             "fr_slip_angle_deg",
             "rl_slip_angle_deg",
@@ -229,6 +253,13 @@ public sealed class RaceRunTelemetryLogger : IDisposable
         Append(vehicle.PreviousPhysicsRpm);
         Append(vehicle.PhysicsTickAlpha);
         Append(vehicle.RevLimiterActive);
+        Append(vehicle.RevLimiterCutTimerSeconds);
+        Append(vehicle.RevLimiterRestoreTimerSeconds);
+        Append(vehicle.LimiterTorqueMultiplier);
+        Append(vehicle.RevLimiterWheelImpliedRpm);
+        Append(vehicle.RevLimiterTorqueProducingRpm);
+        Append(vehicle.RevLimiterEngineTorqueNm);
+        Append(vehicle.RevLimiterDeliveredWheelForceN);
         Append(vehicle.ClutchSlipRpm);
         Append(vehicle.SpeedMetersPerSecond * 3.6f);
         Append(vehicle.SignedForwardSpeed);
@@ -271,6 +302,15 @@ public sealed class RaceRunTelemetryLogger : IDisposable
         Append(vehicle.ClassicRearFollowAccelerationDegreesPerSecondSquared);
         Append(vehicle.ClassicBodySlipDampingForceN);
         Append(vehicle.ClassicCorneringCleanupSpeedRetentionForceN);
+        Append(vehicle.ClassicTargetLongitudinalLoadTransferN);
+        Append(vehicle.ClassicActualLongitudinalLoadTransferN);
+        Append(vehicle.ClassicLongitudinalLoadTransferVelocityNPerSecond);
+        Append(vehicle.ClassicTargetFrontLateralLoadTransferN);
+        Append(vehicle.ClassicActualFrontLateralLoadTransferN);
+        Append(vehicle.ClassicFrontLateralLoadTransferVelocityNPerSecond);
+        Append(vehicle.ClassicTargetRearLateralLoadTransferN);
+        Append(vehicle.ClassicActualRearLateralLoadTransferN);
+        Append(vehicle.ClassicRearLateralLoadTransferVelocityNPerSecond);
         Append(vehicle.EnginePowerUnitActive);
         Append(vehicle.EnginePowerUnitDriveTorqueNm);
         Append(vehicle.EnginePowerUnitEngineDriveTorqueNm);
@@ -310,6 +350,14 @@ public sealed class RaceRunTelemetryLogger : IDisposable
         Append(vehicle.FrontRightSlipRatio);
         Append(vehicle.RearLeftSlipRatio);
         Append(vehicle.RearRightSlipRatio);
+        Append(vehicle.FrontLeftBrakePressureRatio);
+        Append(vehicle.FrontRightBrakePressureRatio);
+        Append(vehicle.RearLeftBrakePressureRatio);
+        Append(vehicle.RearRightBrakePressureRatio);
+        Append(vehicle.FrontLeftBrakePressureRegulatorActive);
+        Append(vehicle.FrontRightBrakePressureRegulatorActive);
+        Append(vehicle.RearLeftBrakePressureRegulatorActive);
+        Append(vehicle.RearRightBrakePressureRegulatorActive);
         Append(vehicle.FrontLeftSlipAngleDegrees);
         Append(vehicle.FrontRightSlipAngleDegrees);
         Append(vehicle.RearLeftSlipAngleDegrees);

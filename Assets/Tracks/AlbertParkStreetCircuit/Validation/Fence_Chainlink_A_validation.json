@@ -1,0 +1,186 @@
+{
+  "asset_name": "Fence_Chainlink_A",
+  "donor_roster_id": "AP-0257",
+  "source_object": "WALL_FENCES_FENCE_MELBOURNE_0",
+  "source_component": 3168,
+  "before_cleanup": {
+    "vertex_count": 4,
+    "triangle_count": 2,
+    "polygon_count": 2,
+    "edge_count": 5,
+    "connected_component_count": 1,
+    "exact_duplicate_vertex_count": 0,
+    "loose_vertex_count": 0,
+    "zero_area_face_count": 0,
+    "degenerate_edge_count": 0,
+    "duplicate_face_count": 0,
+    "bbox_min_m": [
+      -1.897423,
+      -0.075668,
+      0.0
+    ],
+    "bbox_max_m": [
+      1.897423,
+      0.075668,
+      2.729093
+    ],
+    "bbox_center_m": [
+      0.0,
+      0.0,
+      1.364546
+    ],
+    "dimensions_m": [
+      3.794846,
+      0.151337,
+      2.729093
+    ],
+    "location": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "rotation_degrees": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "materials": [
+      "Fence_Chainlink_DarkGrey_Alpha"
+    ],
+    "material_slots": 1
+  },
+  "after_cleanup": {
+    "vertex_count": 4,
+    "triangle_count": 2,
+    "polygon_count": 2,
+    "edge_count": 5,
+    "connected_component_count": 1,
+    "exact_duplicate_vertex_count": 0,
+    "loose_vertex_count": 0,
+    "zero_area_face_count": 0,
+    "degenerate_edge_count": 0,
+    "duplicate_face_count": 0,
+    "bbox_min_m": [
+      -1.897423,
+      -0.075668,
+      0.0
+    ],
+    "bbox_max_m": [
+      1.897423,
+      0.075668,
+      2.729093
+    ],
+    "bbox_center_m": [
+      0.0,
+      0.0,
+      1.364546
+    ],
+    "dimensions_m": [
+      3.794846,
+      0.151337,
+      2.729093
+    ],
+    "location": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "rotation_degrees": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "materials": [
+      "Fence_Chainlink_DarkGrey_Alpha"
+    ],
+    "material_slots": 1
+  },
+  "export": {
+    "glb": "C:\\Monogames\\GranTurismo\\Assets\\Tracks\\AlbertParkStreetCircuit\\Extracted\\Fences\\Fence_Chainlink_A.glb",
+    "review_blend": "C:\\Monogames\\GranTurismo\\Assets\\Tracks\\AlbertParkStreetCircuit\\Review\\Fence_Chainlink_A_review.blend",
+    "report_json": "C:\\Monogames\\GranTurismo\\Assets\\Tracks\\AlbertParkStreetCircuit\\Validation\\Fence_Chainlink_A_validation.json",
+    "report_md": "C:\\Monogames\\GranTurismo\\Assets\\Tracks\\AlbertParkStreetCircuit\\Validation\\Fence_Chainlink_A_validation.md"
+  },
+  "validation": {
+    "mesh_object_count": 1,
+    "objects": [
+      {
+        "vertex_count": 4,
+        "triangle_count": 2,
+        "polygon_count": 2,
+        "edge_count": 5,
+        "connected_component_count": 1,
+        "exact_duplicate_vertex_count": 0,
+        "loose_vertex_count": 0,
+        "zero_area_face_count": 0,
+        "degenerate_edge_count": 0,
+        "duplicate_face_count": 0,
+        "bbox_min_m": [
+          -1.897423,
+          -0.075668,
+          0.0
+        ],
+        "bbox_max_m": [
+          1.897423,
+          0.075668,
+          2.729093
+        ],
+        "bbox_center_m": [
+          0.0,
+          0.0,
+          1.364546
+        ],
+        "dimensions_m": [
+          3.794846,
+          0.151337,
+          2.729093
+        ],
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_degrees": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "materials": [
+          "Fence_Chainlink_DarkGrey_Alpha"
+        ],
+        "material_slots": 1
+      }
+    ],
+    "passed": true,
+    "failures": []
+  },
+  "material_handling": {
+    "source_material_replaced": "FENCE_MELBOURNE",
+    "standalone_material": "Fence_Chainlink_DarkGrey_Alpha",
+    "texture": "Packed generated 256x256 alpha diamond-link texture embedded in blend/GLB.",
+    "double_sided": true,
+    "metallic": 0.0,
+    "roughness": 0.82
+  },
+  "notes": [
+    "Full AP-0257 object was not exported.",
+    "Neighbouring panels and unrelated fragments excluded.",
+    "Coplanar duplicate panel copy excluded; double-sided material used instead.",
+    "No integrated posts/supports were found in selected representative component."
+  ]
+}

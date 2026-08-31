@@ -354,6 +354,8 @@ public sealed class ClassicBicycleParameters
 
     public ClassicBicycleGripBudgetParameters GripBudget { get; set; } = new();
 
+    public ClassicChassisLoadTransferParameters ChassisLoadTransfer { get; set; } = new();
+
     public ClassicBicycleLowSpeedParameters LowSpeed { get; set; } = new();
 
     public ClassicBicycleResistanceParameters Resistance { get; set; } = new();
@@ -372,6 +374,36 @@ public sealed class ClassicBicycleSteeringParameters
     public float SteerSpeedDegreesPerSecond { get; set; } = 170.0f;
 
     public float ReturnSpeedDegreesPerSecond { get; set; } = 230.0f;
+
+    public float PhysicalEnvelopeBlendStartKmh { get; set; } = 40.0f;
+
+    public float PhysicalEnvelopeFullKmh { get; set; } = 95.0f;
+
+    public float NormalLateralAccelerationG { get; set; } = 1.15f;
+
+    public float OverdriveLateralAccelerationG { get; set; } = 1.40f;
+
+    public float NormalCommand { get; set; } = 0.75f;
+
+    public float MinimumHighSpeedAngleDegrees { get; set; } = 0.35f;
+
+    public float NormalPeakSlipFraction { get; set; } = 0.08f;
+
+    public float OverdrivePeakSlipFraction { get; set; } = 0.30f;
+
+    public float TransientPeakSlipFraction { get; set; } = 0.32f;
+
+    public float TransientBoostSeconds { get; set; } = 0.42f;
+
+    public float DigitalInitialCommandRatePerSecond { get; set; } = 5.2f;
+
+    public float DigitalSustainedCommandRatePerSecond { get; set; } = 7.8f;
+
+    public float DigitalRiseAccelerationSeconds { get; set; } = 0.14f;
+
+    public float DigitalReleaseCommandRatePerSecond { get; set; } = 8.0f;
+
+    public float DigitalCounterSteerRateMultiplier { get; set; } = 3.0f;
 }
 
 public sealed class ClassicBicycleTyreParameters
@@ -385,6 +417,12 @@ public sealed class ClassicBicycleTyreParameters
     public float MaxGrip { get; set; } = 1.06f;
 
     public float SlidingGrip { get; set; } = 0.80f;
+
+    public float LoadSensitivity { get; set; } = 0f;
+
+    public float ReferenceLoadN { get; set; } = 0f;
+
+    public float RelaxationLengthMeters { get; set; } = 0f;
 }
 
 public sealed class ClassicBicycleYawParameters
@@ -399,11 +437,76 @@ public sealed class ClassicBicycleYawParameters
 public sealed class ClassicBicycleGripBudgetParameters
 {
     public float CombinedGripExponent { get; set; } = 2.0f;
+
+    public float BrakingSteeringLateralPriority { get; set; } = 0.35f;
+
+    public float BrakingSteeringPrioritySteerStart { get; set; } = 0.20f;
+
+    public float BrakingSteeringPrioritySteerEnd { get; set; } = 0.85f;
+
+    public float BrakingSteeringPriorityBrakeStart { get; set; } = 0.35f;
+
+    public float BrakingSteeringPriorityBrakeEnd { get; set; } = 1.0f;
+
+    public float BrakingSteeringFrontBrakeMultiplier { get; set; } = 0.88f;
+
+    public float BrakingSteeringRearBrakeMultiplier { get; set; } = 0.42f;
+
+    public float BrakePressureFrontTargetGripUsage { get; set; } = 0.94f;
+
+    public float BrakePressureRearTargetGripUsage { get; set; } = 0.82f;
+
+    public float BrakePressureApplyRatePerSecond { get; set; } = 14f;
+
+    public float BrakePressureReleaseRatePerSecond { get; set; } = 38f;
+
+    public float BrakePressureMinimumRatio { get; set; } = 0.10f;
+
+    public float BrakePressureMinimumSpeedMetersPerSecond { get; set; } = 2.0f;
+}
+
+public sealed class ClassicChassisLoadTransferParameters
+{
+    public bool Enabled { get; set; } = true;
+
+    public float LongitudinalNaturalFrequencyHz { get; set; } = 5.5f;
+
+    public float LongitudinalDampingRatio { get; set; } = 0.72f;
+
+    public float LateralNaturalFrequencyHz { get; set; } = 4.2f;
+
+    public float LateralDampingRatio { get; set; } = 0.70f;
 }
 
 public sealed class ClassicBicycleLowSpeedParameters
 {
     public float SlipSpeedFloorMetersPerSecond { get; set; } = 3.0f;
+
+    public float RollingDominantEndMetersPerSecond { get; set; } = 5.0f / 3.6f;
+
+    public float DynamicBlendEndMetersPerSecond { get; set; } = 10.0f / 3.6f;
+
+    public float RollingDominantMaximumLateralScale { get; set; } = 0.02f;
+
+    public float RollingDominantRearLateralScale { get; set; } = 0.55f;
+
+    public float RollingConstraintLateralSpeedMetersPerSecond { get; set; } = 0.75f;
+
+    public float RollingConstraintGripFraction { get; set; } = 0.80f;
+
+    public float KinematicYawBlend { get; set; } = 0f;
+
+    public float KinematicBlendEndSpeedMetersPerSecond { get; set; } = 2.5f;
+
+    public float KinematicYawAccelerationLimitDegreesPerSecondSquared { get; set; } = 45f;
+
+    public bool SlipRateLimitEnabled { get; set; }
+
+    public float MaxSlipRateDegreesPerSecond { get; set; } = 120f;
+
+    public float SlipRateLimitFadeStartMetersPerSecond { get; set; } = 2.0f;
+
+    public float SlipRateLimitFadeEndMetersPerSecond { get; set; } = 5.0f;
 }
 
 public sealed class ClassicBicycleResistanceParameters

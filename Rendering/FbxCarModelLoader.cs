@@ -9,8 +9,10 @@ internal static class FbxCarModelLoader
 {
     private const string MeshCacheExtension = ".rtmesh";
     private const string MeshCacheMagic = "RTRMESH";
-    private const int MeshCacheVersion = 12;
+    private const int MeshCacheVersion = 14;
     private const float TargetBodyLengthMeters = 4.185f;
+    private const float TargetWheelbaseMeters = 2.620f;
+    private const float TargetFrontWeightDistribution = 0.620f;
     private const float MinimumUsableExtentMeters = 0.001f;
 
     private static readonly HashSet<string> SupportedTextureExtensions = new(StringComparer.OrdinalIgnoreCase)
@@ -811,6 +813,73 @@ internal static class FbxCarModelLoader
                 mesh.Vertices[i] = vertex;
             }
         }
+
+        AlignVisualAxlesToPhysicsOrigin(meshes);
+    }
+
+    private static void AlignVisualAxlesToPhysicsOrigin(IReadOnlyList<ImportedMesh> meshes)
+    {
+        if (!TryCalculateNamedWheelAxleCenterZ(meshes, frontAxle: true, out float frontAxleZ) ||
+            !TryCalculateNamedWheelAxleCenterZ(meshes, frontAxle: false, out float rearAxleZ))
+        {
+            return;
+        }
+
+        float visualAxleMidpointZ = (frontAxleZ + rearAxleZ) * 0.5f;
+        float targetFrontAxleZ = TargetWheelbaseMeters * (1f - TargetFrontWeightDistribution);
+        float targetRearAxleZ = -TargetWheelbaseMeters * TargetFrontWeightDistribution;
+        float targetAxleMidpointZ = (targetFrontAxleZ + targetRearAxleZ) * 0.5f;
+        float correctionZ = targetAxleMidpointZ - visualAxleMidpointZ;
+        if (MathF.Abs(correctionZ) <= 0.001f)
+        {
+            return;
+        }
+
+        Vector3 correction = new(0f, 0f, correctionZ);
+        foreach (ImportedMesh mesh in meshes)
+        {
+            for (int i = 0; i < mesh.Vertices.Length; i++)
+            {
+                VertexPositionNormalTexture vertex = mesh.Vertices[i];
+                vertex.Position += correction;
+                mesh.Vertices[i] = vertex;
+            }
+        }
+    }
+
+    private static bool TryCalculateNamedWheelAxleCenterZ(
+        IReadOnlyList<ImportedMesh> meshes,
+        bool frontAxle,
+        out float centerZ)
+    {
+        float minZ = float.PositiveInfinity;
+        float maxZ = float.NegativeInfinity;
+        bool found = false;
+        foreach (ImportedMesh mesh in meshes)
+        {
+            if (!IsNamedWheelForAxle(mesh.Name, frontAxle))
+            {
+                continue;
+            }
+
+            foreach (VertexPositionNormalTexture vertex in mesh.Vertices)
+            {
+                minZ = MathF.Min(minZ, vertex.Position.Z);
+                maxZ = MathF.Max(maxZ, vertex.Position.Z);
+                found = true;
+            }
+        }
+
+        centerZ = found ? (minZ + maxZ) * 0.5f : 0f;
+        return found;
+    }
+
+    private static bool IsNamedWheelForAxle(string name, bool frontAxle)
+    {
+        string normalized = NormalizeMaterialName(name);
+        return frontAxle
+            ? ContainsAny(normalized, "lf tyre", "fr tyre", "lf tire", "fr tire", "lf rim", "fr rim", "front tyre", "front tire", "front wheel")
+            : ContainsAny(normalized, "lr tyre", "rr tyre", "lr tire", "rr tire", "lr rim", "rr rim", "rear tyre", "rear tire", "rear wheel");
     }
 
     private static float CalculateFitScale(MeshBounds bounds)

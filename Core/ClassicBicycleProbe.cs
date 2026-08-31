@@ -44,7 +44,7 @@ public static class ClassicBicycleProbe
         Console.WriteLine(
             $"  sign: rightInput latAccel={state.LateralAcceleration:0.00}m/s2 yaw={MathHelper.ToDegrees(state.YawRateRadiansPerSecond):0.00}deg/s headingDelta={MathHelper.ToDegrees(state.HeadingRadians - startHeading):0.00}deg");
         Require(state.LateralAcceleration > 0.05f, "right steering must generate rightward lateral acceleration");
-        Require(state.YawRateRadiansPerSecond < -0.01f, "right steering must generate rightward yaw in the existing world/render convention");
+        Require(state.YawRateRadiansPerSecond > 0.01f, "right steering must generate rightward positive yaw in the game +X convention");
         RequireFinite(state);
     }
 

@@ -83,14 +83,14 @@ public sealed class SceneRenderer : IDisposable
             {
                 _vehicleEffect.ConfigureFrame(camera.View, camera.Projection, camera.Position);
                 DrawCarMeshes(_carModel.BodyMeshes, bodyWorld, drawTransparent: false, _vehicleEffect, drawTransparentWithShader: false);
-                DrawCarMeshes(_carModel.WheelMeshes, wheelWorld, drawTransparent: false, _vehicleEffect, drawTransparentWithShader: false);
+                DrawWheelMeshes(_carModel.WheelMeshes, wheelWorld, vehicle, drawTransparent: false, _vehicleEffect, drawTransparentWithShader: false);
             }
             else
             {
                 ConfigureCarLighting();
                 ConfigureLitEffect();
                 DrawCarMeshes(_carModel.BodyMeshes, bodyWorld, drawTransparent: false);
-                DrawCarMeshes(_carModel.WheelMeshes, wheelWorld, drawTransparent: false);
+                DrawWheelMeshes(_carModel.WheelMeshes, wheelWorld, vehicle, drawTransparent: false);
             }
 
             _graphicsDevice.BlendState = BlendState.NonPremultiplied;
@@ -100,14 +100,14 @@ public sealed class SceneRenderer : IDisposable
             {
                 _vehicleEffect.ConfigureFrame(camera.View, camera.Projection, camera.Position);
                 DrawCarMeshes(_carModel.BodyMeshes, bodyWorld, drawTransparent: true, _vehicleEffect, drawTransparentWithShader: true);
-                DrawCarMeshes(_carModel.WheelMeshes, wheelWorld, drawTransparent: true, _vehicleEffect, drawTransparentWithShader: true);
+                DrawWheelMeshes(_carModel.WheelMeshes, wheelWorld, vehicle, drawTransparent: true, _vehicleEffect, drawTransparentWithShader: true);
             }
             else
             {
                 ConfigureCarLighting();
                 ConfigureLitEffect();
                 DrawCarMeshes(_carModel.BodyMeshes, bodyWorld, drawTransparent: true);
-                DrawCarMeshes(_carModel.WheelMeshes, wheelWorld, drawTransparent: true);
+                DrawWheelMeshes(_carModel.WheelMeshes, wheelWorld, vehicle, drawTransparent: true);
             }
         }
     }
@@ -177,6 +177,19 @@ public sealed class SceneRenderer : IDisposable
         }
     }
 
+    private void DrawWheelMeshes(IEnumerable<StaticMesh> meshes, Matrix world, VehicleState vehicle, bool drawTransparent)
+    {
+        foreach (StaticMesh mesh in meshes)
+        {
+            if (mesh.IsTransparent != drawTransparent)
+            {
+                continue;
+            }
+
+            mesh.Draw(_graphicsDevice, _effect, CreateWheelMeshWorld(mesh, world, vehicle));
+        }
+    }
+
     private static void DrawCarMeshes(
         IEnumerable<StaticMesh> meshes,
         Matrix world,
@@ -200,6 +213,52 @@ public sealed class SceneRenderer : IDisposable
                 effect.DrawOpaqueMesh(mesh, world);
             }
         }
+    }
+
+    private static void DrawWheelMeshes(
+        IEnumerable<StaticMesh> meshes,
+        Matrix world,
+        VehicleState vehicle,
+        bool drawTransparent,
+        VehicleRenderEffect effect,
+        bool drawTransparentWithShader)
+    {
+        foreach (StaticMesh mesh in meshes)
+        {
+            if (mesh.IsTransparent != drawTransparent)
+            {
+                continue;
+            }
+
+            Matrix wheelMeshWorld = CreateWheelMeshWorld(mesh, world, vehicle);
+            if (drawTransparentWithShader)
+            {
+                effect.DrawTransparentMesh(mesh, wheelMeshWorld);
+            }
+            else
+            {
+                effect.DrawOpaqueMesh(mesh, wheelMeshWorld);
+            }
+        }
+    }
+
+    private static Matrix CreateWheelMeshWorld(StaticMesh mesh, Matrix wheelWorld, VehicleState vehicle)
+    {
+        if (mesh.WheelCorner == WheelCorner.None)
+        {
+            return wheelWorld;
+        }
+
+        float steerDegrees = mesh.WheelCorner switch
+        {
+            WheelCorner.FrontLeft => vehicle.FrontLeftSteerAngleDegrees,
+            WheelCorner.FrontRight => vehicle.FrontRightSteerAngleDegrees,
+            _ => 0f
+        };
+
+        return Matrix.CreateRotationY(MathHelper.ToRadians(steerDegrees)) *
+               Matrix.CreateTranslation(mesh.LocalPivot) *
+               wheelWorld;
     }
 
     private static Matrix CreateBodyWorld(VehicleState vehicle)

@@ -106,9 +106,9 @@ internal static class EngineAssemblyResolver
             LimiterHardCutRpm = ReadSingle(engineCatalog, 8400f, "limiterRpm"),
             LimiterResumeRpm = MathF.Max(0f, ReadSingle(engineCatalog, 0f, "limiterResumeRpm")),
             MaxGaugeRpm = ReadSingle(engineCatalog, 0f, "maxGaugeRpm"),
-            LimiterFuelCutSeconds = 0.34f,
-            LimiterRestoreSeconds = 0.41f,
-            LimiterCutTorqueMultiplier = 0f,
+            LimiterFuelCutSeconds = 0.040f,
+            LimiterRestoreSeconds = 0.025f,
+            LimiterCutTorqueMultiplier = 0.16f,
             RotationalInertiaKgM2 = ReadSingle(block, 0.22f, "rotationalInertiaKgM2"),
             BaseRotationalInertiaKgM2 = ReadSingle(block, 0.22f, "rotationalInertiaKgM2"),
             VtecEnabled = (ReadBoolean(engineCatalog, false, "vtec") ||

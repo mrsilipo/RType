@@ -42,6 +42,282 @@ if (args.Any(arg => arg.Equals("--steering-authority-probe", StringComparison.Or
     return;
 }
 
+if (args.Any(arg => arg.Equals("--cornering-speed-loss-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    CorneringSpeedLossProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-slip-gap-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicSlipGapProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-kinematic-audit-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicKinematicAuditProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-assist-matrix-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicAssistMatrixProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-base-force-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicBaseForceProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-corner-causal-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicCornerCausalProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-yaw-moment-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicYawMomentProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-yaw-damping-experiment-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicYawDampingExperimentProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-body-dynamics-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicBodyDynamicsProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-tyre-response-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicTyreResponseProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-steering-path-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicSteeringPathProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-equilibrium-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicEquilibriumProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-equilibrium-matrix-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicEquilibriumMatrixProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-lateral-balance-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicLateralBalanceProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-slip-kinematics-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicSlipKinematicsProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-transient-force-balance-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicTransientForceBalanceProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-steering-envelope-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicSteeringEnvelopeProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-steering-architecture-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicSteeringArchitectureProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-steering-envelope-matrix-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicSteeringEnvelopeMatrixProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-turn-radius-budget-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicTurnRadiusBudgetProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-ek9-ad09-validation-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicEk9Ad09ValidationProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-digital-steering-feel-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicDigitalSteeringFeelProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-brake-turn-authority-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicBrakeTurnAuthorityProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-trail-brake-dynamics-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicTrailBrakeDynamicsProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-transient-load-transfer-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicTransientLoadTransferProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-roll-stiffness-transfer-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicRollStiffnessTransferProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-suspension-state-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicSuspensionStateProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-low-speed-caster-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicLowSpeedCasterProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-zero-crawl-force-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicZeroCrawlForceProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-low-speed-handoff-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicLowSpeedHandoffProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-steering-unwind-continuity-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicSteeringUnwindContinuityProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-low-speed-drive-side-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicLowSpeedDriveSideProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-forklift-invariant-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicForkliftInvariantProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-rpm-speedo-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicRpmSpeedoProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-limiter-state-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicLimiterStateProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-tyre-load-front-axle-audit-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicTyreLoadFrontAxleAuditProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-front-brake-combined-grip-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicFrontBrakeCombinedGripProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-brake-turn-steering-state-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicBrakeTurnSteeringStateProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-brake-turn-yaw-beta-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicBrakeTurnYawBetaProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-base-turn-in-equilibrium-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicBaseTurnInEquilibriumProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-steering-command-equilibrium-sweep", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicSteeringCommandEquilibriumSweep.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-turn-normalized-steady-state-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicTurnNormalizedSteadyStateProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-top-end-steering-mapping-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicTopEndSteeringMappingProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-axle-authority-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicAxleAuthorityProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-front-yaw-authority-audit-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicFrontYawAuthorityAuditProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-tyre-relaxation-architecture-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicTyreRelaxationArchitectureProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
 if (args.Any(arg => arg.Equals("--surface-probe", StringComparison.OrdinalIgnoreCase)))
 {
     SurfaceProbe.Run(GameLaunchOptions.FromArgs(args));

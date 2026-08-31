@@ -1,0 +1,2783 @@
+{
+  "source_glb": "C:\\Monogames\\GranTurismo\\Assets\\Tracks\\AlbertParkStreetCircuit\\Original GLB\\Albert Park Street Circuit.glb",
+  "walls": [
+    {
+      "roster_id": "AP-0230",
+      "source_object": "wall_a064_MELBOURNE_0",
+      "proposed_cleaned_name": "Barrier_Wall_A",
+      "evaluated_dimensions_m": [
+        6.586143,
+        15.264877,
+        4.627832
+      ],
+      "oriented_dimensions_m": {
+        "length_m": 16.007256,
+        "depth_m": 1.066418,
+        "height_m": 4.627832,
+        "major_min": -126.314045,
+        "major_max": -110.306789,
+        "minor_min": -165.98344,
+        "minor_max": -164.917023,
+        "z_min": -1.626314,
+        "z_max": 3.001518
+      },
+      "horizontal_major_axis_world_xy": [
+        0.350731,
+        0.936476
+      ],
+      "horizontal_minor_axis_world_xy": [
+        -0.936476,
+        0.350731
+      ],
+      "major_axis_angle_degrees": 69.468,
+      "vertex_count": 612,
+      "triangle_count": 344,
+      "connected_component_count": 134,
+      "material_slots": [
+        "MELBOURNE"
+      ],
+      "material_images": [
+        {
+          "name": "MELBOURNE",
+          "size": [
+            4096,
+            4096
+          ]
+        },
+        {
+          "name": "MELBOURNE_NORMAL",
+          "size": [
+            4096,
+            4096
+          ]
+        }
+      ],
+      "component_classification_counts": {
+        "concrete wall/barrier run": 12,
+        "small cap/detail": 106,
+        "thin vertical post/support/fence element": 16
+      },
+      "largest_components": [
+        {
+          "component_index": 12,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            1.43602,
+            3.763672,
+            1.286375
+          ],
+          "bbox_center_m": [
+            115.599426,
+            -163.222946,
+            -0.983127
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.0065,
+            "depth_m": 0.034664,
+            "height_m": 1.286375,
+            "major_min": -114.313324,
+            "major_max": -110.306824,
+            "minor_min": -165.520821,
+            "minor_max": -165.486156,
+            "z_min": -1.626314,
+            "z_max": -0.339939
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 36,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            1.43602,
+            3.763672,
+            1.286375
+          ],
+          "bbox_center_m": [
+            111.388504,
+            -174.460632,
+            -0.96115
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.006485,
+            "depth_m": 0.034664,
+            "height_m": 1.286375,
+            "major_min": -126.314045,
+            "major_max": -122.30756,
+            "minor_min": -165.518795,
+            "minor_max": -165.484131,
+            "z_min": -1.604338,
+            "z_max": -0.317963
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 37,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            1.707909,
+            3.861099,
+            1.00582
+          ],
+          "bbox_center_m": [
+            110.99411,
+            -174.312561,
+            -0.819608
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.005939,
+            "depth_m": 0.323444,
+            "height_m": 1.00582,
+            "major_min": -126.313435,
+            "major_max": -122.307495,
+            "minor_min": -165.24192,
+            "minor_max": -164.918476,
+            "z_min": -1.322518,
+            "z_max": -0.316698
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 13,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            1.707909,
+            3.861099,
+            1.00582
+          ],
+          "bbox_center_m": [
+            115.205032,
+            -163.07489,
+            -0.841585
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.005924,
+            "depth_m": 0.323452,
+            "height_m": 1.00582,
+            "major_min": -114.312714,
+            "major_max": -110.306789,
+            "minor_min": -165.24395,
+            "minor_max": -164.920498,
+            "z_min": -1.344495,
+            "z_max": -0.338675
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 126,
+          "vertex_count": 4,
+          "polygon_count": 2,
+          "triangle_count": 2,
+          "bbox_dimensions_m": [
+            1.632446,
+            3.834778,
+            0.008597
+          ],
+          "bbox_center_m": [
+            111.259285,
+            -174.41095,
+            -0.320997
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.0042,
+            "depth_m": 0.243553,
+            "height_m": 0.008597,
+            "major_min": -126.311695,
+            "major_max": -122.307495,
+            "minor_min": -165.484806,
+            "minor_max": -165.241253,
+            "z_min": -0.325295,
+            "z_max": -0.316698
+          },
+          "materials": {
+            "MELBOURNE": 2
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 82,
+          "vertex_count": 4,
+          "polygon_count": 2,
+          "triangle_count": 2,
+          "bbox_dimensions_m": [
+            1.632446,
+            3.834778,
+            0.008597
+          ],
+          "bbox_center_m": [
+            115.470207,
+            -163.173279,
+            -0.342973
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.004185,
+            "depth_m": 0.243549,
+            "height_m": 0.008597,
+            "major_min": -114.310974,
+            "major_max": -110.306789,
+            "minor_min": -165.486828,
+            "minor_max": -165.243279,
+            "z_min": -0.347272,
+            "z_max": -0.338675
+          },
+          "materials": {
+            "MELBOURNE": 2
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 0,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            1.433968,
+            3.758179,
+            1.286364
+          ],
+          "bbox_center_m": [
+            114.19545,
+            -166.969757,
+            -0.9758
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.000637,
+            "depth_m": 0.034672,
+            "height_m": 1.286364,
+            "major_min": -118.311611,
+            "major_max": -114.310974,
+            "minor_min": -165.520153,
+            "minor_max": -165.485481,
+            "z_min": -1.618982,
+            "z_max": -0.332617
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 24,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            1.433968,
+            3.758179,
+            1.286364
+          ],
+          "bbox_center_m": [
+            112.792496,
+            -170.713821,
+            -0.968477
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.000626,
+            "depth_m": 0.034672,
+            "height_m": 1.286364,
+            "major_min": -122.309898,
+            "major_max": -118.309273,
+            "minor_min": -165.519478,
+            "minor_max": -165.484806,
+            "z_min": -1.61166,
+            "z_max": -0.325295
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 1,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            1.705856,
+            3.855606,
+            1.005809
+          ],
+          "bbox_center_m": [
+            113.801056,
+            -166.821686,
+            -0.834257
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.000076,
+            "depth_m": 0.323456,
+            "height_m": 1.005809,
+            "major_min": -118.310997,
+            "major_max": -114.310921,
+            "minor_min": -165.243279,
+            "minor_max": -164.919823,
+            "z_min": -1.337162,
+            "z_max": -0.331353
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 25,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            1.705856,
+            3.855606,
+            1.005809
+          ],
+          "bbox_center_m": [
+            112.398102,
+            -170.565765,
+            -0.826935
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.000076,
+            "depth_m": 0.323456,
+            "height_m": 1.005809,
+            "major_min": -122.309284,
+            "major_max": -118.309208,
+            "minor_min": -165.242603,
+            "minor_max": -164.919147,
+            "z_min": -1.32984,
+            "z_max": -0.324031
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        }
+      ],
+      "geometry_appears_repeated_internally": true,
+      "approx_smallest_repeated_wall_unit_m": {
+        "detectable": true,
+        "common_component_lengths_m": [
+          [
+            4.01,
+            4
+          ],
+          [
+            4.0,
+            4
+          ]
+        ],
+        "smallest_large_component_length_m": 4.0,
+        "note": "Repeated lengths are based on disconnected large components; continuous extruded runs may still need manual slicing."
+      },
+      "fencing_posts_or_other_geometry_included": true,
+      "suitability": "longer modular assembly / candidate for slicing"
+    },
+    {
+      "roster_id": "AP-0231",
+      "source_object": "wall_a067_MELBOURNE_0",
+      "proposed_cleaned_name": "Barrier_Wall_02",
+      "evaluated_dimensions_m": [
+        7.768547,
+        10.308748,
+        4.632346
+      ],
+      "oriented_dimensions_m": {
+        "length_m": 12.004683,
+        "depth_m": 1.055302,
+        "height_m": 4.632346,
+        "major_min": -51.848618,
+        "major_max": -39.843935,
+        "minor_min": 94.314102,
+        "minor_max": 95.369404,
+        "z_min": -0.877124,
+        "z_max": 3.755222
+      },
+      "horizontal_major_axis_world_xy": [
+        0.5823,
+        0.812974
+      ],
+      "horizontal_minor_axis_world_xy": [
+        -0.812974,
+        0.5823
+      ],
+      "major_axis_angle_degrees": 54.387,
+      "vertex_count": 468,
+      "triangle_count": 258,
+      "connected_component_count": 105,
+      "material_slots": [
+        "MELBOURNE"
+      ],
+      "material_images": [
+        {
+          "name": "MELBOURNE",
+          "size": [
+            4096,
+            4096
+          ]
+        },
+        {
+          "name": "MELBOURNE_NORMAL",
+          "size": [
+            4096,
+            4096
+          ]
+        }
+      ],
+      "component_classification_counts": {
+        "concrete wall/barrier run": 9,
+        "small cap/detail": 84,
+        "thin vertical post/support/fence element": 12
+      },
+      "largest_components": [
+        {
+          "component_index": 12,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            2.362572,
+            3.278578,
+            1.290275
+          ],
+          "bbox_center_m": [
+            -101.426559,
+            21.172737,
+            -0.211428
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.007829,
+            "depth_m": 0.045211,
+            "height_m": 1.290275,
+            "major_min": -43.851764,
+            "major_max": -39.843935,
+            "minor_min": 94.763411,
+            "minor_max": 94.808621,
+            "z_min": -0.856565,
+            "z_max": 0.43371
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 13,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            2.584595,
+            3.445179,
+            1.011492
+          ],
+          "bbox_center_m": [
+            -101.770134,
+            21.417702,
+            -0.071975
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.006601,
+            "depth_m": 0.322719,
+            "height_m": 1.011492,
+            "major_min": -43.852062,
+            "major_max": -39.845461,
+            "minor_min": 95.046613,
+            "minor_max": 95.369331,
+            "z_min": -0.577721,
+            "z_max": 0.433771
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 72,
+          "vertex_count": 4,
+          "polygon_count": 2,
+          "triangle_count": 2,
+          "bbox_dimensions_m": [
+            2.525269,
+            3.399292,
+            0.011481
+          ],
+          "bbox_center_m": [
+            -101.542839,
+            21.253569,
+            0.42803
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.004431,
+            "depth_m": 0.247773,
+            "height_m": 0.011481,
+            "major_min": -43.852062,
+            "major_max": -39.847631,
+            "minor_min": 94.80373,
+            "minor_max": 95.051503,
+            "z_min": 0.42229,
+            "z_max": 0.433771
+          },
+          "materials": {
+            "MELBOURNE": 2
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 24,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            2.359169,
+            3.273813,
+            1.288011
+          ],
+          "bbox_center_m": [
+            -106.076721,
+            14.663686,
+            -0.233119
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.001974,
+            "depth_m": 0.045206,
+            "height_m": 1.288011,
+            "major_min": -51.848319,
+            "major_max": -47.846345,
+            "minor_min": 94.753651,
+            "minor_max": 94.798857,
+            "z_min": -0.877124,
+            "z_max": 0.410886
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 0,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            2.359169,
+            3.273808,
+            1.290258
+          ],
+          "bbox_center_m": [
+            -103.752487,
+            17.917019,
+            -0.222839
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.001971,
+            "depth_m": 0.045195,
+            "height_m": 1.290258,
+            "major_min": -47.850041,
+            "major_max": -43.84807,
+            "minor_min": 94.758535,
+            "minor_max": 94.80373,
+            "z_min": -0.867969,
+            "z_max": 0.42229
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 25,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            2.581192,
+            3.440413,
+            1.009227
+          ],
+          "bbox_center_m": [
+            -106.420303,
+            14.908651,
+            -0.093666
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.000747,
+            "depth_m": 0.322713,
+            "height_m": 1.009227,
+            "major_min": -51.848618,
+            "major_max": -47.847871,
+            "minor_min": 95.03686,
+            "minor_max": 95.359573,
+            "z_min": -0.59828,
+            "z_max": 0.410947
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 1,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            2.581184,
+            3.440409,
+            1.011475
+          ],
+          "bbox_center_m": [
+            -104.096069,
+            18.161987,
+            -0.083387
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.000735,
+            "depth_m": 0.32271,
+            "height_m": 1.011475,
+            "major_min": -47.850335,
+            "major_max": -43.8496,
+            "minor_min": 95.041739,
+            "minor_max": 95.364449,
+            "z_min": -0.589124,
+            "z_max": 0.422351
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 95,
+          "vertex_count": 4,
+          "polygon_count": 2,
+          "triangle_count": 2,
+          "bbox_dimensions_m": [
+            2.521866,
+            3.394526,
+            0.009217
+          ],
+          "bbox_center_m": [
+            -106.193008,
+            14.744518,
+            0.406339
+          ],
+          "oriented_extents_m": {
+            "length_m": 3.998576,
+            "depth_m": 0.24776,
+            "height_m": 0.009217,
+            "major_min": -51.848618,
+            "major_max": -47.850041,
+            "minor_min": 94.793979,
+            "minor_max": 95.041739,
+            "z_min": 0.401731,
+            "z_max": 0.410947
+          },
+          "materials": {
+            "MELBOURNE": 2
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 50,
+          "vertex_count": 4,
+          "polygon_count": 2,
+          "triangle_count": 2,
+          "bbox_dimensions_m": [
+            2.521866,
+            3.39452,
+            0.011464
+          ],
+          "bbox_center_m": [
+            -103.868774,
+            17.997852,
+            0.416618
+          ],
+          "oriented_extents_m": {
+            "length_m": 3.998571,
+            "depth_m": 0.247756,
+            "height_m": 0.011464,
+            "major_min": -47.850335,
+            "major_max": -43.851764,
+            "minor_min": 94.798857,
+            "minor_max": 95.046613,
+            "z_min": 0.410886,
+            "z_max": 0.422351
+          },
+          "materials": {
+            "MELBOURNE": 2
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 56,
+          "vertex_count": 4,
+          "polygon_count": 2,
+          "triangle_count": 2,
+          "bbox_dimensions_m": [
+            0.99894,
+            1.39838,
+            0.283593
+          ],
+          "bbox_center_m": [
+            -104.222641,
+            18.258253,
+            -0.722761
+          ],
+          "oriented_extents_m": {
+            "length_m": 1.718531,
+            "depth_m": 0.002167,
+            "height_m": 0.283593,
+            "major_min": -46.704673,
+            "major_max": -44.986142,
+            "minor_min": 95.360964,
+            "minor_max": 95.363131,
+            "z_min": -0.864558,
+            "z_max": -0.580965
+          },
+          "materials": {
+            "MELBOURNE": 2
+          },
+          "classification_hint": "small cap/detail"
+        }
+      ],
+      "geometry_appears_repeated_internally": true,
+      "approx_smallest_repeated_wall_unit_m": {
+        "detectable": true,
+        "common_component_lengths_m": [
+          [
+            4.0,
+            4
+          ],
+          [
+            4.01,
+            2
+          ]
+        ],
+        "smallest_large_component_length_m": 4.0,
+        "note": "Repeated lengths are based on disconnected large components; continuous extruded runs may still need manual slicing."
+      },
+      "fencing_posts_or_other_geometry_included": true,
+      "suitability": "longer modular assembly / candidate for slicing"
+    },
+    {
+      "roster_id": "AP-0232",
+      "source_object": "wall_a070_MELBOURNE_0",
+      "proposed_cleaned_name": "Barrier_Wall_03",
+      "evaluated_dimensions_m": [
+        14.361725,
+        8.7612,
+        4.61
+      ],
+      "oriented_dimensions_m": {
+        "length_m": 16.000229,
+        "depth_m": 1.067928,
+        "height_m": 4.61,
+        "major_min": -75.627335,
+        "major_max": -59.627106,
+        "minor_min": 296.152271,
+        "minor_max": 297.2202,
+        "z_min": -0.291816,
+        "z_max": 4.318183
+      },
+      "horizontal_major_axis_world_xy": [
+        0.869365,
+        -0.494171
+      ],
+      "horizontal_minor_axis_world_xy": [
+        0.494171,
+        0.869365
+      ],
+      "major_axis_angle_degrees": -29.615,
+      "vertex_count": 614,
+      "triangle_count": 344,
+      "connected_component_count": 135,
+      "material_slots": [
+        "MELBOURNE"
+      ],
+      "material_images": [
+        {
+          "name": "MELBOURNE",
+          "size": [
+            4096,
+            4096
+          ]
+        },
+        {
+          "name": "MELBOURNE_NORMAL",
+          "size": [
+            4096,
+            4096
+          ]
+        }
+      ],
+      "component_classification_counts": {
+        "concrete wall/barrier run": 12,
+        "small cap/detail": 107,
+        "thin vertical post/support/fence element": 16
+      },
+      "largest_components": [
+        {
+          "component_index": 12,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.501747,
+            2.008087,
+            1.281566
+          ],
+          "bbox_center_m": [
+            89.531677,
+            290.311646,
+            0.353697
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.005043,
+            "depth_m": 0.043449,
+            "height_m": 1.281566,
+            "major_min": -67.630455,
+            "major_max": -63.625412,
+            "minor_min": 296.608936,
+            "minor_max": 296.652386,
+            "z_min": -0.287087,
+            "z_max": 0.99448
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 82,
+          "vertex_count": 4,
+          "polygon_count": 2,
+          "triangle_count": 2,
+          "bbox_dimensions_m": [
+            3.603333,
+            2.185608,
+            0.003082
+          ],
+          "bbox_center_m": [
+            89.600639,
+            290.434204,
+            0.993375
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.00444,
+            "depth_m": 0.247978,
+            "height_m": 0.003082,
+            "major_min": -67.630753,
+            "major_max": -63.626312,
+            "minor_min": 296.647289,
+            "minor_max": 296.895267,
+            "z_min": 0.991834,
+            "z_max": 0.994916
+          },
+          "materials": {
+            "MELBOURNE": 2
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 13,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.641624,
+            2.251831,
+            1.002229
+          ],
+          "bbox_center_m": [
+            89.739548,
+            290.678619,
+            0.493801
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.004387,
+            "depth_m": 0.324474,
+            "height_m": 1.002229,
+            "major_min": -67.630753,
+            "major_max": -63.626366,
+            "minor_min": 296.890171,
+            "minor_max": 297.214645,
+            "z_min": -0.007313,
+            "z_max": 0.994916
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 24,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.496651,
+            2.005249,
+            1.281563
+          ],
+          "bbox_center_m": [
+            93.012695,
+            288.338776,
+            0.35634
+          ],
+          "oriented_extents_m": {
+            "length_m": 3.999207,
+            "depth_m": 0.043419,
+            "height_m": 1.281563,
+            "major_min": -63.626312,
+            "major_max": -59.627106,
+            "minor_min": 296.614033,
+            "minor_max": 296.657452,
+            "z_min": -0.284441,
+            "z_max": 0.997122
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 0,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.496651,
+            2.005219,
+            1.281563
+          ],
+          "bbox_center_m": [
+            86.050644,
+            292.284546,
+            0.351053
+          ],
+          "oriented_extents_m": {
+            "length_m": 3.999184,
+            "depth_m": 0.043419,
+            "height_m": 1.281563,
+            "major_min": -71.628738,
+            "major_max": -67.629555,
+            "minor_min": 296.60387,
+            "minor_max": 296.647289,
+            "z_min": -0.289728,
+            "z_max": 0.991834
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 34,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.496658,
+            2.005219,
+            1.281009
+          ],
+          "bbox_center_m": [
+            82.572174,
+            294.255981,
+            0.348688
+          ],
+          "oriented_extents_m": {
+            "length_m": 3.999176,
+            "depth_m": 0.043407,
+            "height_m": 1.281009,
+            "major_min": -75.627029,
+            "major_max": -71.627853,
+            "minor_min": 296.598824,
+            "minor_max": 296.642231,
+            "z_min": -0.291816,
+            "z_max": 0.989192
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 103,
+          "vertex_count": 4,
+          "polygon_count": 2,
+          "triangle_count": 2,
+          "bbox_dimensions_m": [
+            3.598236,
+            2.182739,
+            0.003078
+          ],
+          "bbox_center_m": [
+            93.081665,
+            288.461334,
+            0.996019
+          ],
+          "oriented_extents_m": {
+            "length_m": 3.998611,
+            "depth_m": 0.247948,
+            "height_m": 0.003078,
+            "major_min": -63.626625,
+            "major_max": -59.628014,
+            "minor_min": 296.652386,
+            "minor_max": 296.900333,
+            "z_min": 0.99448,
+            "z_max": 0.997558
+          },
+          "materials": {
+            "MELBOURNE": 2
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 125,
+          "vertex_count": 4,
+          "polygon_count": 2,
+          "triangle_count": 2,
+          "bbox_dimensions_m": [
+            3.598236,
+            2.182739,
+            0.00083
+          ],
+          "bbox_center_m": [
+            82.641144,
+            294.37851,
+            0.989213
+          ],
+          "oriented_extents_m": {
+            "length_m": 3.998596,
+            "depth_m": 0.247948,
+            "height_m": 0.00083,
+            "major_min": -75.627335,
+            "major_max": -71.628738,
+            "minor_min": 296.637165,
+            "minor_max": 296.885113,
+            "z_min": 0.988798,
+            "z_max": 0.989628
+          },
+          "materials": {
+            "MELBOURNE": 2
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 60,
+          "vertex_count": 4,
+          "polygon_count": 2,
+          "triangle_count": 2,
+          "bbox_dimensions_m": [
+            3.598228,
+            2.182739,
+            0.003078
+          ],
+          "bbox_center_m": [
+            86.119614,
+            292.407074,
+            0.990731
+          ],
+          "oriented_extents_m": {
+            "length_m": 3.998589,
+            "depth_m": 0.24794,
+            "height_m": 0.003078,
+            "major_min": -71.629044,
+            "major_max": -67.630455,
+            "minor_min": 296.642231,
+            "minor_max": 296.890171,
+            "z_min": 0.989192,
+            "z_max": 0.99227
+          },
+          "materials": {
+            "MELBOURNE": 2
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 1,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.63652,
+            2.248962,
+            1.002225
+          ],
+          "bbox_center_m": [
+            86.258522,
+            292.651489,
+            0.491158
+          ],
+          "oriented_extents_m": {
+            "length_m": 3.99855,
+            "depth_m": 0.324436,
+            "height_m": 1.002225,
+            "major_min": -71.629044,
+            "major_max": -67.630493,
+            "minor_min": 296.885113,
+            "minor_max": 297.209549,
+            "z_min": -0.009955,
+            "z_max": 0.99227
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        }
+      ],
+      "geometry_appears_repeated_internally": true,
+      "approx_smallest_repeated_wall_unit_m": {
+        "detectable": true,
+        "common_component_lengths_m": [
+          [
+            4.0,
+            7
+          ],
+          [
+            4.01,
+            1
+          ]
+        ],
+        "smallest_large_component_length_m": 4.0,
+        "note": "Repeated lengths are based on disconnected large components; continuous extruded runs may still need manual slicing."
+      },
+      "fencing_posts_or_other_geometry_included": true,
+      "suitability": "longer modular assembly / candidate for slicing"
+    },
+    {
+      "roster_id": "AP-0233",
+      "source_object": "wall_a075_MELBOURNE_0",
+      "proposed_cleaned_name": "Barrier_Wall_04",
+      "evaluated_dimensions_m": [
+        16.450684,
+        12.923981,
+        4.630826
+      ],
+      "oriented_dimensions_m": {
+        "length_m": 20.005081,
+        "depth_m": 1.033463,
+        "height_m": 4.630826,
+        "major_min": 412.927414,
+        "major_max": 432.932495,
+        "minor_min": -669.789215,
+        "minor_max": -668.755753,
+        "z_min": -1.197665,
+        "z_max": 3.43316
+      },
+      "horizontal_major_axis_world_xy": [
+        0.793769,
+        0.60822
+      ],
+      "horizontal_minor_axis_world_xy": [
+        -0.60822,
+        0.793769
+      ],
+      "major_axis_angle_degrees": 37.461,
+      "vertex_count": 748,
+      "triangle_count": 430,
+      "connected_component_count": 159,
+      "material_slots": [
+        "MELBOURNE"
+      ],
+      "material_images": [
+        {
+          "name": "MELBOURNE",
+          "size": [
+            4096,
+            4096
+          ]
+        },
+        {
+          "name": "MELBOURNE_NORMAL",
+          "size": [
+            4096,
+            4096
+          ]
+        }
+      ],
+      "component_classification_counts": {
+        "concrete wall/barrier run": 15,
+        "small cap/detail": 124,
+        "thin vertical post/support/fence element": 20
+      },
+      "largest_components": [
+        {
+          "component_index": 42,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.203247,
+            2.470459,
+            1.284465
+          ],
+          "bbox_center_m": [
+            749.084534,
+            -269.097107,
+            -0.531565
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.005997,
+            "depth_m": 0.043259,
+            "height_m": 1.284465,
+            "major_min": 428.926498,
+            "major_max": 432.932495,
+            "minor_min": -669.230606,
+            "minor_max": -669.187347,
+            "z_min": -1.173797,
+            "z_max": 0.110668
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 12,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.203186,
+            2.470459,
+            1.284465
+          ],
+          "bbox_center_m": [
+            739.558228,
+            -276.395599,
+            -0.548631
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.005936,
+            "depth_m": 0.043228,
+            "height_m": 1.284465,
+            "major_min": 416.925766,
+            "major_max": 420.931702,
+            "minor_min": -669.229858,
+            "minor_max": -669.18663,
+            "z_min": -1.190863,
+            "z_max": 0.093602
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 13,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.371643,
+            2.684967,
+            1.006436
+          ],
+          "bbox_center_m": [
+            739.814941,
+            -276.730896,
+            -0.410067
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.005569,
+            "depth_m": 0.315964,
+            "height_m": 1.006436,
+            "major_min": 416.925735,
+            "major_max": 420.931305,
+            "minor_min": -669.788483,
+            "minor_max": -669.472519,
+            "z_min": -0.913285,
+            "z_max": 0.093151
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 43,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.371643,
+            2.684967,
+            1.006436
+          ],
+          "bbox_center_m": [
+            749.341187,
+            -269.432434,
+            -0.393001
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.005569,
+            "depth_m": 0.315948,
+            "height_m": 1.006436,
+            "major_min": 428.926468,
+            "major_max": 432.932037,
+            "minor_min": -669.789215,
+            "minor_max": -669.473267,
+            "z_min": -0.896219,
+            "z_max": 0.110217
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 88,
+          "vertex_count": 4,
+          "polygon_count": 2,
+          "triangle_count": 2,
+          "bbox_dimensions_m": [
+            3.326233,
+            2.628021,
+            0.006145
+          ],
+          "bbox_center_m": [
+            739.644531,
+            -276.509644,
+            0.090529
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.004181,
+            "depth_m": 0.243149,
+            "height_m": 0.006145,
+            "major_min": 416.925735,
+            "major_max": 420.929916,
+            "minor_min": -669.472778,
+            "minor_max": -669.22963,
+            "z_min": 0.087457,
+            "z_max": 0.093602
+          },
+          "materials": {
+            "MELBOURNE": 2
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 152,
+          "vertex_count": 4,
+          "polygon_count": 2,
+          "triangle_count": 2,
+          "bbox_dimensions_m": [
+            3.326233,
+            2.628021,
+            0.006145
+          ],
+          "bbox_center_m": [
+            749.170776,
+            -269.211121,
+            0.107595
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.004181,
+            "depth_m": 0.243118,
+            "height_m": 0.006145,
+            "major_min": 428.926468,
+            "major_max": 432.930649,
+            "minor_min": -669.473495,
+            "minor_max": -669.230377,
+            "z_min": 0.104523,
+            "z_max": 0.110668
+          },
+          "materials": {
+            "MELBOURNE": 2
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 32,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.198608,
+            2.466888,
+            1.284457
+          ],
+          "bbox_center_m": [
+            745.908325,
+            -271.530518,
+            -0.537255
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.000168,
+            "depth_m": 0.043289,
+            "height_m": 1.284457,
+            "major_min": 424.928177,
+            "major_max": 428.928345,
+            "minor_min": -669.230377,
+            "minor_max": -669.187088,
+            "z_min": -1.179483,
+            "z_max": 0.104974
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 0,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.198608,
+            2.466888,
+            1.284457
+          ],
+          "bbox_center_m": [
+            742.734436,
+            -273.962158,
+            -0.542941
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.000107,
+            "depth_m": 0.043289,
+            "height_m": 1.284457,
+            "major_min": 420.929916,
+            "major_max": 424.930023,
+            "minor_min": -669.230118,
+            "minor_max": -669.186829,
+            "z_min": -1.185169,
+            "z_max": 0.099288
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 22,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.198608,
+            2.466888,
+            1.284457
+          ],
+          "bbox_center_m": [
+            736.38208,
+            -278.829041,
+            -0.554321
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.000107,
+            "depth_m": 0.043259,
+            "height_m": 1.284457,
+            "major_min": 412.927505,
+            "major_max": 416.927612,
+            "minor_min": -669.22963,
+            "minor_max": -669.186371,
+            "z_min": -1.196549,
+            "z_max": 0.087908
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 1,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.367004,
+            2.681396,
+            1.006428
+          ],
+          "bbox_center_m": [
+            742.991089,
+            -274.297485,
+            -0.404377
+          ],
+          "oriented_extents_m": {
+            "length_m": 3.999741,
+            "depth_m": 0.315964,
+            "height_m": 1.006428,
+            "major_min": 420.929886,
+            "major_max": 424.929626,
+            "minor_min": -669.788742,
+            "minor_max": -669.472778,
+            "z_min": -0.907591,
+            "z_max": 0.098837
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        }
+      ],
+      "geometry_appears_repeated_internally": true,
+      "approx_smallest_repeated_wall_unit_m": {
+        "detectable": true,
+        "common_component_lengths_m": [
+          [
+            4.0,
+            6
+          ],
+          [
+            4.01,
+            4
+          ]
+        ],
+        "smallest_large_component_length_m": 4.0,
+        "note": "Repeated lengths are based on disconnected large components; continuous extruded runs may still need manual slicing."
+      },
+      "fencing_posts_or_other_geometry_included": true,
+      "suitability": "track-specific or long assembled run / candidate for slicing only"
+    },
+    {
+      "roster_id": "AP-0234",
+      "source_object": "wall_a077_MELBOURNE_0",
+      "proposed_cleaned_name": "Barrier_Wall_05",
+      "evaluated_dimensions_m": [
+        70.829147,
+        46.707607,
+        4.962897
+      ],
+      "oriented_dimensions_m": {
+        "length_m": 84.003958,
+        "depth_m": 1.055779,
+        "height_m": 4.962897,
+        "major_min": -72.407099,
+        "major_max": 11.596859,
+        "minor_min": 82.629374,
+        "minor_max": 83.685152,
+        "z_min": -0.875463,
+        "z_max": 4.087434
+      },
+      "horizontal_major_axis_world_xy": [
+        0.837761,
+        -0.546037
+      ],
+      "horizontal_minor_axis_world_xy": [
+        0.546037,
+        0.837761
+      ],
+      "major_axis_angle_degrees": -33.096,
+      "vertex_count": 3033,
+      "triangle_count": 1698,
+      "connected_component_count": 667,
+      "material_slots": [
+        "MELBOURNE"
+      ],
+      "material_images": [
+        {
+          "name": "MELBOURNE",
+          "size": [
+            4096,
+            4096
+          ]
+        },
+        {
+          "name": "MELBOURNE_NORMAL",
+          "size": [
+            4096,
+            4096
+          ]
+        }
+      ],
+      "component_classification_counts": {
+        "concrete wall/barrier run": 63,
+        "small cap/detail": 526,
+        "thin vertical post/support/fence element": 78
+      },
+      "largest_components": [
+        {
+          "component_index": 178,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.385078,
+            2.207893,
+            1.331689
+          ],
+          "bbox_center_m": [
+            -3.54863,
+            101.508484,
+            -0.047249
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.016128,
+            "depth_m": 0.03865,
+            "height_m": 1.331689,
+            "major_min": -60.408323,
+            "major_max": -56.392196,
+            "minor_min": 83.082709,
+            "minor_max": 83.121359,
+            "z_min": -0.713094,
+            "z_max": 0.618595
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 208,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.385287,
+            2.207344,
+            1.330336
+          ],
+          "bbox_center_m": [
+            -13.600103,
+            108.060822,
+            0.102905
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.016002,
+            "depth_m": 0.038397,
+            "height_m": 1.330336,
+            "major_min": -72.40682,
+            "major_max": -68.390819,
+            "minor_min": 83.083701,
+            "minor_max": 83.122098,
+            "z_min": -0.562263,
+            "z_max": 0.768073
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 168,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.385284,
+            2.207336,
+            1.33334
+          ],
+          "bbox_center_m": [
+            -0.197359,
+            99.324074,
+            -0.100505
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.015995,
+            "depth_m": 0.038455,
+            "height_m": 1.33334,
+            "major_min": -56.407932,
+            "major_max": -52.391936,
+            "minor_min": 83.082719,
+            "minor_max": 83.121175,
+            "z_min": -0.767175,
+            "z_max": 0.566165
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 188,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.382937,
+            2.207901,
+            1.327784
+          ],
+          "bbox_center_m": [
+            -6.898728,
+            103.693161,
+            0.003229
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.013556,
+            "depth_m": 0.038354,
+            "height_m": 1.327784,
+            "major_min": -64.406147,
+            "major_max": -60.392591,
+            "minor_min": 83.083388,
+            "minor_max": 83.121743,
+            "z_min": -0.660663,
+            "z_max": 0.667121
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 198,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.382937,
+            2.207901,
+            1.328985
+          ],
+          "bbox_center_m": [
+            -10.249899,
+            105.876419,
+            0.052352
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.013556,
+            "depth_m": 0.038648,
+            "height_m": 1.328985,
+            "major_min": -68.406549,
+            "major_max": -64.392993,
+            "minor_min": 83.08345,
+            "minor_max": 83.122098,
+            "z_min": -0.612141,
+            "z_max": 0.716845
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 158,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.382934,
+            2.207901,
+            1.328234
+          ],
+          "bbox_center_m": [
+            3.152844,
+            97.139671,
+            -0.152034
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.013554,
+            "depth_m": 0.038647,
+            "height_m": 1.328234,
+            "major_min": -52.407662,
+            "major_max": -48.394108,
+            "minor_min": 83.082528,
+            "minor_max": 83.121175,
+            "z_min": -0.816151,
+            "z_max": 0.512083
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 209,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.514879,
+            2.459061,
+            1.050427
+          ],
+          "bbox_center_m": [
+            -13.36899,
+            108.413246,
+            0.243336
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.01324,
+            "depth_m": 0.320022,
+            "height_m": 1.050427,
+            "major_min": -72.404166,
+            "major_max": -68.390926,
+            "minor_min": 83.364552,
+            "minor_max": 83.684573,
+            "z_min": -0.281878,
+            "z_max": 0.768549
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 169,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.514875,
+            2.459061,
+            1.053281
+          ],
+          "bbox_center_m": [
+            0.033754,
+            99.676498,
+            0.040001
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.013239,
+            "depth_m": 0.320161,
+            "height_m": 1.053281,
+            "major_min": -56.405284,
+            "major_max": -52.392045,
+            "minor_min": 83.36363,
+            "minor_max": 83.683792,
+            "z_min": -0.48664,
+            "z_max": 0.566641
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 199,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.514875,
+            2.458519,
+            1.049076
+          ],
+          "bbox_center_m": [
+            -10.017613,
+            106.228836,
+            0.192784
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.013118,
+            "depth_m": 0.31945,
+            "height_m": 1.049076,
+            "major_min": -68.403774,
+            "major_max": -64.390656,
+            "minor_min": 83.364747,
+            "minor_max": 83.684197,
+            "z_min": -0.331754,
+            "z_max": 0.717321
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 148,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.381002,
+            2.209358,
+            1.316372
+          ],
+          "bbox_center_m": [
+            6.503044,
+            94.955688,
+            -0.195076
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.010867,
+            "depth_m": 0.038891,
+            "height_m": 1.316372,
+            "major_min": -48.407268,
+            "major_max": -44.396401,
+            "minor_min": 83.082127,
+            "minor_max": 83.121018,
+            "z_min": -0.853262,
+            "z_max": 0.46311
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        }
+      ],
+      "geometry_appears_repeated_internally": true,
+      "approx_smallest_repeated_wall_unit_m": {
+        "detectable": true,
+        "common_component_lengths_m": [
+          [
+            4.0,
+            22
+          ],
+          [
+            4.01,
+            17
+          ],
+          [
+            4.02,
+            3
+          ]
+        ],
+        "smallest_large_component_length_m": 4.0,
+        "note": "Repeated lengths are based on disconnected large components; continuous extruded runs may still need manual slicing."
+      },
+      "fencing_posts_or_other_geometry_included": true,
+      "suitability": "track-specific or long assembled run / candidate for slicing only"
+    },
+    {
+      "roster_id": "AP-0235",
+      "source_object": "wall_a081_MELBOURNE_0",
+      "proposed_cleaned_name": "Barrier_Wall_06",
+      "evaluated_dimensions_m": [
+        25.359375,
+        13.431396,
+        4.62913
+      ],
+      "oriented_dimensions_m": {
+        "length_m": 27.97908,
+        "depth_m": 1.504547,
+        "height_m": 4.62913,
+        "major_min": 521.9431,
+        "major_max": 549.92218,
+        "minor_min": -36.107864,
+        "minor_max": -34.603317,
+        "z_min": -1.958345,
+        "z_max": 2.670785
+      },
+      "horizontal_major_axis_world_xy": [
+        0.889935,
+        -0.456088
+      ],
+      "horizontal_minor_axis_world_xy": [
+        0.456088,
+        0.889935
+      ],
+      "major_axis_angle_degrees": -27.135,
+      "vertex_count": 1062,
+      "triangle_count": 602,
+      "connected_component_count": 230,
+      "material_slots": [
+        "MELBOURNE"
+      ],
+      "material_images": [
+        {
+          "name": "MELBOURNE",
+          "size": [
+            4096,
+            4096
+          ]
+        },
+        {
+          "name": "MELBOURNE_NORMAL",
+          "size": [
+            4096,
+            4096
+          ]
+        }
+      ],
+      "component_classification_counts": {
+        "concrete wall/barrier run": 21,
+        "small cap/detail": 181,
+        "thin vertical post/support/fence element": 28
+      },
+      "largest_components": [
+        {
+          "component_index": 35,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.854034,
+            1.703888,
+            1.002741
+          ],
+          "bbox_center_m": [
+            471.621582,
+            -281.024231,
+            -1.176958
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.01223,
+            "depth_m": 0.776978,
+            "height_m": 1.002741,
+            "major_min": 545.878166,
+            "major_max": 549.890396,
+            "minor_min": -35.38089,
+            "minor_max": -34.603912,
+            "z_min": -1.678328,
+            "z_max": -0.675587
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 201,
+          "vertex_count": 4,
+          "polygon_count": 2,
+          "triangle_count": 2,
+          "bbox_dimensions_m": [
+            3.662659,
+            2.066925,
+            0.004845
+          ],
+          "bbox_center_m": [
+            453.704346,
+            -272.268982,
+            -0.656356
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.005798,
+            "depth_m": 0.271378,
+            "height_m": 0.004845,
+            "major_min": 525.942955,
+            "major_max": 529.948753,
+            "minor_min": -35.508118,
+            "minor_max": -35.23674,
+            "z_min": -0.658779,
+            "z_max": -0.653934
+          },
+          "materials": {
+            "MELBOURNE": 2
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 114,
+          "vertex_count": 4,
+          "polygon_count": 2,
+          "triangle_count": 2,
+          "bbox_dimensions_m": [
+            3.662659,
+            2.066925,
+            0.004845
+          ],
+          "bbox_center_m": [
+            464.345001,
+            -277.818237,
+            -0.669364
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.005775,
+            "depth_m": 0.271378,
+            "height_m": 0.004845,
+            "major_min": 537.943398,
+            "major_max": 541.949173,
+            "minor_min": -35.593491,
+            "minor_max": -35.322113,
+            "z_min": -0.671786,
+            "z_max": -0.666941
+          },
+          "materials": {
+            "MELBOURNE": 2
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 58,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.569153,
+            1.884583,
+            1.283271
+          ],
+          "bbox_center_m": [
+            453.638794,
+            -272.393188,
+            -1.296074
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.005737,
+            "depth_m": 0.066452,
+            "height_m": 1.283271,
+            "major_min": 525.941299,
+            "major_max": 529.947037,
+            "minor_min": -35.546082,
+            "minor_max": -35.47963,
+            "z_min": -1.93771,
+            "z_max": -0.654439
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 12,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.569153,
+            1.884613,
+            1.283271
+          ],
+          "bbox_center_m": [
+            464.279449,
+            -277.942444,
+            -1.309082
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.00573,
+            "depth_m": 0.066483,
+            "height_m": 1.283271,
+            "major_min": 537.941719,
+            "major_max": 541.947449,
+            "minor_min": -35.631485,
+            "minor_max": -35.565002,
+            "z_min": -1.950717,
+            "z_max": -0.667446
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 13,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.697205,
+            2.135468,
+            1.003832
+          ],
+          "bbox_center_m": [
+            464.474579,
+            -277.568604,
+            -1.168857
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.005257,
+            "depth_m": 0.348129,
+            "height_m": 1.003832,
+            "major_min": 537.945091,
+            "major_max": 541.950348,
+            "minor_min": -35.350616,
+            "minor_max": -35.002487,
+            "z_min": -1.670773,
+            "z_max": -0.666941
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 59,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.697205,
+            2.135498,
+            1.003832
+          ],
+          "bbox_center_m": [
+            453.833923,
+            -272.019348,
+            -1.15585
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.005257,
+            "depth_m": 0.34816,
+            "height_m": 1.003832,
+            "major_min": 525.944672,
+            "major_max": 529.949928,
+            "minor_min": -35.265244,
+            "minor_max": -34.917084,
+            "z_min": -1.657766,
+            "z_max": -0.653934
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 157,
+          "vertex_count": 4,
+          "polygon_count": 2,
+          "triangle_count": 2,
+          "bbox_dimensions_m": [
+            3.830109,
+            1.629883,
+            0.00382
+          ],
+          "bbox_center_m": [
+            471.524231,
+            -281.288361,
+            -0.677497
+          ],
+          "oriented_extents_m": {
+            "length_m": 3.999969,
+            "depth_m": 0.700592,
+            "height_m": 0.00382,
+            "major_min": 545.91803,
+            "major_max": 549.917999,
+            "minor_min": -35.621933,
+            "minor_max": -34.921341,
+            "z_min": -0.679407,
+            "z_max": -0.675587
+          },
+          "materials": {
+            "MELBOURNE": 2
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 136,
+          "vertex_count": 4,
+          "polygon_count": 2,
+          "triangle_count": 2,
+          "bbox_dimensions_m": [
+            3.657471,
+            2.064209,
+            0.004839
+          ],
+          "bbox_center_m": [
+            467.892761,
+            -279.668427,
+            -0.6737
+          ],
+          "oriented_extents_m": {
+            "length_m": 3.999931,
+            "depth_m": 0.271317,
+            "height_m": 0.004839,
+            "major_min": 541.947449,
+            "major_max": 545.94738,
+            "minor_min": -35.621933,
+            "minor_max": -35.350616,
+            "z_min": -0.67612,
+            "z_max": -0.671281
+          },
+          "materials": {
+            "MELBOURNE": 2
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 223,
+          "vertex_count": 4,
+          "polygon_count": 2,
+          "triangle_count": 2,
+          "bbox_dimensions_m": [
+            3.657471,
+            2.064209,
+            0.004839
+          ],
+          "bbox_center_m": [
+            450.156586,
+            -270.418793,
+            -0.652019
+          ],
+          "oriented_extents_m": {
+            "length_m": 3.999924,
+            "depth_m": 0.271317,
+            "height_m": 0.004839,
+            "major_min": 521.944748,
+            "major_max": 525.944672,
+            "minor_min": -35.47963,
+            "minor_max": -35.208313,
+            "z_min": -0.654439,
+            "z_max": -0.6496
+          },
+          "materials": {
+            "MELBOURNE": 2
+          },
+          "classification_hint": "concrete wall/barrier run"
+        }
+      ],
+      "geometry_appears_repeated_internally": true,
+      "approx_smallest_repeated_wall_unit_m": {
+        "detectable": true,
+        "common_component_lengths_m": [
+          [
+            4.0,
+            8
+          ],
+          [
+            4.01,
+            5
+          ],
+          [
+            3.98,
+            1
+          ]
+        ],
+        "smallest_large_component_length_m": 3.98,
+        "note": "Repeated lengths are based on disconnected large components; continuous extruded runs may still need manual slicing."
+      },
+      "fencing_posts_or_other_geometry_included": true,
+      "suitability": "track-specific or long assembled run / candidate for slicing only"
+    },
+    {
+      "roster_id": "AP-0236",
+      "source_object": "wall_a083_MELBOURNE_0",
+      "proposed_cleaned_name": "Barrier_Wall_07",
+      "evaluated_dimensions_m": [
+        15.910828,
+        3.40477,
+        4.722023
+      ],
+      "oriented_dimensions_m": {
+        "length_m": 15.999754,
+        "depth_m": 1.057243,
+        "height_m": 4.722023,
+        "major_min": 301.86706,
+        "major_max": 317.866814,
+        "minor_min": -163.426544,
+        "minor_max": -162.369301,
+        "z_min": -2.112384,
+        "z_max": 2.609639
+      },
+      "horizontal_major_axis_world_xy": [
+        0.988841,
+        -0.148973
+      ],
+      "horizontal_minor_axis_world_xy": [
+        0.148973,
+        0.988841
+      ],
+      "major_axis_angle_degrees": -8.567,
+      "vertex_count": 610,
+      "triangle_count": 344,
+      "connected_component_count": 133,
+      "material_slots": [
+        "MELBOURNE"
+      ],
+      "material_images": [
+        {
+          "name": "MELBOURNE",
+          "size": [
+            4096,
+            4096
+          ]
+        },
+        {
+          "name": "MELBOURNE_NORMAL",
+          "size": [
+            4096,
+            4096
+          ]
+        }
+      ],
+      "component_classification_counts": {
+        "concrete wall/barrier run": 12,
+        "small cap/detail": 105,
+        "thin vertical post/support/fence element": 16
+      },
+      "largest_components": [
+        {
+          "component_index": 13,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            4.006897,
+            0.911194,
+            1.000809
+          ],
+          "bbox_center_m": [
+            284.173096,
+            -207.178482,
+            -1.211061
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.004641,
+            "depth_m": 0.321636,
+            "height_m": 1.000809,
+            "major_min": 309.863768,
+            "major_max": 313.868408,
+            "minor_min": -162.693298,
+            "minor_max": -162.371662,
+            "z_min": -1.711466,
+            "z_max": -0.710657
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 12,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.965759,
+            0.632004,
+            1.280334
+          ],
+          "bbox_center_m": [
+            284.110413,
+            -207.595459,
+            -1.351387
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.004578,
+            "depth_m": 0.039413,
+            "height_m": 1.280334,
+            "major_min": 309.863937,
+            "major_max": 313.868515,
+            "minor_min": -162.973862,
+            "minor_max": -162.934448,
+            "z_min": -1.991554,
+            "z_max": -0.71122
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 82,
+          "vertex_count": 4,
+          "polygon_count": 2,
+          "triangle_count": 2,
+          "bbox_dimensions_m": [
+            3.995789,
+            0.834991,
+            0.001956
+          ],
+          "bbox_center_m": [
+            284.13147,
+            -207.456772,
+            -0.711635
+          ],
+          "oriented_extents_m": {
+            "length_m": 4.004244,
+            "depth_m": 0.244602,
+            "height_m": 0.001956,
+            "major_min": 309.864271,
+            "major_max": 313.868515,
+            "minor_min": -162.936172,
+            "minor_max": -162.69157,
+            "z_min": -0.712613,
+            "z_max": -0.710657
+          },
+          "materials": {
+            "MELBOURNE": 2
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 1,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            4.001129,
+            0.910324,
+            1.000807
+          ],
+          "bbox_center_m": [
+            280.216248,
+            -206.584015,
+            -1.25462
+          ],
+          "oriented_extents_m": {
+            "length_m": 3.998804,
+            "depth_m": 0.321632,
+            "height_m": 1.000807,
+            "major_min": 305.865452,
+            "major_max": 309.864256,
+            "minor_min": -162.694927,
+            "minor_max": -162.373295,
+            "z_min": -1.755023,
+            "z_max": -0.754216
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 25,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            4.001129,
+            0.910324,
+            1.000807
+          ],
+          "bbox_center_m": [
+            288.129944,
+            -207.772827,
+            -1.212454
+          ],
+          "oriented_extents_m": {
+            "length_m": 3.998804,
+            "depth_m": 0.321629,
+            "height_m": 1.000807,
+            "major_min": 313.867903,
+            "major_max": 317.866707,
+            "minor_min": -162.69157,
+            "minor_max": -162.369942,
+            "z_min": -1.712857,
+            "z_max": -0.71205
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 35,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            4.001099,
+            0.910324,
+            1.000807
+          ],
+          "bbox_center_m": [
+            276.262329,
+            -205.989899,
+            -1.331892
+          ],
+          "oriented_extents_m": {
+            "length_m": 3.998743,
+            "depth_m": 0.321629,
+            "height_m": 1.000807,
+            "major_min": 301.867157,
+            "major_max": 305.8659,
+            "minor_min": -162.696476,
+            "minor_max": -162.374847,
+            "z_min": -1.832296,
+            "z_max": -0.831488
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 0,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.959991,
+            0.631119,
+            1.280332
+          ],
+          "bbox_center_m": [
+            280.153564,
+            -207.001007,
+            -1.394945
+          ],
+          "oriented_extents_m": {
+            "length_m": 3.998739,
+            "depth_m": 0.03944,
+            "height_m": 1.280332,
+            "major_min": 305.865623,
+            "major_max": 309.864363,
+            "minor_min": -162.975506,
+            "minor_max": -162.936066,
+            "z_min": -2.035111,
+            "z_max": -0.754779
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 24,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.959991,
+            0.631119,
+            1.280332
+          ],
+          "bbox_center_m": [
+            288.067261,
+            -208.189819,
+            -1.352779
+          ],
+          "oriented_extents_m": {
+            "length_m": 3.998739,
+            "depth_m": 0.039425,
+            "height_m": 1.280332,
+            "major_min": 313.868074,
+            "major_max": 317.866814,
+            "minor_min": -162.972137,
+            "minor_max": -162.932713,
+            "z_min": -1.992945,
+            "z_max": -0.712613
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 34,
+          "vertex_count": 12,
+          "polygon_count": 10,
+          "triangle_count": 10,
+          "bbox_dimensions_m": [
+            3.959961,
+            0.631134,
+            1.280332
+          ],
+          "bbox_center_m": [
+            276.199646,
+            -206.406891,
+            -1.472218
+          ],
+          "oriented_extents_m": {
+            "length_m": 3.998739,
+            "depth_m": 0.039406,
+            "height_m": 1.280332,
+            "major_min": 301.867296,
+            "major_max": 305.866035,
+            "minor_min": -162.977039,
+            "minor_max": -162.937634,
+            "z_min": -2.112384,
+            "z_max": -0.832052
+          },
+          "materials": {
+            "MELBOURNE": 10
+          },
+          "classification_hint": "concrete wall/barrier run"
+        },
+        {
+          "component_index": 60,
+          "vertex_count": 4,
+          "polygon_count": 2,
+          "triangle_count": 2,
+          "bbox_dimensions_m": [
+            3.990021,
+            0.834106,
+            0.001954
+          ],
+          "bbox_center_m": [
+            280.174622,
+            -206.862305,
+            -0.755193
+          ],
+          "oriented_extents_m": {
+            "length_m": 3.998436,
+            "depth_m": 0.244625,
+            "height_m": 0.001954,
+            "major_min": 305.865927,
+            "major_max": 309.864363,
+            "minor_min": -162.937817,
+            "minor_max": -162.693192,
+            "z_min": -0.756171,
+            "z_max": -0.754216
+          },
+          "materials": {
+            "MELBOURNE": 2
+          },
+          "classification_hint": "concrete wall/barrier run"
+        }
+      ],
+      "geometry_appears_repeated_internally": true,
+      "approx_smallest_repeated_wall_unit_m": {
+        "detectable": true,
+        "common_component_lengths_m": [
+          [
+            4.0,
+            8
+          ]
+        ],
+        "smallest_large_component_length_m": 4.0,
+        "note": "Repeated lengths are based on disconnected large components; continuous extruded runs may still need manual slicing."
+      },
+      "fencing_posts_or_other_geometry_included": true,
+      "suitability": "longer modular assembly / candidate for slicing"
+    }
+  ],
+  "same_normalized_mesh_signature": {
+    "AP-0230": {
+      "AP-0230": true,
+      "AP-0231": false,
+      "AP-0232": false,
+      "AP-0233": false,
+      "AP-0234": false,
+      "AP-0235": false,
+      "AP-0236": false
+    },
+    "AP-0231": {
+      "AP-0230": false,
+      "AP-0231": true,
+      "AP-0232": false,
+      "AP-0233": false,
+      "AP-0234": false,
+      "AP-0235": false,
+      "AP-0236": false
+    },
+    "AP-0232": {
+      "AP-0230": false,
+      "AP-0231": false,
+      "AP-0232": true,
+      "AP-0233": false,
+      "AP-0234": false,
+      "AP-0235": false,
+      "AP-0236": false
+    },
+    "AP-0233": {
+      "AP-0230": false,
+      "AP-0231": false,
+      "AP-0232": false,
+      "AP-0233": true,
+      "AP-0234": false,
+      "AP-0235": false,
+      "AP-0236": false
+    },
+    "AP-0234": {
+      "AP-0230": false,
+      "AP-0231": false,
+      "AP-0232": false,
+      "AP-0233": false,
+      "AP-0234": true,
+      "AP-0235": false,
+      "AP-0236": false
+    },
+    "AP-0235": {
+      "AP-0230": false,
+      "AP-0231": false,
+      "AP-0232": false,
+      "AP-0233": false,
+      "AP-0234": false,
+      "AP-0235": true,
+      "AP-0236": false
+    },
+    "AP-0236": {
+      "AP-0230": false,
+      "AP-0231": false,
+      "AP-0232": false,
+      "AP-0233": false,
+      "AP-0234": false,
+      "AP-0235": false,
+      "AP-0236": true
+    }
+  }
+}

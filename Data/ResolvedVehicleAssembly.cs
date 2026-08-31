@@ -60,9 +60,9 @@ internal sealed class ResolvedEngineAssembly
     public float LimiterHardCutRpm { get; init; }
     public float LimiterResumeRpm { get; init; }
     public float MaxGaugeRpm { get; init; }
-    public float LimiterFuelCutSeconds { get; init; } = 0.34f;
-    public float LimiterRestoreSeconds { get; init; } = 0.41f;
-    public float LimiterCutTorqueMultiplier { get; init; }
+    public float LimiterFuelCutSeconds { get; init; } = 0.040f;
+    public float LimiterRestoreSeconds { get; init; } = 0.025f;
+    public float LimiterCutTorqueMultiplier { get; init; } = 0.16f;
     public float RotationalInertiaKgM2 { get; init; }
     public bool VtecEnabled { get; init; }
     public float VtecActivationRpm { get; init; }

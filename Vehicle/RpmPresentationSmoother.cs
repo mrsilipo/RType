@@ -19,7 +19,6 @@ public static class RpmPresentationSmoother
         if (limiterPinned)
         {
             projectedRpm = MathF.Min(projectedRpm, limiterHardCutRpm);
-            projectedRpm = ApplyLimiterNeedleBounce(projectedRpm, state, limiterHardCutRpm);
         }
 
         float vtecKick = MathHelper.Clamp(state.EnginePowerUnitVtecKickIntensity, 0f, 1f);
@@ -164,22 +163,6 @@ public static class RpmPresentationSmoother
         return current + MathF.Sign(delta) * maximumDelta;
     }
 
-    private static float ApplyLimiterNeedleBounce(float projectedRpm, VehicleState state, float limiterHardCutRpm)
-    {
-        float bounce = MathHelper.Clamp(state.RevLimiterBounceIntensity, 0f, 1f);
-        if (bounce <= 0.02f)
-        {
-            return limiterHardCutRpm;
-        }
-
-        float phase = state.RevLimiterBouncePhase - MathF.Floor(state.RevLimiterBouncePhase);
-        float bounceDepth = RevLimiterPresentationRules.CalculateBounceDepthRpm(limiterHardCutRpm);
-        float shake = MathF.Sin(phase * MathF.Tau * 8f) * bounceDepth * 0.10f * bounce;
-        float dip = (0.08f + 0.10f * (0.5f - 0.5f * MathF.Cos(phase * MathF.Tau))) * bounceDepth * bounce;
-        float needleRpm = limiterHardCutRpm - dip + shake;
-        return MathHelper.Clamp(needleRpm, limiterHardCutRpm - bounceDepth * 0.28f, limiterHardCutRpm);
-    }
-
     private static void ClampLimiterDisplay(VehicleState state, bool limiterPinned, float limiterHardCutRpm)
     {
         if (!limiterPinned)
@@ -188,7 +171,7 @@ public static class RpmPresentationSmoother
         }
 
         float bounceDepth = RevLimiterPresentationRules.CalculateBounceDepthRpm(limiterHardCutRpm);
-        float minimumLimiterDisplayRpm = limiterHardCutRpm - bounceDepth * 0.28f;
+        float minimumLimiterDisplayRpm = limiterHardCutRpm - bounceDepth * 0.62f;
         state.DisplayedRpm = MathHelper.Clamp(state.DisplayedRpm, minimumLimiterDisplayRpm, limiterHardCutRpm);
         state.DisplayedRpmTarget = MathHelper.Clamp(state.DisplayedRpmTarget, minimumLimiterDisplayRpm, limiterHardCutRpm);
     }

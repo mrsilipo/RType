@@ -214,6 +214,14 @@ public sealed class VehicleSimulationParameters
 
     public float RearSpringRateNPerM { get; init; } = 25000f;
 
+    public float FrontBumpDampingNsPerM { get; init; } = 2900f;
+
+    public float RearBumpDampingNsPerM { get; init; } = 2500f;
+
+    public float FrontReboundDampingNsPerM { get; init; } = 3900f;
+
+    public float RearReboundDampingNsPerM { get; init; } = 3400f;
+
     public float FrontAntiRollBarRateNmPerRad { get; init; } = 15000f;
 
     public float RearAntiRollBarRateNmPerRad { get; init; } = 10500f;

@@ -30,6 +30,12 @@ public sealed class CarModel : IDisposable
 
     public static CarModel Create(GraphicsDevice graphicsDevice, GeneratedTextures textures)
     {
+        if (Directory.Exists(ResolveExistingModelDirectory("Assets/Models/GeneratedEK9")))
+        {
+            Console.WriteLine("Using generated EK9 reference model.");
+            return new CarModel(GeneratedEk9ReferenceModelFactory.Create(graphicsDevice, textures));
+        }
+
         string path = ResolveExistingModelPath(DefaultModelPath);
         List<StaticMesh>? importedMeshes = FbxCarModelLoader.TryLoad(graphicsDevice, path, textures);
         return new CarModel(importedMeshes ?? CreatePlaceholderMeshes(graphicsDevice, textures));
@@ -88,6 +94,19 @@ public sealed class CarModel : IDisposable
         foreach (string path in GetCandidateModelPaths(relativePath))
         {
             if (File.Exists(path))
+            {
+                return path;
+            }
+        }
+
+        return Path.Combine(AppContext.BaseDirectory, relativePath);
+    }
+
+    private static string ResolveExistingModelDirectory(string relativePath)
+    {
+        foreach (string path in GetCandidateModelPaths(relativePath))
+        {
+            if (Directory.Exists(path))
             {
                 return path;
             }

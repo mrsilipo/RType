@@ -262,7 +262,22 @@ public static class SimulationEngineDefinitionLoader
                 OneTwentyKmhAngleDegrees = ReadValueSingleWithFallback(root, defaults.Steering.OneTwentyKmhAngleDegrees, sectionName, fallbackSectionName, "steering", "oneTwentyKmhAngleDegrees"),
                 TwoHundredKmhAngleDegrees = ReadValueSingleWithFallback(root, defaults.Steering.TwoHundredKmhAngleDegrees, sectionName, fallbackSectionName, "steering", "twoHundredKmhAngleDegrees"),
                 SteerSpeedDegreesPerSecond = ReadValueSingleWithFallback(root, defaults.Steering.SteerSpeedDegreesPerSecond, sectionName, fallbackSectionName, "steering", "steerSpeedDegreesPerSecond"),
-                ReturnSpeedDegreesPerSecond = ReadValueSingleWithFallback(root, defaults.Steering.ReturnSpeedDegreesPerSecond, sectionName, fallbackSectionName, "steering", "returnSpeedDegreesPerSecond")
+                ReturnSpeedDegreesPerSecond = ReadValueSingleWithFallback(root, defaults.Steering.ReturnSpeedDegreesPerSecond, sectionName, fallbackSectionName, "steering", "returnSpeedDegreesPerSecond"),
+                PhysicalEnvelopeBlendStartKmh = ReadValueSingleWithFallback(root, defaults.Steering.PhysicalEnvelopeBlendStartKmh, sectionName, fallbackSectionName, "steering", "physicalEnvelopeBlendStartKmh"),
+                PhysicalEnvelopeFullKmh = ReadValueSingleWithFallback(root, defaults.Steering.PhysicalEnvelopeFullKmh, sectionName, fallbackSectionName, "steering", "physicalEnvelopeFullKmh"),
+                NormalLateralAccelerationG = ReadValueSingleWithFallback(root, defaults.Steering.NormalLateralAccelerationG, sectionName, fallbackSectionName, "steering", "normalLateralAccelerationG"),
+                OverdriveLateralAccelerationG = ReadValueSingleWithFallback(root, defaults.Steering.OverdriveLateralAccelerationG, sectionName, fallbackSectionName, "steering", "overdriveLateralAccelerationG"),
+                NormalCommand = ReadValueSingleWithFallback(root, defaults.Steering.NormalCommand, sectionName, fallbackSectionName, "steering", "normalCommand"),
+                MinimumHighSpeedAngleDegrees = ReadValueSingleWithFallback(root, defaults.Steering.MinimumHighSpeedAngleDegrees, sectionName, fallbackSectionName, "steering", "minimumHighSpeedAngleDegrees"),
+                NormalPeakSlipFraction = ReadValueSingleWithFallback(root, defaults.Steering.NormalPeakSlipFraction, sectionName, fallbackSectionName, "steering", "normalPeakSlipFraction"),
+                OverdrivePeakSlipFraction = ReadValueSingleWithFallback(root, defaults.Steering.OverdrivePeakSlipFraction, sectionName, fallbackSectionName, "steering", "overdrivePeakSlipFraction"),
+                TransientPeakSlipFraction = ReadValueSingleWithFallback(root, defaults.Steering.TransientPeakSlipFraction, sectionName, fallbackSectionName, "steering", "transientPeakSlipFraction"),
+                TransientBoostSeconds = ReadValueSingleWithFallback(root, defaults.Steering.TransientBoostSeconds, sectionName, fallbackSectionName, "steering", "transientBoostSeconds"),
+                DigitalInitialCommandRatePerSecond = ReadValueSingleWithFallback(root, defaults.Steering.DigitalInitialCommandRatePerSecond, sectionName, fallbackSectionName, "steering", "digitalInitialCommandRatePerSecond"),
+                DigitalSustainedCommandRatePerSecond = ReadValueSingleWithFallback(root, defaults.Steering.DigitalSustainedCommandRatePerSecond, sectionName, fallbackSectionName, "steering", "digitalSustainedCommandRatePerSecond"),
+                DigitalRiseAccelerationSeconds = ReadValueSingleWithFallback(root, defaults.Steering.DigitalRiseAccelerationSeconds, sectionName, fallbackSectionName, "steering", "digitalRiseAccelerationSeconds"),
+                DigitalReleaseCommandRatePerSecond = ReadValueSingleWithFallback(root, defaults.Steering.DigitalReleaseCommandRatePerSecond, sectionName, fallbackSectionName, "steering", "digitalReleaseCommandRatePerSecond"),
+                DigitalCounterSteerRateMultiplier = ReadValueSingleWithFallback(root, defaults.Steering.DigitalCounterSteerRateMultiplier, sectionName, fallbackSectionName, "steering", "digitalCounterSteerRateMultiplier")
             },
             FrontTyres = ReadClassicTyres(root, defaults.FrontTyres, sectionName, fallbackSectionName, "frontTyres"),
             RearTyres = ReadClassicTyres(root, defaults.RearTyres, sectionName, fallbackSectionName, "rearTyres"),
@@ -274,11 +289,45 @@ public static class SimulationEngineDefinitionLoader
             },
             GripBudget = new ClassicBicycleGripBudgetParameters
             {
-                CombinedGripExponent = ReadValueSingleWithFallback(root, defaults.GripBudget.CombinedGripExponent, sectionName, fallbackSectionName, "gripBudget", "combinedGripExponent")
+                CombinedGripExponent = ReadValueSingleWithFallback(root, defaults.GripBudget.CombinedGripExponent, sectionName, fallbackSectionName, "gripBudget", "combinedGripExponent"),
+                BrakingSteeringLateralPriority = ReadValueSingleWithFallback(root, defaults.GripBudget.BrakingSteeringLateralPriority, sectionName, fallbackSectionName, "gripBudget", "brakingSteeringLateralPriority"),
+                BrakingSteeringPrioritySteerStart = ReadValueSingleWithFallback(root, defaults.GripBudget.BrakingSteeringPrioritySteerStart, sectionName, fallbackSectionName, "gripBudget", "brakingSteeringPrioritySteerStart"),
+                BrakingSteeringPrioritySteerEnd = ReadValueSingleWithFallback(root, defaults.GripBudget.BrakingSteeringPrioritySteerEnd, sectionName, fallbackSectionName, "gripBudget", "brakingSteeringPrioritySteerEnd"),
+                BrakingSteeringPriorityBrakeStart = ReadValueSingleWithFallback(root, defaults.GripBudget.BrakingSteeringPriorityBrakeStart, sectionName, fallbackSectionName, "gripBudget", "brakingSteeringPriorityBrakeStart"),
+                BrakingSteeringPriorityBrakeEnd = ReadValueSingleWithFallback(root, defaults.GripBudget.BrakingSteeringPriorityBrakeEnd, sectionName, fallbackSectionName, "gripBudget", "brakingSteeringPriorityBrakeEnd"),
+                BrakingSteeringFrontBrakeMultiplier = ReadValueSingleWithFallback(root, defaults.GripBudget.BrakingSteeringFrontBrakeMultiplier, sectionName, fallbackSectionName, "gripBudget", "brakingSteeringFrontBrakeMultiplier"),
+                BrakingSteeringRearBrakeMultiplier = ReadValueSingleWithFallback(root, defaults.GripBudget.BrakingSteeringRearBrakeMultiplier, sectionName, fallbackSectionName, "gripBudget", "brakingSteeringRearBrakeMultiplier"),
+                BrakePressureFrontTargetGripUsage = ReadValueSingleWithFallback(root, defaults.GripBudget.BrakePressureFrontTargetGripUsage, sectionName, fallbackSectionName, "gripBudget", "brakePressureFrontTargetGripUsage"),
+                BrakePressureRearTargetGripUsage = ReadValueSingleWithFallback(root, defaults.GripBudget.BrakePressureRearTargetGripUsage, sectionName, fallbackSectionName, "gripBudget", "brakePressureRearTargetGripUsage"),
+                BrakePressureApplyRatePerSecond = ReadValueSingleWithFallback(root, defaults.GripBudget.BrakePressureApplyRatePerSecond, sectionName, fallbackSectionName, "gripBudget", "brakePressureApplyRatePerSecond"),
+                BrakePressureReleaseRatePerSecond = ReadValueSingleWithFallback(root, defaults.GripBudget.BrakePressureReleaseRatePerSecond, sectionName, fallbackSectionName, "gripBudget", "brakePressureReleaseRatePerSecond"),
+                BrakePressureMinimumRatio = ReadValueSingleWithFallback(root, defaults.GripBudget.BrakePressureMinimumRatio, sectionName, fallbackSectionName, "gripBudget", "brakePressureMinimumRatio"),
+                BrakePressureMinimumSpeedMetersPerSecond = ReadValueSingleWithFallback(root, defaults.GripBudget.BrakePressureMinimumSpeedMetersPerSecond, sectionName, fallbackSectionName, "gripBudget", "brakePressureMinimumSpeedMetersPerSecond")
+            },
+            ChassisLoadTransfer = new ClassicChassisLoadTransferParameters
+            {
+                Enabled = ReadValueBooleanWithFallback(root, defaults.ChassisLoadTransfer.Enabled, sectionName, fallbackSectionName, "chassisLoadTransfer", "enabled"),
+                LongitudinalNaturalFrequencyHz = ReadValueSingleWithFallback(root, defaults.ChassisLoadTransfer.LongitudinalNaturalFrequencyHz, sectionName, fallbackSectionName, "chassisLoadTransfer", "longitudinalNaturalFrequencyHz"),
+                LongitudinalDampingRatio = ReadValueSingleWithFallback(root, defaults.ChassisLoadTransfer.LongitudinalDampingRatio, sectionName, fallbackSectionName, "chassisLoadTransfer", "longitudinalDampingRatio"),
+                LateralNaturalFrequencyHz = ReadValueSingleWithFallback(root, defaults.ChassisLoadTransfer.LateralNaturalFrequencyHz, sectionName, fallbackSectionName, "chassisLoadTransfer", "lateralNaturalFrequencyHz"),
+                LateralDampingRatio = ReadValueSingleWithFallback(root, defaults.ChassisLoadTransfer.LateralDampingRatio, sectionName, fallbackSectionName, "chassisLoadTransfer", "lateralDampingRatio")
             },
             LowSpeed = new ClassicBicycleLowSpeedParameters
             {
-                SlipSpeedFloorMetersPerSecond = ReadValueSingleWithFallback(root, defaults.LowSpeed.SlipSpeedFloorMetersPerSecond, sectionName, fallbackSectionName, "lowSpeed", "slipSpeedFloorMetersPerSecond")
+                SlipSpeedFloorMetersPerSecond = ReadValueSingleWithFallback(root, defaults.LowSpeed.SlipSpeedFloorMetersPerSecond, sectionName, fallbackSectionName, "lowSpeed", "slipSpeedFloorMetersPerSecond"),
+                RollingDominantEndMetersPerSecond = ReadValueSingleWithFallback(root, defaults.LowSpeed.RollingDominantEndMetersPerSecond, sectionName, fallbackSectionName, "lowSpeed", "rollingDominantEndMetersPerSecond"),
+                DynamicBlendEndMetersPerSecond = ReadValueSingleWithFallback(root, defaults.LowSpeed.DynamicBlendEndMetersPerSecond, sectionName, fallbackSectionName, "lowSpeed", "dynamicBlendEndMetersPerSecond"),
+                RollingDominantMaximumLateralScale = ReadValueSingleWithFallback(root, defaults.LowSpeed.RollingDominantMaximumLateralScale, sectionName, fallbackSectionName, "lowSpeed", "rollingDominantMaximumLateralScale"),
+                RollingDominantRearLateralScale = ReadValueSingleWithFallback(root, defaults.LowSpeed.RollingDominantRearLateralScale, sectionName, fallbackSectionName, "lowSpeed", "rollingDominantRearLateralScale"),
+                RollingConstraintLateralSpeedMetersPerSecond = ReadValueSingleWithFallback(root, defaults.LowSpeed.RollingConstraintLateralSpeedMetersPerSecond, sectionName, fallbackSectionName, "lowSpeed", "rollingConstraintLateralSpeedMetersPerSecond"),
+                RollingConstraintGripFraction = ReadValueSingleWithFallback(root, defaults.LowSpeed.RollingConstraintGripFraction, sectionName, fallbackSectionName, "lowSpeed", "rollingConstraintGripFraction"),
+                KinematicYawBlend = ReadValueSingleWithFallback(root, defaults.LowSpeed.KinematicYawBlend, sectionName, fallbackSectionName, "lowSpeed", "kinematicYawBlend"),
+                KinematicBlendEndSpeedMetersPerSecond = ReadValueSingleWithFallback(root, defaults.LowSpeed.KinematicBlendEndSpeedMetersPerSecond, sectionName, fallbackSectionName, "lowSpeed", "kinematicBlendEndSpeedMetersPerSecond"),
+                KinematicYawAccelerationLimitDegreesPerSecondSquared = ReadValueSingleWithFallback(root, defaults.LowSpeed.KinematicYawAccelerationLimitDegreesPerSecondSquared, sectionName, fallbackSectionName, "lowSpeed", "kinematicYawAccelerationLimitDegreesPerSecondSquared"),
+                SlipRateLimitEnabled = ReadValueBooleanWithFallback(root, defaults.LowSpeed.SlipRateLimitEnabled, sectionName, fallbackSectionName, "lowSpeed", "slipRateLimitEnabled"),
+                MaxSlipRateDegreesPerSecond = ReadValueSingleWithFallback(root, defaults.LowSpeed.MaxSlipRateDegreesPerSecond, sectionName, fallbackSectionName, "lowSpeed", "maxSlipRateDegreesPerSecond"),
+                SlipRateLimitFadeStartMetersPerSecond = ReadValueSingleWithFallback(root, defaults.LowSpeed.SlipRateLimitFadeStartMetersPerSecond, sectionName, fallbackSectionName, "lowSpeed", "slipRateLimitFadeStartMetersPerSecond"),
+                SlipRateLimitFadeEndMetersPerSecond = ReadValueSingleWithFallback(root, defaults.LowSpeed.SlipRateLimitFadeEndMetersPerSecond, sectionName, fallbackSectionName, "lowSpeed", "slipRateLimitFadeEndMetersPerSecond")
             },
             Resistance = new ClassicBicycleResistanceParameters
             {
@@ -309,7 +358,10 @@ public static class SimulationEngineDefinitionLoader
             PeakSlipAngleDegrees = ReadValueSingleWithFallback(root, defaults.PeakSlipAngleDegrees, sectionName, fallbackSectionName, axleName, "peakSlipAngleDegrees"),
             FalloffSlipAngleDegrees = ReadValueSingleWithFallback(root, defaults.FalloffSlipAngleDegrees, sectionName, fallbackSectionName, axleName, "falloffSlipAngleDegrees"),
             MaxGrip = ReadValueSingleWithFallback(root, defaults.MaxGrip, sectionName, fallbackSectionName, axleName, "maxGrip"),
-            SlidingGrip = ReadValueSingleWithFallback(root, defaults.SlidingGrip, sectionName, fallbackSectionName, axleName, "slidingGrip")
+            SlidingGrip = ReadValueSingleWithFallback(root, defaults.SlidingGrip, sectionName, fallbackSectionName, axleName, "slidingGrip"),
+            LoadSensitivity = ReadValueSingleWithFallback(root, defaults.LoadSensitivity, sectionName, fallbackSectionName, axleName, "loadSensitivity"),
+            ReferenceLoadN = ReadValueSingleWithFallback(root, defaults.ReferenceLoadN, sectionName, fallbackSectionName, axleName, "referenceLoadN"),
+            RelaxationLengthMeters = ReadValueSingleWithFallback(root, defaults.RelaxationLengthMeters, sectionName, fallbackSectionName, axleName, "relaxationLengthMeters")
         };
     }
 
@@ -333,6 +385,27 @@ public static class SimulationEngineDefinitionLoader
         fallbackPath[0] = fallbackSectionName;
         Array.Copy(remainingPath, 0, fallbackPath, 1, remainingPath.Length);
         return ReadValueSingle(root, defaultValue, fallbackPath);
+    }
+
+    private static bool ReadValueBooleanWithFallback(
+        JsonElement root,
+        bool defaultValue,
+        string sectionName,
+        string fallbackSectionName,
+        params string[] remainingPath)
+    {
+        string[] primaryPath = new string[remainingPath.Length + 1];
+        primaryPath[0] = sectionName;
+        Array.Copy(remainingPath, 0, primaryPath, 1, remainingPath.Length);
+        if (TryGet(root, out _, primaryPath))
+        {
+            return ReadValueBool(root, defaultValue, primaryPath);
+        }
+
+        string[] fallbackPath = new string[remainingPath.Length + 1];
+        fallbackPath[0] = fallbackSectionName;
+        Array.Copy(remainingPath, 0, fallbackPath, 1, remainingPath.Length);
+        return ReadValueBool(root, defaultValue, fallbackPath);
     }
 
     private static string ResolveDataPath(string path)

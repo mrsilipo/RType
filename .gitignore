@@ -7,6 +7,7 @@ _external/
 .idea/
 .agents/
 .tmp/
+.codex-build/
 Exports/
 
 *.user
@@ -25,6 +26,10 @@ Telemetry/RaceRuns/*
 Assets/Tracks/3DTrackBuilderAssets/
 Assets/Tracks/AssetoCorsaDownloads/
 Assets/Tracks/KN5_Exporter_FBX/
+Assets/Tracks/AlbertParkStreetCircuit/Original GLB/
+Assets/Tracks/AlbertParkStreetCircuit/Review/*.blend*
+Assets/Tracks/AlbertParkStreetCircuit/Extracted/**/*.glb
+Assets/Models/FakeEG/
 Assets/Models/Ek9_Sukimoto/
 Assets/Models/Joe'sEK9/*.blend*
 Assets/Models/Joe'sEK9/**/*.blend1

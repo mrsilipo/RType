@@ -4,5 +4,6 @@ public enum CameraMode
 {
     Chase1,
     Chase2,
+    FixedDiagnostic,
     InCar
 }

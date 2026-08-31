@@ -1,0 +1,208 @@
+{
+  "roster_id": "AP-0132",
+  "asset_name": "Barrier_TyreStack_A",
+  "source": {
+    "glb": "C:\\Monogames\\GranTurismo\\Assets\\Tracks\\AlbertParkStreetCircuit\\Original GLB\\Albert Park Street Circuit.glb",
+    "object_name": "prop_tyre_stack_A001_tyres_MELBOURNE_0",
+    "mesh_name": "prop_tyre_stack_A001_tyres_MELBOURNE_0",
+    "category": "tyre_wall",
+    "bbox_min_m": [
+      466.726715,
+      -290.448395,
+      -1.678297
+    ],
+    "bbox_max_m": [
+      467.906006,
+      -289.2742,
+      -0.434248
+    ],
+    "dimensions_m": [
+      1.179291,
+      1.174194,
+      1.244049
+    ],
+    "bbox_center_m": [
+      467.316345,
+      -289.861298,
+      -1.056273
+    ],
+    "vertex_count": 624,
+    "triangle_count": 768,
+    "materials": [
+      "tyres_MELBOURNE"
+    ],
+    "material_details": [
+      {
+        "name": "tyres_MELBOURNE",
+        "polygon_count": 768,
+        "base_color": [
+          0.588,
+          0.588,
+          0.588,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 1.0
+      }
+    ],
+    "source_bbox_min_m": [
+      466.888092,
+      -290.288971,
+      -1.676555
+    ],
+    "source_bbox_max_m": [
+      467.742676,
+      -289.430664,
+      -0.439264
+    ],
+    "source_dimensions_m": [
+      0.854584,
+      0.858307,
+      1.237291
+    ],
+    "source_bbox_center_m": [
+      467.315369,
+      -289.859802,
+      -1.05791
+    ],
+    "normalization_offset_m": [
+      -467.315369,
+      289.859802,
+      1.676555
+    ],
+    "material_replacement": {
+      "mode": "painted_tyre_red_white",
+      "assignment_mode": "four_connected_tyre_bands",
+      "component_count": 28,
+      "band_assignments_bottom_to_top": [
+        {
+          "band_index_bottom_to_top": 0,
+          "center_z": 0.130963,
+          "component_count": 6,
+          "polygon_count": 144,
+          "material": "TyrePaint_Red"
+        },
+        {
+          "band_index_bottom_to_top": 1,
+          "center_z": 0.413934,
+          "component_count": 7,
+          "polygon_count": 192,
+          "material": "TyrePaint_OffWhite"
+        },
+        {
+          "band_index_bottom_to_top": 2,
+          "center_z": 0.713126,
+          "component_count": 7,
+          "polygon_count": 192,
+          "material": "TyrePaint_Red"
+        },
+        {
+          "band_index_bottom_to_top": 3,
+          "center_z": 1.043515,
+          "component_count": 8,
+          "polygon_count": 240,
+          "material": "TyrePaint_OffWhite"
+        }
+      ],
+      "visible_order_bottom_to_top": [
+        "TyrePaint_Red",
+        "TyrePaint_OffWhite",
+        "TyrePaint_Red",
+        "TyrePaint_OffWhite"
+      ],
+      "alternating_order_valid": true,
+      "materials": [
+        "TyrePaint_Red",
+        "TyrePaint_OffWhite"
+      ],
+      "polygon_counts_by_material": {
+        "TyrePaint_Red": 336,
+        "TyrePaint_OffWhite": 432
+      }
+    }
+  },
+  "export": {
+    "glb": "C:\\Monogames\\GranTurismo\\Assets\\Tracks\\AlbertParkStreetCircuit\\Extracted\\Barriers\\Barrier_TyreStack_A.glb",
+    "review_blend": "C:\\Monogames\\GranTurismo\\Assets\\Tracks\\AlbertParkStreetCircuit\\Review\\Barrier_TyreStack_A_review.blend",
+    "report_json": "C:\\Monogames\\GranTurismo\\Assets\\Tracks\\AlbertParkStreetCircuit\\Validation\\Barrier_TyreStack_A_validation.json",
+    "report_md": "C:\\Monogames\\GranTurismo\\Assets\\Tracks\\AlbertParkStreetCircuit\\Validation\\Barrier_TyreStack_A_validation.md"
+  },
+  "validation": {
+    "mesh_object_count": 1,
+    "objects": [
+      {
+        "name": "Barrier_TyreStack_A",
+        "mesh_name": "Barrier_TyreStack_A_Mesh",
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_degrees": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "bbox_min_m": [
+          -0.427277,
+          -0.429169,
+          0.0
+        ],
+        "bbox_max_m": [
+          0.427307,
+          0.429138,
+          1.237291
+        ],
+        "bbox_center_m": [
+          1.5e-05,
+          -1.5e-05,
+          0.618646
+        ],
+        "dimensions_m": [
+          0.854584,
+          0.858307,
+          1.237291
+        ],
+        "vertex_count": 624,
+        "triangle_count": 768,
+        "materials": [
+          "TyrePaint_Red",
+          "TyrePaint_OffWhite"
+        ],
+        "material_details": [
+          {
+            "name": "TyrePaint_Red",
+            "polygon_count": 336,
+            "base_color": [
+              0.72,
+              0.035,
+              0.025,
+              1.0
+            ],
+            "metallic": 0.0,
+            "roughness": 0.72
+          },
+          {
+            "name": "TyrePaint_OffWhite",
+            "polygon_count": 432,
+            "base_color": [
+              0.86,
+              0.82,
+              0.72,
+              1.0
+            ],
+            "metallic": 0.0,
+            "roughness": 0.74
+          }
+        ]
+      }
+    ],
+    "passed": true,
+    "failures": []
+  }
+}

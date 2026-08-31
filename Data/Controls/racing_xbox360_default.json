@@ -52,13 +52,13 @@
     "triggerPressedThreshold": 0.55,
     "steering": {
       "axis": "LeftThumbstickX",
-      "invertAxis": false,
+      "invertAxis": true,
       "deadZone": 0.16,
       "negativeButtons": [
-        "DPadLeft"
+        "DPadRight"
       ],
       "positiveButtons": [
-        "DPadRight"
+        "DPadLeft"
       ]
     },
     "actions": {

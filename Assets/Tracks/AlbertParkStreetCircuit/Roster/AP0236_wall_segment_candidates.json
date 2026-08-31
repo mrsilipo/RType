@@ -1,0 +1,3402 @@
+{
+  "source_object": "wall_a083_MELBOURNE_0",
+  "major_axis_xy": [
+    0.988841,
+    -0.148973
+  ],
+  "minor_axis_xy": [
+    0.148973,
+    0.988841
+  ],
+  "angle_degrees": -8.567419,
+  "candidate_component_count": 77,
+  "candidate_buckets": {
+    "0": [
+      {
+        "component_index": 37,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.089294,
+          0.593781,
+          0.36094
+        ],
+        "bbox_center": [
+          275.389038,
+          -206.00058,
+          -1.930918
+        ],
+        "oriented": {
+          "major_min": 303.004507,
+          "major_max": 303.004768,
+          "major_center": 303.004638,
+          "length": 0.000261,
+          "depth": 0.600445,
+          "z_min": -2.111388,
+          "z_max": -1.750448,
+          "height": 0.36094
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 43,
+        "vertex_count": 3,
+        "polygon_count": 1,
+        "triangle_count": 1,
+        "bbox_dimensions": [
+          0.089294,
+          0.594437,
+          0.280088
+        ],
+        "bbox_center": [
+          275.389038,
+          -206.000244,
+          -1.971344
+        ],
+        "oriented": {
+          "major_min": 303.00441,
+          "major_max": 303.004646,
+          "major_center": 303.004528,
+          "length": 0.000237,
+          "depth": 0.601101,
+          "z_min": -2.111388,
+          "z_max": -1.8313,
+          "height": 0.280088
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 36,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.089294,
+          0.593781,
+          0.36094
+        ],
+        "bbox_center": [
+          275.093353,
+          -205.956161,
+          -1.930814
+        ],
+        "oriented": {
+          "major_min": 302.705502,
+          "major_max": 302.705793,
+          "major_center": 302.705647,
+          "length": 0.000292,
+          "depth": 0.60046,
+          "z_min": -2.111284,
+          "z_max": -1.750344,
+          "height": 0.36094
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 42,
+        "vertex_count": 3,
+        "polygon_count": 1,
+        "triangle_count": 1,
+        "bbox_dimensions": [
+          0.089294,
+          0.594437,
+          0.280088
+        ],
+        "bbox_center": [
+          275.093353,
+          -205.955841,
+          -1.97124
+        ],
+        "oriented": {
+          "major_min": 302.705404,
+          "major_max": 302.705641,
+          "major_center": 302.705523,
+          "length": 0.000237,
+          "depth": 0.601101,
+          "z_min": -2.111284,
+          "z_max": -1.831196,
+          "height": 0.280088
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 127,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.089294,
+          0.593781,
+          1.279504
+        ],
+        "bbox_center": [
+          274.264313,
+          -205.831635,
+          -1.47124
+        ],
+        "oriented": {
+          "major_min": 301.867157,
+          "major_max": 301.867735,
+          "major_center": 301.867446,
+          "length": 0.000578,
+          "depth": 0.60046,
+          "z_min": -2.110992,
+          "z_max": -0.831488,
+          "height": 1.279504
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 40,
+        "vertex_count": 3,
+        "polygon_count": 1,
+        "triangle_count": 1,
+        "bbox_dimensions": [
+          0.089294,
+          0.594437,
+          0.280088
+        ],
+        "bbox_center": [
+          274.264313,
+          -205.831299,
+          -1.970948
+        ],
+        "oriented": {
+          "major_min": 301.86706,
+          "major_max": 301.867296,
+          "major_center": 301.867178,
+          "length": 0.000237,
+          "depth": 0.601101,
+          "z_min": -2.110992,
+          "z_max": -1.830904,
+          "height": 0.280088
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 132,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.829041,
+          0.125183,
+          0.278986
+        ],
+        "bbox_center": [
+          274.72348,
+          -205.59668,
+          -1.970397
+        ],
+        "oriented": {
+          "major_min": 301.86706,
+          "major_max": 302.705502,
+          "major_center": 302.286281,
+          "length": 0.838442,
+          "depth": 0.001007,
+          "z_min": -2.10989,
+          "z_max": -1.830904,
+          "height": 0.278986
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 129,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.380646,
+          0.610214,
+          0.001431
+        ],
+        "bbox_center": [
+          275.239563,
+          -205.989685,
+          -1.751059
+        ],
+        "oriented": {
+          "major_min": 302.705519,
+          "major_max": 303.004768,
+          "major_center": 302.855144,
+          "length": 0.29925,
+          "depth": 0.572269,
+          "z_min": -1.751774,
+          "z_max": -1.750344,
+          "height": 0.001431
+        },
+        "include_candidate": true
+      }
+    ],
+    "1": [
+      {
+        "component_index": 34,
+        "vertex_count": 12,
+        "polygon_count": 10,
+        "triangle_count": 10,
+        "bbox_dimensions": [
+          3.959961,
+          0.631134,
+          1.280332
+        ],
+        "bbox_center": [
+          276.199646,
+          -206.406891,
+          -1.472218
+        ],
+        "oriented": {
+          "major_min": 301.867296,
+          "major_max": 305.866035,
+          "major_center": 303.866666,
+          "length": 3.998739,
+          "depth": 0.039406,
+          "z_min": -2.112384,
+          "z_max": -0.832052,
+          "height": 1.280332
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 126,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.089294,
+          0.593796,
+          1.279504
+        ],
+        "bbox_center": [
+          278.218231,
+          -206.425568,
+          -1.472632
+        ],
+        "oriented": {
+          "major_min": 305.865425,
+          "major_max": 305.866035,
+          "major_center": 305.86573,
+          "length": 0.00061,
+          "depth": 0.600475,
+          "z_min": -2.112384,
+          "z_max": -0.83288,
+          "height": 1.279504
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 41,
+        "vertex_count": 3,
+        "polygon_count": 1,
+        "triangle_count": 1,
+        "bbox_dimensions": [
+          0.089294,
+          0.594452,
+          0.280088
+        ],
+        "bbox_center": [
+          278.218231,
+          -206.425232,
+          -1.97234
+        ],
+        "oriented": {
+          "major_min": 305.865326,
+          "major_max": 305.865597,
+          "major_center": 305.865461,
+          "length": 0.000271,
+          "depth": 0.601131,
+          "z_min": -2.112384,
+          "z_max": -1.832296,
+          "height": 0.280088
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 38,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.089294,
+          0.593781,
+          0.36094
+        ],
+        "bbox_center": [
+          277.389191,
+          -206.301025,
+          -1.931622
+        ],
+        "oriented": {
+          "major_min": 305.027081,
+          "major_max": 305.02737,
+          "major_center": 305.027225,
+          "length": 0.00029,
+          "depth": 0.60046,
+          "z_min": -2.112092,
+          "z_max": -1.751152,
+          "height": 0.36094
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 44,
+        "vertex_count": 3,
+        "polygon_count": 1,
+        "triangle_count": 1,
+        "bbox_dimensions": [
+          0.089294,
+          0.594437,
+          0.280088
+        ],
+        "bbox_center": [
+          277.389191,
+          -206.30069,
+          -1.972048
+        ],
+        "oriented": {
+          "major_min": 305.026981,
+          "major_max": 305.02725,
+          "major_center": 305.027116,
+          "length": 0.000269,
+          "depth": 0.601116,
+          "z_min": -2.112092,
+          "z_max": -1.832004,
+          "height": 0.280088
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 39,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.089294,
+          0.593781,
+          0.36094
+        ],
+        "bbox_center": [
+          277.087708,
+          -206.255737,
+          -1.931516
+        ],
+        "oriented": {
+          "major_min": 304.722206,
+          "major_max": 304.722528,
+          "major_center": 304.722367,
+          "length": 0.000322,
+          "depth": 0.60046,
+          "z_min": -2.111986,
+          "z_max": -1.751046,
+          "height": 0.36094
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 45,
+        "vertex_count": 3,
+        "polygon_count": 1,
+        "triangle_count": 1,
+        "bbox_dimensions": [
+          0.089294,
+          0.594437,
+          0.280088
+        ],
+        "bbox_center": [
+          277.087708,
+          -206.255402,
+          -1.971942
+        ],
+        "oriented": {
+          "major_min": 304.722109,
+          "major_max": 304.722376,
+          "major_center": 304.722242,
+          "length": 0.000267,
+          "depth": 0.601101,
+          "z_min": -2.111986,
+          "z_max": -1.831898,
+          "height": 0.280088
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 130,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.829041,
+          0.125183,
+          0.278986
+        ],
+        "bbox_center": [
+          277.848358,
+          -206.066071,
+          -1.971497
+        ],
+        "oriented": {
+          "major_min": 305.026981,
+          "major_max": 305.865425,
+          "major_center": 305.446203,
+          "length": 0.838444,
+          "depth": 0.001022,
+          "z_min": -2.11099,
+          "z_max": -1.832004,
+          "height": 0.278986
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 131,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          1.698669,
+          0.255814,
+          0.279292
+        ],
+        "bbox_center": [
+          276.28302,
+          -205.830933,
+          -1.970946
+        ],
+        "oriented": {
+          "major_min": 303.00441,
+          "major_max": 304.722206,
+          "major_center": 303.863308,
+          "length": 1.717796,
+          "depth": 0.001392,
+          "z_min": -2.110592,
+          "z_max": -1.8313,
+          "height": 0.279292
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 3,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.089294,
+          0.593796,
+          0.358693
+        ],
+        "bbox_center": [
+          279.348755,
+          -206.595551,
+          -1.854771
+        ],
+        "oriented": {
+          "major_min": 307.008669,
+          "major_max": 307.008961,
+          "major_center": 307.008815,
+          "length": 0.000292,
+          "depth": 0.60046,
+          "z_min": -2.034118,
+          "z_max": -1.675425,
+          "height": 0.358693
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 9,
+        "vertex_count": 3,
+        "polygon_count": 1,
+        "triangle_count": 1,
+        "bbox_dimensions": [
+          0.089294,
+          0.594437,
+          0.280088
+        ],
+        "bbox_center": [
+          279.348755,
+          -206.595245,
+          -1.894074
+        ],
+        "oriented": {
+          "major_min": 307.008574,
+          "major_max": 307.008812,
+          "major_center": 307.008693,
+          "length": 0.000238,
+          "depth": 0.601101,
+          "z_min": -2.034118,
+          "z_max": -1.75403,
+          "height": 0.280088
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 2,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.089294,
+          0.593781,
+          0.358693
+        ],
+        "bbox_center": [
+          279.053101,
+          -206.551147,
+          -1.854667
+        ],
+        "oriented": {
+          "major_min": 306.709696,
+          "major_max": 306.709955,
+          "major_center": 306.709826,
+          "length": 0.000259,
+          "depth": 0.60046,
+          "z_min": -2.034014,
+          "z_max": -1.675321,
+          "height": 0.358693
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 8,
+        "vertex_count": 3,
+        "polygon_count": 1,
+        "triangle_count": 1,
+        "bbox_dimensions": [
+          0.089294,
+          0.594437,
+          0.280088
+        ],
+        "bbox_center": [
+          279.053101,
+          -206.550812,
+          -1.89397
+        ],
+        "oriented": {
+          "major_min": 306.709599,
+          "major_max": 306.709835,
+          "major_center": 306.709717,
+          "length": 0.000237,
+          "depth": 0.601101,
+          "z_min": -2.034014,
+          "z_max": -1.753926,
+          "height": 0.280088
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 62,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.089294,
+          0.593796,
+          1.279504
+        ],
+        "bbox_center": [
+          278.218231,
+          -206.425751,
+          -1.393968
+        ],
+        "oriented": {
+          "major_min": 305.865452,
+          "major_max": 305.866064,
+          "major_center": 305.865758,
+          "length": 0.000612,
+          "depth": 0.600475,
+          "z_min": -2.03372,
+          "z_max": -0.754216,
+          "height": 1.279504
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 6,
+        "vertex_count": 3,
+        "polygon_count": 1,
+        "triangle_count": 1,
+        "bbox_dimensions": [
+          0.089294,
+          0.594452,
+          0.280088
+        ],
+        "bbox_center": [
+          278.218231,
+          -206.425415,
+          -1.893676
+        ],
+        "oriented": {
+          "major_min": 305.865355,
+          "major_max": 305.865623,
+          "major_center": 305.865489,
+          "length": 0.000269,
+          "depth": 0.601131,
+          "z_min": -2.03372,
+          "z_max": -1.753632,
+          "height": 0.280088
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 67,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.834869,
+          0.126068,
+          0.278988
+        ],
+        "bbox_center": [
+          278.680298,
+          -206.191223,
+          -1.893126
+        ],
+        "oriented": {
+          "major_min": 305.865355,
+          "major_max": 306.709696,
+          "major_center": 306.287525,
+          "length": 0.844341,
+          "depth": 0.001003,
+          "z_min": -2.03262,
+          "z_max": -1.753632,
+          "height": 0.278988
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 35,
+        "vertex_count": 12,
+        "polygon_count": 10,
+        "triangle_count": 10,
+        "bbox_dimensions": [
+          4.001099,
+          0.910324,
+          1.000807
+        ],
+        "bbox_center": [
+          276.262329,
+          -205.989899,
+          -1.331892
+        ],
+        "oriented": {
+          "major_min": 301.867157,
+          "major_max": 305.8659,
+          "major_center": 303.866529,
+          "length": 3.998743,
+          "depth": 0.321629,
+          "z_min": -1.832296,
+          "z_max": -0.831488,
+          "height": 1.000807
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 128,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.386444,
+          0.611084,
+          0.001433
+        ],
+        "bbox_center": [
+          277.236816,
+          -206.289703,
+          -1.751762
+        ],
+        "oriented": {
+          "major_min": 304.722284,
+          "major_max": 305.02737,
+          "major_center": 304.874827,
+          "length": 0.305086,
+          "depth": 0.572266,
+          "z_min": -1.752478,
+          "z_max": -1.751046,
+          "height": 0.001433
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 64,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.380676,
+          0.610214,
+          0.001431
+        ],
+        "bbox_center": [
+          279.19931,
+          -206.584656,
+          -1.676036
+        ],
+        "oriented": {
+          "major_min": 306.709711,
+          "major_max": 307.008961,
+          "major_center": 306.859336,
+          "length": 0.29925,
+          "depth": 0.572277,
+          "z_min": -1.676752,
+          "z_max": -1.675321,
+          "height": 0.001431
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 125,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          3.98999,
+          0.834122,
+          0.001954
+        ],
+        "bbox_center": [
+          276.220703,
+          -206.268188,
+          -0.832466
+        ],
+        "oriented": {
+          "major_min": 301.867628,
+          "major_max": 305.866035,
+          "major_center": 303.866832,
+          "length": 3.998407,
+          "depth": 0.244591,
+          "z_min": -0.833443,
+          "z_max": -0.831488,
+          "height": 0.001954
+        },
+        "include_candidate": true
+      }
+    ],
+    "2": [
+      {
+        "component_index": 0,
+        "vertex_count": 12,
+        "polygon_count": 10,
+        "triangle_count": 10,
+        "bbox_dimensions": [
+          3.959991,
+          0.631119,
+          1.280332
+        ],
+        "bbox_center": [
+          280.153564,
+          -207.001007,
+          -1.394945
+        ],
+        "oriented": {
+          "major_min": 305.865623,
+          "major_max": 309.864363,
+          "major_center": 307.864993,
+          "length": 3.998739,
+          "depth": 0.03944,
+          "z_min": -2.035111,
+          "z_max": -0.754779,
+          "height": 1.280332
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 61,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.089294,
+          0.593781,
+          1.279504
+        ],
+        "bbox_center": [
+          282.17218,
+          -207.019669,
+          -1.395359
+        ],
+        "oriented": {
+          "major_min": 309.863752,
+          "major_max": 309.864363,
+          "major_center": 309.864058,
+          "length": 0.00061,
+          "depth": 0.60046,
+          "z_min": -2.035111,
+          "z_max": -0.755607,
+          "height": 1.279504
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 7,
+        "vertex_count": 3,
+        "polygon_count": 1,
+        "triangle_count": 1,
+        "bbox_dimensions": [
+          0.089294,
+          0.594437,
+          0.280088
+        ],
+        "bbox_center": [
+          282.17218,
+          -207.019348,
+          -1.895067
+        ],
+        "oriented": {
+          "major_min": 309.863655,
+          "major_max": 309.863922,
+          "major_center": 309.863789,
+          "length": 0.000267,
+          "depth": 0.601101,
+          "z_min": -2.035111,
+          "z_max": -1.755023,
+          "height": 0.280088
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 4,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.089264,
+          0.593796,
+          0.358692
+        ],
+        "bbox_center": [
+          281.34314,
+          -206.895142,
+          -1.855473
+        ],
+        "oriented": {
+          "major_min": 309.025375,
+          "major_max": 309.025696,
+          "major_center": 309.025536,
+          "length": 0.00032,
+          "depth": 0.600456,
+          "z_min": -2.034819,
+          "z_max": -1.676127,
+          "height": 0.358692
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 10,
+        "vertex_count": 3,
+        "polygon_count": 1,
+        "triangle_count": 1,
+        "bbox_dimensions": [
+          0.089264,
+          0.594437,
+          0.280088
+        ],
+        "bbox_center": [
+          281.34314,
+          -206.894806,
+          -1.894776
+        ],
+        "oriented": {
+          "major_min": 309.02528,
+          "major_max": 309.025578,
+          "major_center": 309.025429,
+          "length": 0.000298,
+          "depth": 0.601097,
+          "z_min": -2.034819,
+          "z_max": -1.754732,
+          "height": 0.280088
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 5,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.089294,
+          0.593781,
+          0.358693
+        ],
+        "bbox_center": [
+          281.047455,
+          -206.850723,
+          -1.855369
+        ],
+        "oriented": {
+          "major_min": 308.726433,
+          "major_max": 308.72669,
+          "major_center": 308.726562,
+          "length": 0.000257,
+          "depth": 0.60046,
+          "z_min": -2.034715,
+          "z_max": -1.676023,
+          "height": 0.358693
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 11,
+        "vertex_count": 3,
+        "polygon_count": 1,
+        "triangle_count": 1,
+        "bbox_dimensions": [
+          0.089294,
+          0.594437,
+          0.280088
+        ],
+        "bbox_center": [
+          281.047455,
+          -206.850403,
+          -1.894671
+        ],
+        "oriented": {
+          "major_min": 308.726334,
+          "major_max": 308.726572,
+          "major_center": 308.726453,
+          "length": 0.000238,
+          "depth": 0.601101,
+          "z_min": -2.034715,
+          "z_max": -1.754628,
+          "height": 0.280088
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 65,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.829071,
+          0.125183,
+          0.278986
+        ],
+        "bbox_center": [
+          281.802307,
+          -206.660187,
+          -1.894225
+        ],
+        "oriented": {
+          "major_min": 309.02528,
+          "major_max": 309.863752,
+          "major_center": 309.444516,
+          "length": 0.838472,
+          "depth": 0.001011,
+          "z_min": -2.033717,
+          "z_max": -1.754732,
+          "height": 0.278986
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 66,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          1.6987,
+          0.255814,
+          0.279292
+        ],
+        "bbox_center": [
+          280.242737,
+          -206.425934,
+          -1.893676
+        ],
+        "oriented": {
+          "major_min": 307.008574,
+          "major_max": 308.726433,
+          "major_center": 307.867503,
+          "length": 1.717859,
+          "depth": 0.001385,
+          "z_min": -2.033322,
+          "z_max": -1.75403,
+          "height": 0.279292
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 15,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.089294,
+          0.593781,
+          0.36094
+        ],
+        "bbox_center": [
+          283.302704,
+          -207.18959,
+          -1.810088
+        ],
+        "oriented": {
+          "major_min": 311.006987,
+          "major_max": 311.007246,
+          "major_center": 311.007116,
+          "length": 0.000259,
+          "depth": 0.600464,
+          "z_min": -1.990558,
+          "z_max": -1.629618,
+          "height": 0.36094
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 21,
+        "vertex_count": 3,
+        "polygon_count": 1,
+        "triangle_count": 1,
+        "bbox_dimensions": [
+          0.089294,
+          0.594437,
+          0.280088
+        ],
+        "bbox_center": [
+          283.302704,
+          -207.18927,
+          -1.850514
+        ],
+        "oriented": {
+          "major_min": 311.006887,
+          "major_max": 311.007156,
+          "major_center": 311.007022,
+          "length": 0.000269,
+          "depth": 0.601105,
+          "z_min": -1.990558,
+          "z_max": -1.710471,
+          "height": 0.280088
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 14,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.089294,
+          0.593796,
+          0.36094
+        ],
+        "bbox_center": [
+          283.007019,
+          -207.145172,
+          -1.809984
+        ],
+        "oriented": {
+          "major_min": 310.707979,
+          "major_max": 310.708271,
+          "major_center": 310.708125,
+          "length": 0.000292,
+          "depth": 0.60046,
+          "z_min": -1.990454,
+          "z_max": -1.629514,
+          "height": 0.36094
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 20,
+        "vertex_count": 3,
+        "polygon_count": 1,
+        "triangle_count": 1,
+        "bbox_dimensions": [
+          0.089294,
+          0.594452,
+          0.280088
+        ],
+        "bbox_center": [
+          283.007019,
+          -207.144852,
+          -1.85041
+        ],
+        "oriented": {
+          "major_min": 310.707882,
+          "major_max": 310.708153,
+          "major_center": 310.708017,
+          "length": 0.000271,
+          "depth": 0.601116,
+          "z_min": -1.990454,
+          "z_max": -1.710366,
+          "height": 0.280088
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 84,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.089294,
+          0.593781,
+          1.279504
+        ],
+        "bbox_center": [
+          282.17218,
+          -207.019775,
+          -1.350409
+        ],
+        "oriented": {
+          "major_min": 309.863768,
+          "major_max": 309.864378,
+          "major_center": 309.864073,
+          "length": 0.00061,
+          "depth": 0.60046,
+          "z_min": -1.99016,
+          "z_max": -0.710657,
+          "height": 1.279504
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 18,
+        "vertex_count": 3,
+        "polygon_count": 1,
+        "triangle_count": 1,
+        "bbox_dimensions": [
+          0.089294,
+          0.594437,
+          0.280088
+        ],
+        "bbox_center": [
+          282.17218,
+          -207.01944,
+          -1.850117
+        ],
+        "oriented": {
+          "major_min": 309.86367,
+          "major_max": 309.863937,
+          "major_center": 309.863804,
+          "length": 0.000267,
+          "depth": 0.601101,
+          "z_min": -1.99016,
+          "z_max": -1.710073,
+          "height": 0.280088
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 89,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.834839,
+          0.126053,
+          0.278988
+        ],
+        "bbox_center": [
+          282.634247,
+          -206.785248,
+          -1.849567
+        ],
+        "oriented": {
+          "major_min": 309.86367,
+          "major_max": 310.707979,
+          "major_center": 310.285825,
+          "length": 0.844309,
+          "depth": 0.001015,
+          "z_min": -1.989061,
+          "z_max": -1.710073,
+          "height": 0.278988
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 1,
+        "vertex_count": 12,
+        "polygon_count": 10,
+        "triangle_count": 10,
+        "bbox_dimensions": [
+          4.001129,
+          0.910324,
+          1.000807
+        ],
+        "bbox_center": [
+          280.216248,
+          -206.584015,
+          -1.25462
+        ],
+        "oriented": {
+          "major_min": 305.865452,
+          "major_max": 309.864256,
+          "major_center": 307.864854,
+          "length": 3.998804,
+          "depth": 0.321632,
+          "z_min": -1.755023,
+          "z_max": -0.754216,
+          "height": 1.000807
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 63,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.380676,
+          0.610214,
+          0.001431
+        ],
+        "bbox_center": [
+          281.193665,
+          -206.884247,
+          -1.676738
+        ],
+        "oriented": {
+          "major_min": 308.726448,
+          "major_max": 309.025696,
+          "major_center": 308.876072,
+          "length": 0.299248,
+          "depth": 0.572273,
+          "z_min": -1.677453,
+          "z_max": -1.676023,
+          "height": 0.001431
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 86,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.380676,
+          0.610214,
+          0.001431
+        ],
+        "bbox_center": [
+          283.153229,
+          -207.178711,
+          -1.630229
+        ],
+        "oriented": {
+          "major_min": 310.707998,
+          "major_max": 311.007246,
+          "major_center": 310.857622,
+          "length": 0.299248,
+          "depth": 0.572262,
+          "z_min": -1.630945,
+          "z_max": -1.629514,
+          "height": 0.001431
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 60,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          3.990021,
+          0.834106,
+          0.001954
+        ],
+        "bbox_center": [
+          280.174622,
+          -206.862305,
+          -0.755193
+        ],
+        "oriented": {
+          "major_min": 305.865927,
+          "major_max": 309.864363,
+          "major_center": 307.865145,
+          "length": 3.998436,
+          "depth": 0.244625,
+          "z_min": -0.756171,
+          "z_max": -0.754216,
+          "height": 0.001954
+        },
+        "include_candidate": true
+      }
+    ],
+    "3": [
+      {
+        "component_index": 27,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.089294,
+          0.593796,
+          0.36094
+        ],
+        "bbox_center": [
+          287.256622,
+          -207.783508,
+          -1.81148
+        ],
+        "oriented": {
+          "major_min": 315.005255,
+          "major_max": 315.005577,
+          "major_center": 315.005416,
+          "length": 0.000322,
+          "depth": 0.600479,
+          "z_min": -1.99195,
+          "z_max": -1.631009,
+          "height": 0.36094
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 32,
+        "vertex_count": 3,
+        "polygon_count": 1,
+        "triangle_count": 1,
+        "bbox_dimensions": [
+          0.089294,
+          0.594437,
+          0.280088
+        ],
+        "bbox_center": [
+          287.256622,
+          -207.783203,
+          -1.851906
+        ],
+        "oriented": {
+          "major_min": 315.005157,
+          "major_max": 315.005426,
+          "major_center": 315.005292,
+          "length": 0.000269,
+          "depth": 0.60112,
+          "z_min": -1.99195,
+          "z_max": -1.711862,
+          "height": 0.280088
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 26,
+        "vertex_count": 5,
+        "polygon_count": 3,
+        "triangle_count": 3,
+        "bbox_dimensions": [
+          0.089294,
+          0.594437,
+          0.36094
+        ],
+        "bbox_center": [
+          286.960968,
+          -207.73877,
+          -1.811375
+        ],
+        "oriented": {
+          "major_min": 314.706182,
+          "major_max": 314.706572,
+          "major_center": 314.706377,
+          "length": 0.000389,
+          "depth": 0.601105,
+          "z_min": -1.991845,
+          "z_max": -1.630906,
+          "height": 0.36094
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 12,
+        "vertex_count": 12,
+        "polygon_count": 10,
+        "triangle_count": 10,
+        "bbox_dimensions": [
+          3.965759,
+          0.632004,
+          1.280334
+        ],
+        "bbox_center": [
+          284.110413,
+          -207.595459,
+          -1.351387
+        ],
+        "oriented": {
+          "major_min": 309.863937,
+          "major_max": 313.868515,
+          "major_center": 311.866226,
+          "length": 4.004578,
+          "depth": 0.039413,
+          "z_min": -1.991554,
+          "z_max": -0.71122,
+          "height": 1.280334
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 83,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.089294,
+          0.593796,
+          1.279504
+        ],
+        "bbox_center": [
+          286.131897,
+          -207.614563,
+          -1.351802
+        ],
+        "oriented": {
+          "major_min": 313.867903,
+          "major_max": 313.868515,
+          "major_center": 313.868209,
+          "length": 0.000612,
+          "depth": 0.600475,
+          "z_min": -1.991554,
+          "z_max": -0.71205,
+          "height": 1.279504
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 105,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.089294,
+          0.593796,
+          1.279504
+        ],
+        "bbox_center": [
+          286.131897,
+          -207.614563,
+          -1.351802
+        ],
+        "oriented": {
+          "major_min": 313.867903,
+          "major_max": 313.868515,
+          "major_center": 313.868209,
+          "length": 0.000612,
+          "depth": 0.600475,
+          "z_min": -1.991554,
+          "z_max": -0.71205,
+          "height": 1.279504
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 19,
+        "vertex_count": 3,
+        "polygon_count": 1,
+        "triangle_count": 1,
+        "bbox_dimensions": [
+          0.089294,
+          0.594452,
+          0.280088
+        ],
+        "bbox_center": [
+          286.131897,
+          -207.614243,
+          -1.85151
+        ],
+        "oriented": {
+          "major_min": 313.867805,
+          "major_max": 313.868074,
+          "major_center": 313.86794,
+          "length": 0.000269,
+          "depth": 0.601116,
+          "z_min": -1.991554,
+          "z_max": -1.711466,
+          "height": 0.280088
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 30,
+        "vertex_count": 3,
+        "polygon_count": 1,
+        "triangle_count": 1,
+        "bbox_dimensions": [
+          0.089294,
+          0.594452,
+          0.280088
+        ],
+        "bbox_center": [
+          286.131897,
+          -207.614243,
+          -1.85151
+        ],
+        "oriented": {
+          "major_min": 313.867805,
+          "major_max": 313.868074,
+          "major_center": 313.86794,
+          "length": 0.000269,
+          "depth": 0.601116,
+          "z_min": -1.991554,
+          "z_max": -1.711466,
+          "height": 0.280088
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 16,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.089294,
+          0.593781,
+          0.36094
+        ],
+        "bbox_center": [
+          285.297058,
+          -207.489166,
+          -1.81079
+        ],
+        "oriented": {
+          "major_min": 313.023722,
+          "major_max": 313.023983,
+          "major_center": 313.023852,
+          "length": 0.000261,
+          "depth": 0.60046,
+          "z_min": -1.99126,
+          "z_max": -1.63032,
+          "height": 0.36094
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 22,
+        "vertex_count": 3,
+        "polygon_count": 1,
+        "triangle_count": 1,
+        "bbox_dimensions": [
+          0.089294,
+          0.594437,
+          0.280088
+        ],
+        "bbox_center": [
+          285.297058,
+          -207.488831,
+          -1.851216
+        ],
+        "oriented": {
+          "major_min": 313.023624,
+          "major_max": 313.023861,
+          "major_center": 313.023743,
+          "length": 0.000237,
+          "depth": 0.601101,
+          "z_min": -1.99126,
+          "z_max": -1.711172,
+          "height": 0.280088
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 17,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.089294,
+          0.593796,
+          0.36094
+        ],
+        "bbox_center": [
+          285.001373,
+          -207.444763,
+          -1.810686
+        ],
+        "oriented": {
+          "major_min": 312.724716,
+          "major_max": 312.725006,
+          "major_center": 312.724861,
+          "length": 0.00029,
+          "depth": 0.600464,
+          "z_min": -1.991156,
+          "z_max": -1.630216,
+          "height": 0.36094
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 23,
+        "vertex_count": 3,
+        "polygon_count": 1,
+        "triangle_count": 1,
+        "bbox_dimensions": [
+          0.089294,
+          0.594452,
+          0.280088
+        ],
+        "bbox_center": [
+          285.001373,
+          -207.444427,
+          -1.851112
+        ],
+        "oriented": {
+          "major_min": 312.724617,
+          "major_max": 312.724857,
+          "major_center": 312.724737,
+          "length": 0.00024,
+          "depth": 0.60112,
+          "z_min": -1.991156,
+          "z_max": -1.711068,
+          "height": 0.280088
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 110,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.829071,
+          0.125198,
+          0.278986
+        ],
+        "bbox_center": [
+          286.591064,
+          -207.379608,
+          -1.850959
+        ],
+        "oriented": {
+          "major_min": 313.867805,
+          "major_max": 314.70628,
+          "major_center": 314.287043,
+          "length": 0.838474,
+          "depth": 0.000999,
+          "z_min": -1.990452,
+          "z_max": -1.711466,
+          "height": 0.278986
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 87,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.834839,
+          0.126053,
+          0.278988
+        ],
+        "bbox_center": [
+          285.759125,
+          -207.254639,
+          -1.850666
+        ],
+        "oriented": {
+          "major_min": 313.023624,
+          "major_max": 313.867903,
+          "major_center": 313.445764,
+          "length": 0.844278,
+          "depth": 0.001015,
+          "z_min": -1.99016,
+          "z_max": -1.711172,
+          "height": 0.278988
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 88,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          1.698669,
+          0.255814,
+          0.279292
+        ],
+        "bbox_center": [
+          284.196686,
+          -207.019958,
+          -1.850116
+        ],
+        "oriented": {
+          "major_min": 311.006887,
+          "major_max": 312.724716,
+          "major_center": 311.865802,
+          "length": 1.717829,
+          "depth": 0.001392,
+          "z_min": -1.989762,
+          "z_max": -1.710471,
+          "height": 0.279292
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 13,
+        "vertex_count": 12,
+        "polygon_count": 10,
+        "triangle_count": 10,
+        "bbox_dimensions": [
+          4.006897,
+          0.911194,
+          1.000809
+        ],
+        "bbox_center": [
+          284.173096,
+          -207.178482,
+          -1.211061
+        ],
+        "oriented": {
+          "major_min": 309.863768,
+          "major_max": 313.868408,
+          "major_center": 311.866088,
+          "length": 4.004641,
+          "depth": 0.321636,
+          "z_min": -1.711466,
+          "z_max": -0.710657,
+          "height": 1.000809
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 107,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.380676,
+          0.610214,
+          0.001431
+        ],
+        "bbox_center": [
+          287.107178,
+          -207.772644,
+          -1.631621
+        ],
+        "oriented": {
+          "major_min": 314.706329,
+          "major_max": 315.005577,
+          "major_center": 314.855953,
+          "length": 0.299248,
+          "depth": 0.572289,
+          "z_min": -1.632336,
+          "z_max": -1.630906,
+          "height": 0.001431
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 85,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.380646,
+          0.610214,
+          0.001431
+        ],
+        "bbox_center": [
+          285.147583,
+          -207.478271,
+          -1.630931
+        ],
+        "oriented": {
+          "major_min": 312.724764,
+          "major_max": 313.023983,
+          "major_center": 312.874373,
+          "length": 0.299219,
+          "depth": 0.572254,
+          "z_min": -1.631647,
+          "z_max": -1.630216,
+          "height": 0.001431
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 82,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          3.995789,
+          0.834991,
+          0.001956
+        ],
+        "bbox_center": [
+          284.13147,
+          -207.456772,
+          -0.711635
+        ],
+        "oriented": {
+          "major_min": 309.864271,
+          "major_max": 313.868515,
+          "major_center": 311.866393,
+          "length": 4.004244,
+          "depth": 0.244602,
+          "z_min": -0.712613,
+          "z_max": -0.710657,
+          "height": 0.001956
+        },
+        "include_candidate": true
+      }
+    ],
+    "4": [
+      {
+        "component_index": 24,
+        "vertex_count": 12,
+        "polygon_count": 10,
+        "triangle_count": 10,
+        "bbox_dimensions": [
+          3.959991,
+          0.631119,
+          1.280332
+        ],
+        "bbox_center": [
+          288.067261,
+          -208.189819,
+          -1.352779
+        ],
+        "oriented": {
+          "major_min": 313.868074,
+          "major_max": 317.866814,
+          "major_center": 315.867444,
+          "length": 3.998739,
+          "depth": 0.039425,
+          "z_min": -1.992945,
+          "z_max": -0.712613,
+          "height": 1.280332
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 31,
+        "vertex_count": 5,
+        "polygon_count": 3,
+        "triangle_count": 3,
+        "bbox_dimensions": [
+          0.089294,
+          0.594437,
+          1.279504
+        ],
+        "bbox_center": [
+          290.085846,
+          -208.20816,
+          -1.353193
+        ],
+        "oriented": {
+          "major_min": 317.866137,
+          "major_max": 317.866814,
+          "major_center": 317.866475,
+          "length": 0.000677,
+          "depth": 0.601101,
+          "z_min": -1.992945,
+          "z_max": -0.713441,
+          "height": 1.279504
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 28,
+        "vertex_count": 5,
+        "polygon_count": 3,
+        "triangle_count": 3,
+        "bbox_dimensions": [
+          0.089264,
+          0.594437,
+          0.36094
+        ],
+        "bbox_center": [
+          289.250977,
+          -208.082764,
+          -1.812181
+        ],
+        "oriented": {
+          "major_min": 317.021894,
+          "major_max": 317.022284,
+          "major_center": 317.022089,
+          "length": 0.000389,
+          "depth": 0.601112,
+          "z_min": -1.992651,
+          "z_max": -1.631711,
+          "height": 0.36094
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 29,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.089294,
+          0.593781,
+          0.36094
+        ],
+        "bbox_center": [
+          288.955322,
+          -208.038681,
+          -1.812077
+        ],
+        "oriented": {
+          "major_min": 316.723017,
+          "major_max": 316.723307,
+          "major_center": 316.723162,
+          "length": 0.00029,
+          "depth": 0.60046,
+          "z_min": -1.992547,
+          "z_max": -1.631607,
+          "height": 0.36094
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 33,
+        "vertex_count": 3,
+        "polygon_count": 1,
+        "triangle_count": 1,
+        "bbox_dimensions": [
+          0.089294,
+          0.594437,
+          0.280088
+        ],
+        "bbox_center": [
+          288.955322,
+          -208.038361,
+          -1.852503
+        ],
+        "oriented": {
+          "major_min": 316.722919,
+          "major_max": 316.723186,
+          "major_center": 316.723053,
+          "length": 0.000267,
+          "depth": 0.601101,
+          "z_min": -1.992547,
+          "z_max": -1.712459,
+          "height": 0.280088
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 108,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.834869,
+          0.126053,
+          0.278988
+        ],
+        "bbox_center": [
+          289.713074,
+          -207.848572,
+          -1.852057
+        ],
+        "oriented": {
+          "major_min": 317.021894,
+          "major_max": 317.866234,
+          "major_center": 317.444064,
+          "length": 0.844339,
+          "depth": 0.001003,
+          "z_min": -1.991551,
+          "z_max": -1.712564,
+          "height": 0.278988
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 109,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          1.6987,
+          0.255814,
+          0.279292
+        ],
+        "bbox_center": [
+          288.150635,
+          -207.613892,
+          -1.851508
+        ],
+        "oriented": {
+          "major_min": 315.005157,
+          "major_max": 316.723017,
+          "major_center": 315.864087,
+          "length": 1.717859,
+          "depth": 0.001381,
+          "z_min": -1.991154,
+          "z_max": -1.711862,
+          "height": 0.279292
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 25,
+        "vertex_count": 12,
+        "polygon_count": 10,
+        "triangle_count": 10,
+        "bbox_dimensions": [
+          4.001129,
+          0.910324,
+          1.000807
+        ],
+        "bbox_center": [
+          288.129944,
+          -207.772827,
+          -1.212454
+        ],
+        "oriented": {
+          "major_min": 313.867903,
+          "major_max": 317.866707,
+          "major_center": 315.867305,
+          "length": 3.998804,
+          "depth": 0.321629,
+          "z_min": -1.712857,
+          "z_max": -0.71205,
+          "height": 1.000807
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 106,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          0.380676,
+          0.610214,
+          0.001431
+        ],
+        "bbox_center": [
+          289.101532,
+          -208.072205,
+          -1.632323
+        ],
+        "oriented": {
+          "major_min": 316.723034,
+          "major_max": 317.022284,
+          "major_center": 316.872659,
+          "length": 0.29925,
+          "depth": 0.572289,
+          "z_min": -1.633038,
+          "z_max": -1.631607,
+          "height": 0.001431
+        },
+        "include_candidate": true
+      },
+      {
+        "component_index": 104,
+        "vertex_count": 4,
+        "polygon_count": 2,
+        "triangle_count": 2,
+        "bbox_dimensions": [
+          3.990021,
+          0.834106,
+          0.001954
+        ],
+        "bbox_center": [
+          288.088318,
+          -208.051132,
+          -0.713027
+        ],
+        "oriented": {
+          "major_min": 313.868408,
+          "major_max": 317.866814,
+          "major_center": 315.867611,
+          "length": 3.998405,
+          "depth": 0.244614,
+          "z_min": -0.714004,
+          "z_max": -0.71205,
+          "height": 0.001954
+        },
+        "include_candidate": true
+      }
+    ]
+  },
+  "all_large_or_tall_components": [
+    {
+      "component_index": 0,
+      "vertex_count": 12,
+      "polygon_count": 10,
+      "triangle_count": 10,
+      "bbox_dimensions": [
+        3.959991,
+        0.631119,
+        1.280332
+      ],
+      "bbox_center": [
+        280.153564,
+        -207.001007,
+        -1.394945
+      ],
+      "oriented": {
+        "major_min": 305.865623,
+        "major_max": 309.864363,
+        "major_center": 307.864993,
+        "length": 3.998739,
+        "depth": 0.03944,
+        "z_min": -2.035111,
+        "z_max": -0.754779,
+        "height": 1.280332
+      },
+      "include_candidate": true
+    },
+    {
+      "component_index": 1,
+      "vertex_count": 12,
+      "polygon_count": 10,
+      "triangle_count": 10,
+      "bbox_dimensions": [
+        4.001129,
+        0.910324,
+        1.000807
+      ],
+      "bbox_center": [
+        280.216248,
+        -206.584015,
+        -1.25462
+      ],
+      "oriented": {
+        "major_min": 305.865452,
+        "major_max": 309.864256,
+        "major_center": 307.864854,
+        "length": 3.998804,
+        "depth": 0.321632,
+        "z_min": -1.755023,
+        "z_max": -0.754216,
+        "height": 1.000807
+      },
+      "include_candidate": true
+    },
+    {
+      "component_index": 12,
+      "vertex_count": 12,
+      "polygon_count": 10,
+      "triangle_count": 10,
+      "bbox_dimensions": [
+        3.965759,
+        0.632004,
+        1.280334
+      ],
+      "bbox_center": [
+        284.110413,
+        -207.595459,
+        -1.351387
+      ],
+      "oriented": {
+        "major_min": 309.863937,
+        "major_max": 313.868515,
+        "major_center": 311.866226,
+        "length": 4.004578,
+        "depth": 0.039413,
+        "z_min": -1.991554,
+        "z_max": -0.71122,
+        "height": 1.280334
+      },
+      "include_candidate": true
+    },
+    {
+      "component_index": 13,
+      "vertex_count": 12,
+      "polygon_count": 10,
+      "triangle_count": 10,
+      "bbox_dimensions": [
+        4.006897,
+        0.911194,
+        1.000809
+      ],
+      "bbox_center": [
+        284.173096,
+        -207.178482,
+        -1.211061
+      ],
+      "oriented": {
+        "major_min": 309.863768,
+        "major_max": 313.868408,
+        "major_center": 311.866088,
+        "length": 4.004641,
+        "depth": 0.321636,
+        "z_min": -1.711466,
+        "z_max": -0.710657,
+        "height": 1.000809
+      },
+      "include_candidate": true
+    },
+    {
+      "component_index": 24,
+      "vertex_count": 12,
+      "polygon_count": 10,
+      "triangle_count": 10,
+      "bbox_dimensions": [
+        3.959991,
+        0.631119,
+        1.280332
+      ],
+      "bbox_center": [
+        288.067261,
+        -208.189819,
+        -1.352779
+      ],
+      "oriented": {
+        "major_min": 313.868074,
+        "major_max": 317.866814,
+        "major_center": 315.867444,
+        "length": 3.998739,
+        "depth": 0.039425,
+        "z_min": -1.992945,
+        "z_max": -0.712613,
+        "height": 1.280332
+      },
+      "include_candidate": true
+    },
+    {
+      "component_index": 25,
+      "vertex_count": 12,
+      "polygon_count": 10,
+      "triangle_count": 10,
+      "bbox_dimensions": [
+        4.001129,
+        0.910324,
+        1.000807
+      ],
+      "bbox_center": [
+        288.129944,
+        -207.772827,
+        -1.212454
+      ],
+      "oriented": {
+        "major_min": 313.867903,
+        "major_max": 317.866707,
+        "major_center": 315.867305,
+        "length": 3.998804,
+        "depth": 0.321629,
+        "z_min": -1.712857,
+        "z_max": -0.71205,
+        "height": 1.000807
+      },
+      "include_candidate": true
+    },
+    {
+      "component_index": 34,
+      "vertex_count": 12,
+      "polygon_count": 10,
+      "triangle_count": 10,
+      "bbox_dimensions": [
+        3.959961,
+        0.631134,
+        1.280332
+      ],
+      "bbox_center": [
+        276.199646,
+        -206.406891,
+        -1.472218
+      ],
+      "oriented": {
+        "major_min": 301.867296,
+        "major_max": 305.866035,
+        "major_center": 303.866666,
+        "length": 3.998739,
+        "depth": 0.039406,
+        "z_min": -2.112384,
+        "z_max": -0.832052,
+        "height": 1.280332
+      },
+      "include_candidate": true
+    },
+    {
+      "component_index": 35,
+      "vertex_count": 12,
+      "polygon_count": 10,
+      "triangle_count": 10,
+      "bbox_dimensions": [
+        4.001099,
+        0.910324,
+        1.000807
+      ],
+      "bbox_center": [
+        276.262329,
+        -205.989899,
+        -1.331892
+      ],
+      "oriented": {
+        "major_min": 301.867157,
+        "major_max": 305.8659,
+        "major_center": 303.866529,
+        "length": 3.998743,
+        "depth": 0.321629,
+        "z_min": -1.832296,
+        "z_max": -0.831488,
+        "height": 1.000807
+      },
+      "include_candidate": true
+    },
+    {
+      "component_index": 47,
+      "vertex_count": 6,
+      "polygon_count": 4,
+      "triangle_count": 4,
+      "bbox_dimensions": [
+        0.096161,
+        0.647919,
+        3.363416
+      ],
+      "bbox_center": [
+        282.035034,
+        -207.426071,
+        0.88304
+      ],
+      "oriented": {
+        "major_min": 309.788031,
+        "major_max": 309.789465,
+        "major_center": 309.788748,
+        "length": 0.001434,
+        "depth": 0.65501,
+        "z_min": -0.798668,
+        "z_max": 2.564748,
+        "height": 3.363416
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 49,
+      "vertex_count": 6,
+      "polygon_count": 4,
+      "triangle_count": 4,
+      "bbox_dimensions": [
+        0.096161,
+        0.647903,
+        3.363416
+      ],
+      "bbox_center": [
+        281.959656,
+        -207.414764,
+        0.883066
+      ],
+      "oriented": {
+        "major_min": 309.711853,
+        "major_max": 309.71328,
+        "major_center": 309.712566,
+        "length": 0.001427,
+        "depth": 0.65501,
+        "z_min": -0.798642,
+        "z_max": 2.564774,
+        "height": 3.363416
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 50,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_dimensions": [
+        0.075348,
+        0.017761,
+        2.74876
+      ],
+      "bbox_center": [
+        282.04541,
+        -207.099686,
+        0.575922
+      ],
+      "oriented": {
+        "major_min": 309.711853,
+        "major_max": 309.788992,
+        "major_center": 309.750422,
+        "length": 0.077139,
+        "depth": 0.006416,
+        "z_min": -0.798458,
+        "z_max": 1.950301,
+        "height": 2.74876
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 51,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_dimensions": [
+        0.075378,
+        0.017654,
+        2.699314
+      ],
+      "bbox_center": [
+        282.031982,
+        -207.189056,
+        0.550989
+      ],
+      "oriented": {
+        "major_min": 309.71187,
+        "major_max": 309.789024,
+        "major_center": 309.750447,
+        "length": 0.077154,
+        "depth": 0.006287,
+        "z_min": -0.798668,
+        "z_max": 1.900646,
+        "height": 2.699314
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 54,
+      "vertex_count": 6,
+      "polygon_count": 4,
+      "triangle_count": 4,
+      "bbox_dimensions": [
+        0.096161,
+        0.647903,
+        3.363416
+      ],
+      "bbox_center": [
+        278.324585,
+        -206.868713,
+        0.884345
+      ],
+      "oriented": {
+        "major_min": 306.035995,
+        "major_max": 306.03743,
+        "major_center": 306.036713,
+        "length": 0.001434,
+        "depth": 0.654999,
+        "z_min": -0.797363,
+        "z_max": 2.566053,
+        "height": 3.363416
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 56,
+      "vertex_count": 6,
+      "polygon_count": 4,
+      "triangle_count": 4,
+      "bbox_dimensions": [
+        0.096161,
+        0.647903,
+        3.363416
+      ],
+      "bbox_center": [
+        278.243408,
+        -206.856537,
+        0.884374
+      ],
+      "oriented": {
+        "major_min": 305.953917,
+        "major_max": 305.955345,
+        "major_center": 305.954631,
+        "length": 0.001429,
+        "depth": 0.654999,
+        "z_min": -0.797334,
+        "z_max": 2.566082,
+        "height": 3.363416
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 57,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_dimensions": [
+        0.081177,
+        0.018631,
+        2.748762
+      ],
+      "bbox_center": [
+        278.332092,
+        -206.541901,
+        0.577228
+      ],
+      "oriented": {
+        "major_min": 305.953917,
+        "major_max": 306.036955,
+        "major_center": 305.995436,
+        "length": 0.083038,
+        "depth": 0.006401,
+        "z_min": -0.797153,
+        "z_max": 1.951609,
+        "height": 2.748762
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 58,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_dimensions": [
+        0.081146,
+        0.018509,
+        2.699316
+      ],
+      "bbox_center": [
+        278.318665,
+        -206.631287,
+        0.552295
+      ],
+      "oriented": {
+        "major_min": 305.953968,
+        "major_max": 306.036955,
+        "major_center": 305.995461,
+        "length": 0.082987,
+        "depth": 0.00629,
+        "z_min": -0.797363,
+        "z_max": 1.901953,
+        "height": 2.699316
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 60,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_dimensions": [
+        3.990021,
+        0.834106,
+        0.001954
+      ],
+      "bbox_center": [
+        280.174622,
+        -206.862305,
+        -0.755193
+      ],
+      "oriented": {
+        "major_min": 305.865927,
+        "major_max": 309.864363,
+        "major_center": 307.865145,
+        "length": 3.998436,
+        "depth": 0.244625,
+        "z_min": -0.756171,
+        "z_max": -0.754216,
+        "height": 0.001954
+      },
+      "include_candidate": true
+    },
+    {
+      "component_index": 66,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_dimensions": [
+        1.6987,
+        0.255814,
+        0.279292
+      ],
+      "bbox_center": [
+        280.242737,
+        -206.425934,
+        -1.893676
+      ],
+      "oriented": {
+        "major_min": 307.008574,
+        "major_max": 308.726433,
+        "major_center": 307.867503,
+        "length": 1.717859,
+        "depth": 0.001385,
+        "z_min": -2.033322,
+        "z_max": -1.75403,
+        "height": 0.279292
+      },
+      "include_candidate": true
+    },
+    {
+      "component_index": 69,
+      "vertex_count": 6,
+      "polygon_count": 4,
+      "triangle_count": 4,
+      "bbox_dimensions": [
+        0.096161,
+        0.647919,
+        3.361168
+      ],
+      "bbox_center": [
+        285.988953,
+        -208.020111,
+        0.927723
+      ],
+      "oriented": {
+        "major_min": 313.786346,
+        "major_max": 313.787807,
+        "major_center": 313.787077,
+        "length": 0.001461,
+        "depth": 0.655014,
+        "z_min": -0.752861,
+        "z_max": 2.608307,
+        "height": 3.361168
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 71,
+      "vertex_count": 6,
+      "polygon_count": 4,
+      "triangle_count": 4,
+      "bbox_dimensions": [
+        0.096161,
+        0.647919,
+        3.361168
+      ],
+      "bbox_center": [
+        285.913574,
+        -208.008789,
+        0.927749
+      ],
+      "oriented": {
+        "major_min": 313.710136,
+        "major_max": 313.711571,
+        "major_center": 313.710854,
+        "length": 0.001434,
+        "depth": 0.65501,
+        "z_min": -0.752835,
+        "z_max": 2.608333,
+        "height": 3.361168
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 72,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_dimensions": [
+        0.075378,
+        0.017776,
+        2.74876
+      ],
+      "bbox_center": [
+        285.999359,
+        -207.693726,
+        0.621728
+      ],
+      "oriented": {
+        "major_min": 313.710136,
+        "major_max": 313.787308,
+        "major_center": 313.748722,
+        "length": 0.077171,
+        "depth": 0.006409,
+        "z_min": -0.752652,
+        "z_max": 1.996108,
+        "height": 2.74876
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 73,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_dimensions": [
+        0.075378,
+        0.017654,
+        2.699314
+      ],
+      "bbox_center": [
+        285.985931,
+        -207.783112,
+        0.596796
+      ],
+      "oriented": {
+        "major_min": 313.710186,
+        "major_max": 313.78731,
+        "major_center": 313.748748,
+        "length": 0.077124,
+        "depth": 0.006298,
+        "z_min": -0.752861,
+        "z_max": 1.946453,
+        "height": 2.699314
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 76,
+      "vertex_count": 6,
+      "polygon_count": 4,
+      "triangle_count": 4,
+      "bbox_dimensions": [
+        0.096161,
+        0.647903,
+        3.361168
+      ],
+      "bbox_center": [
+        282.278503,
+        -207.462769,
+        0.929028
+      ],
+      "oriented": {
+        "major_min": 310.034281,
+        "major_max": 310.035713,
+        "major_center": 310.034997,
+        "length": 0.001432,
+        "depth": 0.654999,
+        "z_min": -0.751556,
+        "z_max": 2.609612,
+        "height": 3.361168
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 78,
+      "vertex_count": 6,
+      "polygon_count": 4,
+      "triangle_count": 4,
+      "bbox_dimensions": [
+        0.096191,
+        0.647903,
+        3.361168
+      ],
+      "bbox_center": [
+        282.203156,
+        -207.451447,
+        0.929055
+      ],
+      "oriented": {
+        "major_min": 309.958101,
+        "major_max": 309.959503,
+        "major_center": 309.958802,
+        "length": 0.001402,
+        "depth": 0.654999,
+        "z_min": -0.751529,
+        "z_max": 2.609639,
+        "height": 3.361168
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 79,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_dimensions": [
+        0.075378,
+        0.017761,
+        2.74876
+      ],
+      "bbox_center": [
+        282.28891,
+        -207.136368,
+        0.623034
+      ],
+      "oriented": {
+        "major_min": 309.958101,
+        "major_max": 310.03524,
+        "major_center": 309.996671,
+        "length": 0.077139,
+        "depth": 0.006409,
+        "z_min": -0.751346,
+        "z_max": 1.997414,
+        "height": 2.74876
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 80,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_dimensions": [
+        0.075378,
+        0.017639,
+        2.699314
+      ],
+      "bbox_center": [
+        282.275482,
+        -207.225754,
+        0.598101
+      ],
+      "oriented": {
+        "major_min": 309.95812,
+        "major_max": 310.035273,
+        "major_center": 309.996696,
+        "length": 0.077152,
+        "depth": 0.006283,
+        "z_min": -0.751556,
+        "z_max": 1.947758,
+        "height": 2.699314
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 82,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_dimensions": [
+        3.995789,
+        0.834991,
+        0.001956
+      ],
+      "bbox_center": [
+        284.13147,
+        -207.456772,
+        -0.711635
+      ],
+      "oriented": {
+        "major_min": 309.864271,
+        "major_max": 313.868515,
+        "major_center": 311.866393,
+        "length": 4.004244,
+        "depth": 0.244602,
+        "z_min": -0.712613,
+        "z_max": -0.710657,
+        "height": 0.001956
+      },
+      "include_candidate": true
+    },
+    {
+      "component_index": 88,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_dimensions": [
+        1.698669,
+        0.255814,
+        0.279292
+      ],
+      "bbox_center": [
+        284.196686,
+        -207.019958,
+        -1.850116
+      ],
+      "oriented": {
+        "major_min": 311.006887,
+        "major_max": 312.724716,
+        "major_center": 311.865802,
+        "length": 1.717829,
+        "depth": 0.001392,
+        "z_min": -1.989762,
+        "z_max": -1.710471,
+        "height": 0.279292
+      },
+      "include_candidate": true
+    },
+    {
+      "component_index": 91,
+      "vertex_count": 6,
+      "polygon_count": 4,
+      "triangle_count": 4,
+      "bbox_dimensions": [
+        0.096161,
+        0.647903,
+        3.361168
+      ],
+      "bbox_center": [
+        289.948669,
+        -208.614899,
+        0.926329
+      ],
+      "oriented": {
+        "major_min": 317.790514,
+        "major_max": 317.791941,
+        "major_center": 317.791227,
+        "length": 0.001427,
+        "depth": 0.654995,
+        "z_min": -0.754255,
+        "z_max": 2.606914,
+        "height": 3.361168
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 93,
+      "vertex_count": 6,
+      "polygon_count": 4,
+      "triangle_count": 4,
+      "bbox_dimensions": [
+        0.096161,
+        0.647903,
+        3.361168
+      ],
+      "bbox_center": [
+        289.873352,
+        -208.603577,
+        0.926356
+      ],
+      "oriented": {
+        "major_min": 317.714304,
+        "major_max": 317.715736,
+        "major_center": 317.71502,
+        "length": 0.001432,
+        "depth": 0.654999,
+        "z_min": -0.754228,
+        "z_max": 2.60694,
+        "height": 3.361168
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 94,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_dimensions": [
+        0.075348,
+        0.017761,
+        2.74876
+      ],
+      "bbox_center": [
+        289.959106,
+        -208.288513,
+        0.620335
+      ],
+      "oriented": {
+        "major_min": 317.714304,
+        "major_max": 317.791473,
+        "major_center": 317.752889,
+        "length": 0.077169,
+        "depth": 0.006386,
+        "z_min": -0.754045,
+        "z_max": 1.994715,
+        "height": 2.74876
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 95,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_dimensions": [
+        0.075378,
+        0.017639,
+        2.699314
+      ],
+      "bbox_center": [
+        289.945648,
+        -208.377899,
+        0.595402
+      ],
+      "oriented": {
+        "major_min": 317.714323,
+        "major_max": 317.791475,
+        "major_center": 317.752899,
+        "length": 0.077152,
+        "depth": 0.006287,
+        "z_min": -0.754255,
+        "z_max": 1.94506,
+        "height": 2.699314
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 98,
+      "vertex_count": 6,
+      "polygon_count": 4,
+      "triangle_count": 4,
+      "bbox_dimensions": [
+        0.096161,
+        0.647919,
+        3.361168
+      ],
+      "bbox_center": [
+        286.232483,
+        -208.056686,
+        0.927637
+      ],
+      "oriented": {
+        "major_min": 314.032579,
+        "major_max": 314.034039,
+        "major_center": 314.033309,
+        "length": 0.001459,
+        "depth": 0.65501,
+        "z_min": -0.752947,
+        "z_max": 2.608221,
+        "height": 3.361168
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 100,
+      "vertex_count": 6,
+      "polygon_count": 4,
+      "triangle_count": 4,
+      "bbox_dimensions": [
+        0.096161,
+        0.647919,
+        3.361168
+      ],
+      "bbox_center": [
+        286.157104,
+        -208.045364,
+        0.927664
+      ],
+      "oriented": {
+        "major_min": 313.956369,
+        "major_max": 313.957804,
+        "major_center": 313.957087,
+        "length": 0.001434,
+        "depth": 0.65501,
+        "z_min": -0.75292,
+        "z_max": 2.608248,
+        "height": 3.361168
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 101,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_dimensions": [
+        0.075378,
+        0.017776,
+        2.74876
+      ],
+      "bbox_center": [
+        286.242859,
+        -207.730286,
+        0.621643
+      ],
+      "oriented": {
+        "major_min": 313.956369,
+        "major_max": 314.033541,
+        "major_center": 313.994955,
+        "length": 0.077171,
+        "depth": 0.006409,
+        "z_min": -0.752737,
+        "z_max": 1.996022,
+        "height": 2.74876
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 102,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_dimensions": [
+        0.075348,
+        0.017654,
+        2.699314
+      ],
+      "bbox_center": [
+        286.229431,
+        -207.819672,
+        0.59671
+      ],
+      "oriented": {
+        "major_min": 313.956419,
+        "major_max": 314.033543,
+        "major_center": 313.994981,
+        "length": 0.077124,
+        "depth": 0.006294,
+        "z_min": -0.752947,
+        "z_max": 1.946367,
+        "height": 2.699314
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 104,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_dimensions": [
+        3.990021,
+        0.834106,
+        0.001954
+      ],
+      "bbox_center": [
+        288.088318,
+        -208.051132,
+        -0.713027
+      ],
+      "oriented": {
+        "major_min": 313.868408,
+        "major_max": 317.866814,
+        "major_center": 315.867611,
+        "length": 3.998405,
+        "depth": 0.244614,
+        "z_min": -0.714004,
+        "z_max": -0.71205,
+        "height": 0.001954
+      },
+      "include_candidate": true
+    },
+    {
+      "component_index": 109,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_dimensions": [
+        1.6987,
+        0.255814,
+        0.279292
+      ],
+      "bbox_center": [
+        288.150635,
+        -207.613892,
+        -1.851508
+      ],
+      "oriented": {
+        "major_min": 315.005157,
+        "major_max": 316.723017,
+        "major_center": 315.864087,
+        "length": 1.717859,
+        "depth": 0.001381,
+        "z_min": -1.991154,
+        "z_max": -1.711862,
+        "height": 0.279292
+      },
+      "include_candidate": true
+    },
+    {
+      "component_index": 112,
+      "vertex_count": 6,
+      "polygon_count": 4,
+      "triangle_count": 4,
+      "bbox_dimensions": [
+        0.096161,
+        0.647903,
+        3.363416
+      ],
+      "bbox_center": [
+        278.081116,
+        -206.83197,
+        0.805767
+      ],
+      "oriented": {
+        "major_min": 305.789736,
+        "major_max": 305.79117,
+        "major_center": 305.790453,
+        "length": 0.001434,
+        "depth": 0.654999,
+        "z_min": -0.87594,
+        "z_max": 2.487475,
+        "height": 3.363416
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 114,
+      "vertex_count": 6,
+      "polygon_count": 4,
+      "triangle_count": 4,
+      "bbox_dimensions": [
+        0.096161,
+        0.647903,
+        3.363416
+      ],
+      "bbox_center": [
+        278.005737,
+        -206.820648,
+        0.805794
+      ],
+      "oriented": {
+        "major_min": 305.713524,
+        "major_max": 305.714952,
+        "major_center": 305.714238,
+        "length": 0.001429,
+        "depth": 0.654999,
+        "z_min": -0.875914,
+        "z_max": 2.487502,
+        "height": 3.363416
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 115,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_dimensions": [
+        0.075378,
+        0.017761,
+        2.748759
+      ],
+      "bbox_center": [
+        278.091492,
+        -206.505569,
+        0.498649
+      ],
+      "oriented": {
+        "major_min": 305.713524,
+        "major_max": 305.790695,
+        "major_center": 305.75211,
+        "length": 0.077171,
+        "depth": 0.006393,
+        "z_min": -0.875731,
+        "z_max": 1.873029,
+        "height": 2.748759
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 116,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_dimensions": [
+        0.075378,
+        0.017654,
+        2.701561
+      ],
+      "bbox_center": [
+        278.078064,
+        -206.594971,
+        0.47484
+      ],
+      "oriented": {
+        "major_min": 305.713545,
+        "major_max": 305.790697,
+        "major_center": 305.752121,
+        "length": 0.077152,
+        "depth": 0.006302,
+        "z_min": -0.87594,
+        "z_max": 1.825621,
+        "height": 2.701561
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 119,
+      "vertex_count": 6,
+      "polygon_count": 4,
+      "triangle_count": 4,
+      "bbox_dimensions": [
+        0.096161,
+        0.647919,
+        3.363415
+      ],
+      "bbox_center": [
+        274.364868,
+        -206.273743,
+        0.807075
+      ],
+      "oriented": {
+        "major_min": 302.031799,
+        "major_max": 302.03323,
+        "major_center": 302.032515,
+        "length": 0.001431,
+        "depth": 0.65501,
+        "z_min": -0.874633,
+        "z_max": 2.488783,
+        "height": 3.363415
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 121,
+      "vertex_count": 6,
+      "polygon_count": 4,
+      "triangle_count": 4,
+      "bbox_dimensions": [
+        0.096161,
+        0.647919,
+        3.363415
+      ],
+      "bbox_center": [
+        274.28949,
+        -206.262421,
+        0.807101
+      ],
+      "oriented": {
+        "major_min": 301.955589,
+        "major_max": 301.95705,
+        "major_center": 301.95632,
+        "length": 0.001461,
+        "depth": 0.655014,
+        "z_min": -0.874606,
+        "z_max": 2.488809,
+        "height": 3.363415
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 122,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_dimensions": [
+        0.075348,
+        0.017776,
+        2.748759
+      ],
+      "bbox_center": [
+        274.375244,
+        -205.947357,
+        0.499957
+      ],
+      "oriented": {
+        "major_min": 301.955589,
+        "major_max": 302.032763,
+        "major_center": 301.994176,
+        "length": 0.077173,
+        "depth": 0.006401,
+        "z_min": -0.874423,
+        "z_max": 1.874336,
+        "height": 2.748759
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 123,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_dimensions": [
+        0.075378,
+        0.017654,
+        2.701561
+      ],
+      "bbox_center": [
+        274.361816,
+        -206.036743,
+        0.476148
+      ],
+      "oriented": {
+        "major_min": 301.955608,
+        "major_max": 302.032793,
+        "major_center": 301.994201,
+        "length": 0.077185,
+        "depth": 0.006302,
+        "z_min": -0.874633,
+        "z_max": 1.826928,
+        "height": 2.701561
+      },
+      "include_candidate": false
+    },
+    {
+      "component_index": 125,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_dimensions": [
+        3.98999,
+        0.834122,
+        0.001954
+      ],
+      "bbox_center": [
+        276.220703,
+        -206.268188,
+        -0.832466
+      ],
+      "oriented": {
+        "major_min": 301.867628,
+        "major_max": 305.866035,
+        "major_center": 303.866832,
+        "length": 3.998407,
+        "depth": 0.244591,
+        "z_min": -0.833443,
+        "z_max": -0.831488,
+        "height": 0.001954
+      },
+      "include_candidate": true
+    },
+    {
+      "component_index": 131,
+      "vertex_count": 4,
+      "polygon_count": 2,
+      "triangle_count": 2,
+      "bbox_dimensions": [
+        1.698669,
+        0.255814,
+        0.279292
+      ],
+      "bbox_center": [
+        276.28302,
+        -205.830933,
+        -1.970946
+      ],
+      "oriented": {
+        "major_min": 303.00441,
+        "major_max": 304.722206,
+        "major_center": 303.863308,
+        "length": 1.717796,
+        "depth": 0.001392,
+        "z_min": -2.110592,
+        "z_max": -1.8313,
+        "height": 0.279292
+      },
+      "include_candidate": true
+    }
+  ]
+}

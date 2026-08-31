@@ -83,7 +83,7 @@ internal sealed class RaceEngineSampleSound : IDisposable
         float dtRpmBlend = _active ? 0.42f : 1f;
         _smoothedRpm = MathHelper.Lerp(_smoothedRpm <= 0f ? frame.Rpm : _smoothedRpm, frame.Rpm, dtRpmBlend);
         float rpm = frame.HardLimiterActive
-            ? frame.LimiterHardCutRpm
+            ? MathHelper.Clamp(frame.Rpm, 450f, frame.LimiterHardCutRpm)
             : MathHelper.Clamp(_smoothedRpm, 450f, MathF.Max(900f, frame.LimiterHardCutRpm * 1.12f));
         bool wasLimiterAudioActive = IsLimiterAudioActive;
         UpdateLimiterAudioPhase(frame);
@@ -208,7 +208,7 @@ internal sealed class RaceEngineSampleSound : IDisposable
             }
 
             bool limiterLoopActive = i == limiterLoopIndex;
-            float effectiveRpm = limiterLoopActive ? frame.LimiterHardCutRpm : rpm;
+            float effectiveRpm = rpm;
             float ratio = MathHelper.Clamp(
                 effectiveRpm / MathF.Max(1f, loop.Sample.Rpm),
                 _parameters.MinimumPlaybackRatio,
@@ -237,7 +237,7 @@ internal sealed class RaceEngineSampleSound : IDisposable
                 resonance,
                 saturation,
                 0f,
-                limiterLoopActive && frame.HardLimiterActive ? _parameters.LimiterStutterIntensity : 0f,
+                0f,
                 0f,
                 CalculateFiringPulseHz(rpm),
                 _parameters.LimiterStutterFrequencyHz,

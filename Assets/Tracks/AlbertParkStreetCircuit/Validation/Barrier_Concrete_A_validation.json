@@ -1,0 +1,218 @@
+{
+  "asset_name": "Barrier_Concrete_A",
+  "source_review_blend": "C:\\Monogames\\GranTurismo\\Assets\\Tracks\\AlbertParkStreetCircuit\\Review\\Barrier_Concrete_A_review.blend",
+  "cleanup": {
+    "merge_tolerance_m": 1e-05,
+    "vertices_before_cleanup": 126,
+    "vertices_after_cleanup": 30,
+    "vertices_welded_or_removed": 96
+  },
+  "before_cleanup": {
+    "vertex_count": 126,
+    "triangle_count": 56,
+    "polygon_count": 56,
+    "edge_count": 147,
+    "connected_component_count": 35,
+    "exact_duplicate_vertex_count": 96,
+    "loose_vertex_count": 0,
+    "zero_area_face_count": 0,
+    "degenerate_edge_count": 0,
+    "duplicate_face_count": 0,
+    "bbox_min_m": [
+      -2.002411,
+      -0.301422,
+      0.0
+    ],
+    "bbox_max_m": [
+      2.002441,
+      0.301422,
+      1.280897
+    ],
+    "bbox_center_m": [
+      1.5e-05,
+      0.0,
+      0.640449
+    ],
+    "dimensions_m": [
+      4.004852,
+      0.602844,
+      1.280897
+    ],
+    "location": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "rotation_degrees": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "materials": [
+      "Concrete_LightGrey_Matte"
+    ],
+    "material_details": [
+      {
+        "name": "Concrete_LightGrey_Matte",
+        "polygon_count": 56,
+        "base_color": [
+          0.58,
+          0.57,
+          0.53,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.84
+      }
+    ]
+  },
+  "after_cleanup": {
+    "vertex_count": 30,
+    "triangle_count": 56,
+    "polygon_count": 56,
+    "edge_count": 84,
+    "connected_component_count": 1,
+    "exact_duplicate_vertex_count": 0,
+    "loose_vertex_count": 0,
+    "zero_area_face_count": 0,
+    "degenerate_edge_count": 0,
+    "duplicate_face_count": 0,
+    "bbox_min_m": [
+      -2.002411,
+      -0.301422,
+      0.0
+    ],
+    "bbox_max_m": [
+      2.002441,
+      0.301422,
+      1.280897
+    ],
+    "bbox_center_m": [
+      1.5e-05,
+      0.0,
+      0.640449
+    ],
+    "dimensions_m": [
+      4.004852,
+      0.602844,
+      1.280897
+    ],
+    "location": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "rotation_degrees": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "materials": [
+      "Concrete_LightGrey_Matte"
+    ],
+    "material_details": [
+      {
+        "name": "Concrete_LightGrey_Matte",
+        "polygon_count": 56,
+        "base_color": [
+          0.58,
+          0.57,
+          0.53,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.84
+      }
+    ]
+  },
+  "export": {
+    "glb": "C:\\Monogames\\GranTurismo\\Assets\\Tracks\\AlbertParkStreetCircuit\\Extracted\\Barriers\\Barrier_Concrete_A.glb",
+    "review_blend": "C:\\Monogames\\GranTurismo\\Assets\\Tracks\\AlbertParkStreetCircuit\\Review\\Barrier_Concrete_A_review.blend",
+    "report_json": "C:\\Monogames\\GranTurismo\\Assets\\Tracks\\AlbertParkStreetCircuit\\Validation\\Barrier_Concrete_A_validation.json",
+    "report_md": "C:\\Monogames\\GranTurismo\\Assets\\Tracks\\AlbertParkStreetCircuit\\Validation\\Barrier_Concrete_A_validation.md"
+  },
+  "validation": {
+    "mesh_object_count": 1,
+    "objects": [
+      {
+        "vertex_count": 128,
+        "triangle_count": 56,
+        "polygon_count": 56,
+        "edge_count": 148,
+        "connected_component_count": 36,
+        "exact_duplicate_vertex_count": 98,
+        "loose_vertex_count": 0,
+        "zero_area_face_count": 0,
+        "degenerate_edge_count": 0,
+        "duplicate_face_count": 0,
+        "bbox_min_m": [
+          -2.002411,
+          -0.301422,
+          0.0
+        ],
+        "bbox_max_m": [
+          2.002441,
+          0.301422,
+          1.280897
+        ],
+        "bbox_center_m": [
+          1.5e-05,
+          0.0,
+          0.640449
+        ],
+        "dimensions_m": [
+          4.004852,
+          0.602844,
+          1.280897
+        ],
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_degrees": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "materials": [
+          "Concrete_LightGrey_Matte"
+        ],
+        "material_details": [
+          {
+            "name": "Concrete_LightGrey_Matte",
+            "polygon_count": 56,
+            "base_color": [
+              0.58,
+              0.57,
+              0.53,
+              1.0
+            ],
+            "metallic": 0.0,
+            "roughness": 0.84
+          }
+        ],
+        "exact_duplicate_vertex_note": "Re-imported GLB contains normal-split vertices at identical positions; cleaned source mesh topology has the authoritative duplicate-vertex result."
+      }
+    ],
+    "passed": true,
+    "failures": [],
+    "source_topology_passed": true,
+    "source_topology_failures": []
+  }
+}

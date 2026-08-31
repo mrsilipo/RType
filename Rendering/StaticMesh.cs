@@ -22,11 +22,15 @@ public sealed class StaticMesh : IDisposable
         Vector3? specularColor = null,
         float specularPower = 16f,
         Vector3? emissiveColor = null,
-        VehicleMaterial? vehicleMaterial = null)
+        VehicleMaterial? vehicleMaterial = null,
+        WheelCorner wheelCorner = WheelCorner.None,
+        Vector3? localPivot = null)
     {
         Name = name;
         Texture = texture;
         IsWheelMesh = isWheelMesh;
+        WheelCorner = wheelCorner;
+        LocalPivot = localPivot ?? Vector3.Zero;
         VehicleMaterial = vehicleMaterial;
         DiffuseColor = vehicleMaterial?.BaseColor ?? diffuseColor;
         Alpha = vehicleMaterial?.Opacity ?? MathHelper.Clamp(alpha, 0f, 1f);
@@ -66,6 +70,10 @@ public sealed class StaticMesh : IDisposable
     public Vector3 EmissiveColor { get; }
 
     public bool IsWheelMesh { get; }
+
+    public WheelCorner WheelCorner { get; }
+
+    public Vector3 LocalPivot { get; }
 
     public VehicleMaterial? VehicleMaterial { get; }
 
@@ -122,4 +130,13 @@ public sealed class StaticMesh : IDisposable
                 _primitiveCount);
         }
     }
+}
+
+public enum WheelCorner
+{
+    None,
+    FrontLeft,
+    FrontRight,
+    RearLeft,
+    RearRight
 }

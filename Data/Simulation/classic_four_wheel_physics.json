@@ -29,22 +29,67 @@
   "classicFourWheel": {
     "steering": {
       "zeroKmhAngleDegrees": {
-        "value": 26.0
+        "value": 36.0
       },
       "sixtyKmhAngleDegrees": {
-        "value": 12.5
+        "value": 31.65
       },
       "oneTwentyKmhAngleDegrees": {
-        "value": 11.5
+        "value": 27.3
       },
       "twoHundredKmhAngleDegrees": {
-        "value": 6.0
+        "value": 7.0
       },
       "steerSpeedDegreesPerSecond": {
         "value": 145.0
       },
       "returnSpeedDegreesPerSecond": {
         "value": 115.0
+      },
+      "physicalEnvelopeBlendStartKmh": {
+        "value": 40.0
+      },
+      "physicalEnvelopeFullKmh": {
+        "value": 95.0
+      },
+      "normalLateralAccelerationG": {
+        "value": 1.3225
+      },
+      "overdriveLateralAccelerationG": {
+        "value": 1.61
+      },
+      "normalCommand": {
+        "value": 0.75
+      },
+      "minimumHighSpeedAngleDegrees": {
+        "value": 0.4025
+      },
+      "normalPeakSlipFraction": {
+        "value": 0.092
+      },
+      "overdrivePeakSlipFraction": {
+        "value": 0.345
+      },
+      "transientPeakSlipFraction": {
+        "value": 0.368
+      },
+      "transientBoostSeconds": {
+        "value": 0.42
+      },
+      "digitalInitialCommandRatePerSecond": {
+        "value": 5.2
+      },
+      "digitalSustainedCommandRatePerSecond": {
+        "value": 7.8
+      },
+      "digitalRiseAccelerationSeconds": {
+        "value": 0.14
+      },
+      "digitalReleaseCommandRatePerSecond": {
+        "value": 8.0
+      },
+      "digitalCounterSteerRateMultiplier": {
+        "value": 3.0
       }
     },
     "frontTyres": {
@@ -62,6 +107,9 @@
       },
       "slidingGrip": {
         "value": 0.90
+      },
+      "relaxationLengthMeters": {
+        "value": 0.18
       }
     },
     "rearTyres": {
@@ -79,6 +127,9 @@
       },
       "slidingGrip": {
         "value": 0.72
+      },
+      "relaxationLengthMeters": {
+        "value": 0.24
       }
     },
     "yaw": {
@@ -95,11 +146,106 @@
     "gripBudget": {
       "combinedGripExponent": {
         "value": 2.35
+      },
+      "brakingSteeringLateralPriority": {
+        "value": 0.65
+      },
+      "brakingSteeringPrioritySteerStart": {
+        "value": 0.20
+      },
+      "brakingSteeringPrioritySteerEnd": {
+        "value": 0.85
+      },
+      "brakingSteeringPriorityBrakeStart": {
+        "value": 0.10
+      },
+      "brakingSteeringPriorityBrakeEnd": {
+        "value": 0.75
+      },
+      "brakingSteeringFrontBrakeMultiplier": {
+        "value": 0.72
+      },
+      "brakingSteeringRearBrakeMultiplier": {
+        "value": 0.18
+      },
+      "brakePressureFrontTargetGripUsage": {
+        "value": 0.94
+      },
+      "brakePressureRearTargetGripUsage": {
+        "value": 0.82
+      },
+      "brakePressureApplyRatePerSecond": {
+        "value": 14.0
+      },
+      "brakePressureReleaseRatePerSecond": {
+        "value": 38.0
+      },
+      "brakePressureMinimumRatio": {
+        "value": 0.10
+      },
+      "brakePressureMinimumSpeedMetersPerSecond": {
+        "value": 2.0
+      }
+    },
+    "chassisLoadTransfer": {
+      "enabled": {
+        "value": true
+      },
+      "longitudinalNaturalFrequencyHz": {
+        "value": 5.5
+      },
+      "longitudinalDampingRatio": {
+        "value": 0.72
+      },
+      "lateralNaturalFrequencyHz": {
+        "value": 4.2
+      },
+      "lateralDampingRatio": {
+        "value": 0.70
       }
     },
     "lowSpeed": {
       "slipSpeedFloorMetersPerSecond": {
         "value": 3.4
+      },
+      "rollingDominantEndMetersPerSecond": {
+        "value": 1.39
+      },
+      "dynamicBlendEndMetersPerSecond": {
+        "value": 2.78
+      },
+      "rollingDominantMaximumLateralScale": {
+        "value": 0.02
+      },
+      "rollingDominantRearLateralScale": {
+        "value": 0.55
+      },
+      "rollingConstraintLateralSpeedMetersPerSecond": {
+        "value": 0.75
+      },
+      "rollingConstraintGripFraction": {
+        "value": 0.8
+      },
+      "kinematicYawBlend": {
+        "value": 0.0
+      },
+      "kinematicBlendEndSpeedMetersPerSecond": {
+        "value": 2.5
+      },
+      "kinematicYawAccelerationLimitDegreesPerSecondSquared": {
+        "value": 45.0
+      },
+      "slipRateLimitEnabled": {
+        "value": true
+      },
+      "maxSlipRateDegreesPerSecond": {
+        "value": 120.0
+      },
+      "slipRateLimitFadeStartMetersPerSecond": {
+        "value": 2.0
+      },
+      "slipRateLimitFadeEndMetersPerSecond": {
+        "value": 5.0
       }
     },
     "resistance": {

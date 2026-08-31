@@ -1,0 +1,285 @@
+{
+  "roster_id": "AP-0097",
+  "asset_name": "Cone_Traffic_A",
+  "source_object": "prop_cone001_garages_MELBOURNE_0",
+  "manual_reference_blend": "C:\\Monogames\\GranTurismo\\Assets\\Tracks\\AlbertParkStreetCircuit\\Review\\Cone_Traffic_A_manual_reference.blend",
+  "source": {
+    "reference_blend": {
+      "object_name": "Cone_Traffic_A",
+      "mesh_name": "Cone_Traffic_A_Mesh",
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_degrees": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "bbox_min_m": [
+        -0.342174,
+        -0.34195,
+        0.0
+      ],
+      "bbox_max_m": [
+        0.341827,
+        0.341981,
+        1.022383
+      ],
+      "bbox_center_m": [
+        -0.000173,
+        1.5E-05,
+        0.511192
+      ],
+      "dimensions_m": [
+        0.684002,
+        0.683932,
+        1.022383
+      ],
+      "vertex_count": 182,
+      "triangle_count": 124,
+      "materials": [
+        "ConePaint_OrangeRed",
+        "ConeRubber_Dark",
+        "ConeStripe_OffWhite"
+      ]
+    },
+    "bake": {
+      "normalization_offset_m": [
+        0.000173,
+        -1.5E-05,
+        -0.0
+      ],
+      "orientation_source": "user_corrected_review_blend",
+      "operation": "Copied edited mesh in world space, translated vertices to center X/Y and min Z=0, then reset object transform."
+    },
+    "orientation_convention": {
+      "up_axis": "+Z",
+      "forward_axis": null,
+      "width_axis": "X",
+      "depth_axis": "Y",
+      "vertical_axis": "Z",
+      "basis": "Directionless upright prop. User-corrected review orientation is preserved visually; no forward-facing semantic is assigned.",
+      "forward_face_material": null,
+      "measured_forward_face_normal": null,
+      "forward_axis_error_radians": null,
+      "orientation_mode": "directionless_upright"
+    },
+    "normalized": {
+      "bbox_min_m": [
+        -0.342001,
+        -0.341966,
+        0.0
+      ],
+      "bbox_max_m": [
+        0.342001,
+        0.341966,
+        1.022383
+      ],
+      "bbox_center_m": [
+        0.0,
+        0.0,
+        0.511192
+      ],
+      "dimensions_m": [
+        0.684002,
+        0.683932,
+        1.022383
+      ],
+      "vertex_count": 182,
+      "triangle_count": 124,
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_degrees": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": [
+        "ConePaint_OrangeRed",
+        "ConeRubber_Dark",
+        "ConeStripe_OffWhite"
+      ],
+      "material_details": [
+        {
+          "name": "ConePaint_OrangeRed",
+          "polygon_count": 52,
+          "base_color": [
+            0.95,
+            0.22,
+            0.045,
+            1.0
+          ],
+          "metallic": 0.0,
+          "roughness": 0.68
+        },
+        {
+          "name": "ConeRubber_Dark",
+          "polygon_count": 64,
+          "base_color": [
+            0.025,
+            0.023,
+            0.021,
+            1.0
+          ],
+          "metallic": 0.0,
+          "roughness": 0.78
+        },
+        {
+          "name": "ConeStripe_OffWhite",
+          "polygon_count": 8,
+          "base_color": [
+            0.86,
+            0.83,
+            0.74,
+            1.0
+          ],
+          "metallic": 0.0,
+          "roughness": 0.7
+        }
+      ],
+      "material_weighted_normals": {
+        "ConePaint_OrangeRed": [
+          -0.474552,
+          -0.195725,
+          0.858191
+        ],
+        "ConeRubber_Dark": [
+          -0.018833,
+          -0.002625,
+          0.999819
+        ],
+        "ConeStripe_OffWhite": [
+          -5.4E-05,
+          -0.99999,
+          -0.004525
+        ]
+      }
+    }
+  },
+  "export": {
+    "glb": "C:\\Monogames\\GranTurismo\\Assets\\Tracks\\AlbertParkStreetCircuit\\Extracted\\TracksideProps\\Cone_Traffic_A.glb",
+    "review_blend": "C:\\Monogames\\GranTurismo\\Assets\\Tracks\\AlbertParkStreetCircuit\\Review\\Cone_Traffic_A_review.blend",
+    "report_json": "C:\\Monogames\\GranTurismo\\Assets\\Tracks\\AlbertParkStreetCircuit\\Validation\\Cone_Traffic_A_validation.json",
+    "report_md": "C:\\Monogames\\GranTurismo\\Assets\\Tracks\\AlbertParkStreetCircuit\\Validation\\Cone_Traffic_A_validation.md"
+  },
+  "validation": {
+    "mesh_object_count": 1,
+    "objects": [
+      {
+        "name": "Cone_Traffic_A",
+        "mesh_name": "Cone_Traffic_A_Mesh",
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_degrees": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "bbox_min_m": [
+          -0.342001,
+          -0.341966,
+          0.0
+        ],
+        "bbox_max_m": [
+          0.342001,
+          0.341966,
+          1.022383
+        ],
+        "bbox_center_m": [
+          0.0,
+          0.0,
+          0.511192
+        ],
+        "dimensions_m": [
+          0.684002,
+          0.683932,
+          1.022383
+        ],
+        "vertex_count": 199,
+        "triangle_count": 124,
+        "materials": [
+          "ConePaint_OrangeRed",
+          "ConeRubber_Dark",
+          "ConeStripe_OffWhite"
+        ],
+        "material_details": [
+          {
+            "name": "ConePaint_OrangeRed",
+            "polygon_count": 52,
+            "base_color": [
+              0.95,
+              0.22,
+              0.045,
+              1.0
+            ],
+            "metallic": 0.0,
+            "roughness": 0.68
+          },
+          {
+            "name": "ConeRubber_Dark",
+            "polygon_count": 64,
+            "base_color": [
+              0.025,
+              0.023,
+              0.021,
+              1.0
+            ],
+            "metallic": 0.0,
+            "roughness": 0.78
+          },
+          {
+            "name": "ConeStripe_OffWhite",
+            "polygon_count": 8,
+            "base_color": [
+              0.86,
+              0.83,
+              0.74,
+              1.0
+            ],
+            "metallic": 0.0,
+            "roughness": 0.7
+          }
+        ],
+        "forward_face_normal": null,
+        "orientation_mode": "directionless_upright"
+      }
+    ],
+    "images": [],
+    "passed": true,
+    "failures": []
+  },
+  "duplicate_resolution": {
+    "canonical_roster_id": "AP-0097",
+    "canonical_asset_name": "Cone_Traffic_A",
+    "duplicate_rejected": [
+      "AP-0098",
+      "AP-0099",
+      "AP-0100",
+      "AP-0101"
+    ],
+    "note": "AP-0098 through AP-0101 share the same normalized cone topology/material dependency as AP-0097 and are treated as scaled/placed duplicates. AP-0097 is canonical."
+  }
+}
