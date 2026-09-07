@@ -1,0 +1,842 @@
+{
+  "exportDate": "2026-09-07T10:10:18.894879+10:00",
+  "authoringBlend": "C:\\\\Monogames\\\\GranTurismo\\\\Assets\\\\Tracks\\\\HighSpeedRing\\\\Editable\\\\HighSpeedRing_Authoring.blend",
+  "runtimeGlb": "C:\\\\Monogames\\\\GranTurismo\\\\Assets\\\\Tracks\\\\HighSpeedRing\\\\Runtime\\\\HighSpeedRing_Authored.glb",
+  "objectCount": 28,
+  "visibleObjectCount": 26,
+  "hiddenOmittedObjectCount": 2,
+  "hiddenOmittedObjects": [
+    "Grass_Field_0001",
+    "Wall_Block"
+  ],
+  "meshObjectCount": 25,
+  "renderableObjectCount": 26,
+  "exportedObjectCount": 25,
+  "meshCount": 19,
+  "vertexCount": 18732,
+  "triangleCount": 18700,
+  "materialCount": 13,
+  "textureCount": 7,
+  "texturePaths": [
+    "Textures/Barrier_BlueWhite.png",
+    "Textures/GrandStand_Crowd.png",
+    "Textures/GrandStand_Empty.png",
+    "Textures/Grass_A.png",
+    "Textures/Road_Asphalt.png",
+    "Textures/StartFinish_Line.png",
+    "Textures/White_Solid.png"
+  ],
+  "collections": [
+    "Collection",
+    "Furniture",
+    "HighSpeedRing",
+    "PolePositions",
+    "Terrain"
+  ],
+  "boundsMin": [
+    349.930786,
+    -827.374084,
+    -7.578441
+  ],
+  "boundsMax": [
+    1479.888428,
+    -161.411453,
+    20.93079
+  ],
+  "authoredIdsAdded": 12,
+  "duplicateAuthoredIds": [],
+  "invalidTransforms": [],
+  "evaluatedModifierObjects": [
+    "Barrier_BlueWhite",
+    "Barrier_Fences_01",
+    "Barrier_Fences_02",
+    "GrandStand_Crowd",
+    "StartFinish_TrackChecker",
+    "Terrain_Inner_Driveable",
+    "Terrain_Outer_Driveable",
+    "Track_Asphalt_Driveable"
+  ],
+  "convertedCurveObjects": [
+    "Track_Curve"
+  ],
+  "omittedEmptyGeometry": [
+    "Track_Curve"
+  ],
+  "fallbackBaseMeshObjects": [],
+  "manualCurveArrayObjects": [],
+  "replacedVisualObjects": [],
+  "missingTextures": [],
+  "unsupportedMaterialFeatures": [],
+  "glbValid": true,
+  "glbSizeBytes": 631872,
+  "validationPassed": true,
+  "objects": [
+    {
+      "name": "Grass_Field_0001",
+      "type": "MESH",
+      "visible": false,
+      "exported": false,
+      "authoredId": "hsr-authored-83caaf40913f47a28e9418258ce6e906",
+      "sourceExportId": "high_speed_ring/Terrain/Grass_Field/e0b525eb",
+      "category": "Terrain",
+      "collectionNames": [
+        "Collection"
+      ],
+      "location": [
+        912.599304,
+        -500.710449,
+        -5.0
+      ],
+      "rotationEuler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.180047,
+        1.884226,
+        1.0
+      ]
+    },
+    {
+      "name": "StartFinish_Gantry_0001",
+      "type": "MESH",
+      "visible": true,
+      "exported": true,
+      "authoredId": "hsr-authored-4f55cbbb12344eb982cf6b617165b812",
+      "sourceExportId": "high_speed_ring/RaceFurniture/StartFinish_Gantry/3c4c5f78",
+      "category": "RaceFurniture",
+      "collectionNames": [
+        "Collection"
+      ],
+      "location": [
+        984.193665,
+        -181.240112,
+        3.449987
+      ],
+      "rotationEuler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "StartFinish_Gantry_0002",
+      "type": "MESH",
+      "visible": true,
+      "exported": true,
+      "authoredId": "hsr-authored-ce6d6f0eecc740258d55dcbd439ee29f",
+      "sourceExportId": "high_speed_ring/RaceFurniture/StartFinish_Gantry/268135bc",
+      "category": "RaceFurniture",
+      "collectionNames": [
+        "Collection"
+      ],
+      "location": [
+        984.193665,
+        -206.5401,
+        3.449987
+      ],
+      "rotationEuler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "StartFinish_Gantry_0003",
+      "type": "MESH",
+      "visible": true,
+      "exported": true,
+      "authoredId": "hsr-authored-33bb04cadc9b4c719e1b28391ae6c790",
+      "sourceExportId": "high_speed_ring/RaceFurniture/StartFinish_Gantry/d2895e88",
+      "category": "RaceFurniture",
+      "collectionNames": [
+        "Collection"
+      ],
+      "location": [
+        984.193665,
+        -193.890106,
+        6.999987
+      ],
+      "rotationEuler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "StartFinish_TrackChecker",
+      "type": "MESH",
+      "visible": true,
+      "exported": true,
+      "authoredId": "hsr-authored-d35273ff4dd44925b3cb39f8a0020976",
+      "sourceExportId": "high_speed_ring/Signs/Signs_start_finish_high_speed_circuit_board/cc0cd4ab",
+      "category": "Signs",
+      "collectionNames": [
+        "Collection"
+      ],
+      "location": [
+        984.104675,
+        -193.890106,
+        0.083277
+      ],
+      "rotationEuler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "Signs_start_finish_signal_lamp_00_0001",
+      "type": "MESH",
+      "visible": true,
+      "exported": true,
+      "authoredId": "hsr-authored-3bce3f2828e24a24b6ea6be310276897",
+      "sourceExportId": "high_speed_ring/Signs/Signs_start_finish_signal_lamp_00/6841d5e7",
+      "category": "Signs",
+      "collectionNames": [
+        "Collection"
+      ],
+      "location": [
+        984.593689,
+        -190.741592,
+        6.965072
+      ],
+      "rotationEuler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.311885,
+        1.311885,
+        1.311885
+      ]
+    },
+    {
+      "name": "Signs_start_finish_signal_lamp_01_0001",
+      "type": "MESH",
+      "visible": true,
+      "exported": true,
+      "authoredId": "hsr-authored-4131e8bd20d14b09a2e9a017cb7d457a",
+      "sourceExportId": "high_speed_ring/Signs/Signs_start_finish_signal_lamp_01/fe149940",
+      "category": "Signs",
+      "collectionNames": [
+        "Collection"
+      ],
+      "location": [
+        984.593689,
+        -192.315842,
+        6.965072
+      ],
+      "rotationEuler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.311885,
+        1.311885,
+        1.311885
+      ]
+    },
+    {
+      "name": "Signs_start_finish_signal_lamp_02_0001",
+      "type": "MESH",
+      "visible": true,
+      "exported": true,
+      "authoredId": "hsr-authored-8bb4d41d13904c8d80bb8066836a069a",
+      "sourceExportId": "high_speed_ring/Signs/Signs_start_finish_signal_lamp_02/f54ad17a",
+      "category": "Signs",
+      "collectionNames": [
+        "Collection"
+      ],
+      "location": [
+        984.593689,
+        -193.890106,
+        6.965072
+      ],
+      "rotationEuler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.311885,
+        1.311885,
+        1.311885
+      ]
+    },
+    {
+      "name": "Signs_start_finish_signal_lamp_03_0001",
+      "type": "MESH",
+      "visible": true,
+      "exported": true,
+      "authoredId": "hsr-authored-d2befdc4b7f54b3fa27ef116bf6fb3a2",
+      "sourceExportId": "high_speed_ring/Signs/Signs_start_finish_signal_lamp_03/ef9a4680",
+      "category": "Signs",
+      "collectionNames": [
+        "Collection"
+      ],
+      "location": [
+        984.593689,
+        -195.464371,
+        6.965072
+      ],
+      "rotationEuler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.311885,
+        1.311885,
+        1.311885
+      ]
+    },
+    {
+      "name": "Signs_start_finish_signal_lamp_04_0001",
+      "type": "MESH",
+      "visible": true,
+      "exported": true,
+      "authoredId": "hsr-authored-3b1504fb1b204095898b8bef7a0ff3db",
+      "sourceExportId": "high_speed_ring/Signs/Signs_start_finish_signal_lamp_04/32c680f7",
+      "category": "Signs",
+      "collectionNames": [
+        "Collection"
+      ],
+      "location": [
+        984.593689,
+        -197.03862,
+        6.965072
+      ],
+      "rotationEuler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.311885,
+        1.311885,
+        1.311885
+      ]
+    },
+    {
+      "name": "Track_Curve",
+      "type": "CURVE",
+      "visible": true,
+      "exported": true,
+      "authoredId": "hsr-authored-ce07b5ce5f7347549cdf8704a6a190c8",
+      "sourceExportId": "",
+      "category": "",
+      "collectionNames": [
+        "HighSpeedRing"
+      ],
+      "location": [
+        1036.067261,
+        -186.631042,
+        0.0
+      ],
+      "rotationEuler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "Track_Asphalt_Driveable",
+      "type": "MESH",
+      "visible": true,
+      "exported": true,
+      "authoredId": "hsr-authored-f443e2e026d24df6ae5f82e3717eb9c8",
+      "sourceExportId": "",
+      "category": "",
+      "collectionNames": [
+        "HighSpeedRing"
+      ],
+      "location": [
+        1036.0,
+        -185.5,
+        0.0
+      ],
+      "rotationEuler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "1st",
+      "type": "MESH",
+      "visible": true,
+      "exported": true,
+      "authoredId": "hsr-authored-924307ccc7924cddad2c49418d6b1ee3",
+      "sourceExportId": "high_speed_ring/Signs/Signs_start_grid_yellow_nose_marker_05/29f813e1",
+      "category": "Signs",
+      "collectionNames": [
+        "PolePositions"
+      ],
+      "location": [
+        991.936584,
+        -189.157791,
+        0.037
+      ],
+      "rotationEuler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "2nd",
+      "type": "MESH",
+      "visible": true,
+      "exported": true,
+      "authoredId": "hsr-authored-020aef028e5742a5a1102eb660dd4dea",
+      "sourceExportId": "high_speed_ring/Signs/Signs_start_grid_yellow_nose_marker_04/dc3a8a81",
+      "category": "Signs",
+      "collectionNames": [
+        "PolePositions"
+      ],
+      "location": [
+        999.136597,
+        -198.517776,
+        0.037
+      ],
+      "rotationEuler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "3rd",
+      "type": "MESH",
+      "visible": true,
+      "exported": true,
+      "authoredId": "hsr-authored-f64deb34aba54b89afcad7ff44840ec6",
+      "sourceExportId": "high_speed_ring/Signs/Signs_start_grid_yellow_nose_marker_03/51fa52da",
+      "category": "Signs",
+      "collectionNames": [
+        "PolePositions"
+      ],
+      "location": [
+        1006.33667,
+        -189.157791,
+        0.037
+      ],
+      "rotationEuler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "4th",
+      "type": "MESH",
+      "visible": true,
+      "exported": true,
+      "authoredId": "hsr-authored-e5f92e30034a4ff1a0fbfa48576fde7d",
+      "sourceExportId": "high_speed_ring/Signs/Signs_start_grid_yellow_nose_marker_02/9edbd268",
+      "category": "Signs",
+      "collectionNames": [
+        "PolePositions"
+      ],
+      "location": [
+        1013.53656,
+        -198.517776,
+        0.037
+      ],
+      "rotationEuler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "5th",
+      "type": "MESH",
+      "visible": true,
+      "exported": true,
+      "authoredId": "hsr-authored-7b8f12fb51604781982f55e44034066a",
+      "sourceExportId": "high_speed_ring/Signs/Signs_start_grid_yellow_nose_marker_01/e6b4b098",
+      "category": "Signs",
+      "collectionNames": [
+        "PolePositions"
+      ],
+      "location": [
+        1020.736572,
+        -189.157791,
+        0.037
+      ],
+      "rotationEuler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "6th",
+      "type": "MESH",
+      "visible": true,
+      "exported": true,
+      "authoredId": "hsr-authored-133d3fdd0a5f41a08dc52ffbfefcc6bc",
+      "sourceExportId": "high_speed_ring/Signs/Signs_start_grid_yellow_nose_marker_00/6ac7839a",
+      "category": "Signs",
+      "collectionNames": [
+        "PolePositions"
+      ],
+      "location": [
+        1027.936523,
+        -198.517776,
+        0.037
+      ],
+      "rotationEuler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "Wall_Block",
+      "type": "MESH",
+      "visible": false,
+      "exported": false,
+      "authoredId": "hsr-authored-43438c4c695844e5ae1c16357be526a3",
+      "sourceExportId": "",
+      "category": "",
+      "collectionNames": [
+        "Terrain"
+      ],
+      "location": [
+        1037.067261,
+        -186.631042,
+        0.0
+      ],
+      "rotationEuler": [
+        0.0,
+        -0.0,
+        -1.570796
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "Terrain_Inner_Driveable",
+      "type": "MESH",
+      "visible": true,
+      "exported": true,
+      "authoredId": "hsr-authored-76703c108a1648b4985132837939754c",
+      "sourceExportId": "",
+      "category": "",
+      "collectionNames": [
+        "Terrain"
+      ],
+      "location": [
+        1036.0,
+        -185.5,
+        0.0
+      ],
+      "rotationEuler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "Terrain_Outer_Driveable",
+      "type": "MESH",
+      "visible": true,
+      "exported": true,
+      "authoredId": "hsr-authored-8fbbbff9cc164213a4756606852ab5b4",
+      "sourceExportId": "",
+      "category": "",
+      "collectionNames": [
+        "Terrain"
+      ],
+      "location": [
+        1036.0,
+        -185.5,
+        0.0
+      ],
+      "rotationEuler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "GrandStand_Crowd",
+      "type": "MESH",
+      "visible": true,
+      "exported": true,
+      "authoredId": "hsr-authored-c3173272fafb422895056ba4cfff9d26",
+      "sourceExportId": "",
+      "category": "",
+      "collectionNames": [
+        "Furniture"
+      ],
+      "location": [
+        1200.388794,
+        -173.49025,
+        0.73468
+      ],
+      "rotationEuler": [
+        0.757318,
+        -0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "Barrier_BlueWhite",
+      "type": "MESH",
+      "visible": true,
+      "exported": true,
+      "authoredId": "hsr-authored-75848ed0351645e0a0d13b341f404562",
+      "sourceExportId": "",
+      "category": "",
+      "collectionNames": [
+        "Furniture"
+      ],
+      "location": [
+        1305.46582,
+        -184.493271,
+        0.0
+      ],
+      "rotationEuler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "GrandStand_Empty_02",
+      "type": "MESH",
+      "visible": true,
+      "exported": true,
+      "authoredId": "hsr-authored-d8a503b855c34c5681144742254e6a2c",
+      "sourceExportId": "",
+      "category": "",
+      "collectionNames": [
+        "Furniture"
+      ],
+      "location": [
+        808.761536,
+        -173.49025,
+        0.73468
+      ],
+      "rotationEuler": [
+        0.757318,
+        -0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "GrandStand_Empty_01",
+      "type": "MESH",
+      "visible": true,
+      "exported": true,
+      "authoredId": "hsr-authored-b1415b9528434a119dff5b659da9a73d",
+      "sourceExportId": "",
+      "category": "",
+      "collectionNames": [
+        "Furniture"
+      ],
+      "location": [
+        1235.991211,
+        -173.49025,
+        0.73468
+      ],
+      "rotationEuler": [
+        0.757318,
+        -0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "Barrier_Fences_02",
+      "type": "MESH",
+      "visible": true,
+      "exported": true,
+      "authoredId": "hsr-authored-f9f790b57d0a41e9b541faddfaea3902",
+      "sourceExportId": "",
+      "category": "",
+      "collectionNames": [
+        "Furniture"
+      ],
+      "location": [
+        1305.46582,
+        -184.493271,
+        0.0
+      ],
+      "rotationEuler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "Barrier_Fences_01",
+      "type": "MESH",
+      "visible": true,
+      "exported": true,
+      "authoredId": "hsr-authored-574b0d6594504455a60748c622c49e49",
+      "sourceExportId": "",
+      "category": "",
+      "collectionNames": [
+        "Furniture"
+      ],
+      "location": [
+        1305.46582,
+        -184.493271,
+        0.0
+      ],
+      "rotationEuler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "Barrier_Fences_02.001",
+      "type": "MESH",
+      "visible": true,
+      "exported": true,
+      "authoredId": "hsr-authored-58b14916426843e69db5ff20433e5bc4",
+      "sourceExportId": "",
+      "category": "",
+      "collectionNames": [
+        "Furniture"
+      ],
+      "location": [
+        1185.465698,
+        -184.493271,
+        0.0
+      ],
+      "rotationEuler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    }
+  ],
+  "notes": [
+    "Authored Blender scene is the visual source of truth.",
+    "Procedural bootstrap object parity is not required.",
+    "Deleted, moved, joined, split, replaced and newly authored objects are valid.",
+    "Only objects visible in the saved Blender view layer are exported; hidden objects remain in the authoring blend but are omitted from the runtime GLB.",
+    "GLB is exported from a temporary evaluated mesh scene with Blender glTF exporter extras enabled.",
+    "Modifiers and curve/font/surface objects are baked only into the runtime GLB; the authoring blend remains editable.",
+    "If a mesh object's evaluated modifier stack produces no faces, the exporter falls back to the base mesh and reports it.",
+    "Distance-based curve array modifiers that evaluate empty in headless Blender are manually baked along their curve path.",
+    "When Track_Asphalt* exists, the previous generated Road object is treated as replaced and is not exported to the runtime GLB."
+  ]
+}

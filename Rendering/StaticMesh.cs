@@ -7,6 +7,8 @@ public sealed class StaticMesh : IDisposable
 {
     private readonly VertexBuffer _vertexBuffer;
     private readonly IndexBuffer _indexBuffer;
+    private readonly VertexPositionNormalTexture[] _vertices;
+    private readonly int[] _indices;
     private readonly int _vertexCount;
     private readonly int _primitiveCount;
 
@@ -37,6 +39,10 @@ public sealed class StaticMesh : IDisposable
         SpecularColor = vehicleMaterial?.ToBasicEffectSpecularColor() ?? specularColor ?? Vector3.Zero;
         SpecularPower = vehicleMaterial?.ToBasicEffectSpecularPower() ?? MathF.Max(1f, specularPower);
         EmissiveColor = vehicleMaterial?.ToBasicEffectEmissiveColor() ?? emissiveColor ?? Vector3.Zero;
+        _vertices = vertices.ToArray();
+        _indices = indices.ToArray();
+        Bounds = CalculateBounds(vertices);
+        BoundingSphere = BoundingSphere.CreateFromBoundingBox(Bounds);
         _vertexCount = vertices.Length;
         _primitiveCount = indices.Length / 3;
 
@@ -77,14 +83,43 @@ public sealed class StaticMesh : IDisposable
 
     public VehicleMaterial? VehicleMaterial { get; }
 
+    public BoundingBox Bounds { get; }
+
+    public BoundingSphere BoundingSphere { get; }
+
     public bool IsTransparent => Alpha < 0.995f;
+
+    public IReadOnlyList<VertexPositionNormalTexture> Vertices => _vertices;
+
+    public IReadOnlyList<int> Indices => _indices;
 
     public void Draw(GraphicsDevice graphicsDevice, BasicEffect effect, Matrix world)
     {
+        Draw(graphicsDevice, effect, world, null);
+    }
+
+    public void Draw(GraphicsDevice graphicsDevice, BasicEffect effect, Matrix world, VehicleMaterial? materialOverride)
+    {
+        Draw(graphicsDevice, effect, world, materialOverride, forceTextureEnabled: true);
+    }
+
+    public void DrawUntextured(GraphicsDevice graphicsDevice, BasicEffect effect, Matrix world, VehicleMaterial? materialOverride)
+    {
+        Draw(graphicsDevice, effect, world, materialOverride, forceTextureEnabled: false);
+    }
+
+    private void Draw(
+        GraphicsDevice graphicsDevice,
+        BasicEffect effect,
+        Matrix world,
+        VehicleMaterial? materialOverride,
+        bool forceTextureEnabled)
+    {
+        VehicleMaterial? material = materialOverride ?? VehicleMaterial;
         effect.World = world;
         effect.Texture = Texture;
-        effect.TextureEnabled = true;
-        if (VehicleMaterial is VehicleMaterial vehicleMaterial)
+        effect.TextureEnabled = forceTextureEnabled;
+        if (material is VehicleMaterial vehicleMaterial)
         {
             effect.DiffuseColor = vehicleMaterial.ToBasicEffectDiffuseColor();
             effect.Alpha = vehicleMaterial.Opacity;
@@ -129,6 +164,25 @@ public sealed class StaticMesh : IDisposable
                 0,
                 _primitiveCount);
         }
+    }
+
+    private static BoundingBox CalculateBounds(VertexPositionNormalTexture[] vertices)
+    {
+        if (vertices.Length == 0)
+        {
+            return new BoundingBox(Vector3.Zero, Vector3.Zero);
+        }
+
+        Vector3 min = vertices[0].Position;
+        Vector3 max = vertices[0].Position;
+        for (int i = 1; i < vertices.Length; i++)
+        {
+            Vector3 position = vertices[i].Position;
+            min = Vector3.Min(min, position);
+            max = Vector3.Max(max, position);
+        }
+
+        return new BoundingBox(min, max);
     }
 }
 

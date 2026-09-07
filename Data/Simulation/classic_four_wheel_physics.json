@@ -29,13 +29,13 @@
   "classicFourWheel": {
     "steering": {
       "zeroKmhAngleDegrees": {
-        "value": 36.0
+        "value": 51.0
       },
       "sixtyKmhAngleDegrees": {
-        "value": 31.65
+        "value": 44.4
       },
       "oneTwentyKmhAngleDegrees": {
-        "value": 27.3
+        "value": 37.8
       },
       "twoHundredKmhAngleDegrees": {
         "value": 7.0
@@ -148,7 +148,7 @@
         "value": 2.35
       },
       "brakingSteeringLateralPriority": {
-        "value": 0.65
+        "value": 0.20
       },
       "brakingSteeringPrioritySteerStart": {
         "value": 0.20
@@ -163,10 +163,10 @@
         "value": 0.75
       },
       "brakingSteeringFrontBrakeMultiplier": {
-        "value": 0.72
+        "value": 0.88
       },
       "brakingSteeringRearBrakeMultiplier": {
-        "value": 0.18
+        "value": 0.42
       },
       "brakePressureFrontTargetGripUsage": {
         "value": 0.94

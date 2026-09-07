@@ -33,6 +33,25 @@ internal sealed class MeshBuilder
         _indices.Add(start + 3);
     }
 
+    public void AddTriangle(
+        Vector3 a,
+        Vector3 b,
+        Vector3 c,
+        Vector2 uvA,
+        Vector2 uvB,
+        Vector2 uvC,
+        Vector3 normal)
+    {
+        int start = _vertices.Count;
+        _vertices.Add(new VertexPositionNormalTexture(a, normal, uvA));
+        _vertices.Add(new VertexPositionNormalTexture(b, normal, uvB));
+        _vertices.Add(new VertexPositionNormalTexture(c, normal, uvC));
+
+        _indices.Add(start);
+        _indices.Add(start + 1);
+        _indices.Add(start + 2);
+    }
+
     public void AddBox(Vector3 center, Vector3 size, float uvScale = 1f)
     {
         Vector3 half = size * 0.5f;
@@ -89,6 +108,39 @@ internal sealed class MeshBuilder
         AddCylinderCapX(center, halfWidth, radius, safeSides, Vector3.Right);
     }
 
+    public void AddCylinderY(Vector3 center, float radius, float height, int sides)
+    {
+        int safeSides = Math.Max(6, sides);
+        float halfHeight = height * 0.5f;
+        int sideStart = _vertices.Count;
+        for (int i = 0; i <= safeSides; i++)
+        {
+            float angle = MathF.Tau * i / safeSides;
+            float x = MathF.Cos(angle) * radius;
+            float z = MathF.Sin(angle) * radius;
+            Vector3 normal = Vector3.Normalize(new Vector3(x, 0f, z));
+            _vertices.Add(new VertexPositionNormalTexture(center + new Vector3(x, -halfHeight, z), normal, new Vector2(i / (float)safeSides, 0f)));
+            _vertices.Add(new VertexPositionNormalTexture(center + new Vector3(x, halfHeight, z), normal, new Vector2(i / (float)safeSides, 1f)));
+        }
+
+        for (int i = 0; i < safeSides; i++)
+        {
+            int a = sideStart + i * 2;
+            int b = a + 1;
+            int c = a + 2;
+            int d = a + 3;
+            _indices.Add(a);
+            _indices.Add(b);
+            _indices.Add(c);
+            _indices.Add(b);
+            _indices.Add(d);
+            _indices.Add(c);
+        }
+
+        AddCylinderCapY(center, -halfHeight, radius, safeSides, Vector3.Down);
+        AddCylinderCapY(center, halfHeight, radius, safeSides, Vector3.Up);
+    }
+
     private void AddCylinderCapX(Vector3 center, float xOffset, float radius, int sides, Vector3 normal)
     {
         int centerIndex = _vertices.Count;
@@ -124,12 +176,48 @@ internal sealed class MeshBuilder
         }
     }
 
+    private void AddCylinderCapY(Vector3 center, float yOffset, float radius, int sides, Vector3 normal)
+    {
+        int centerIndex = _vertices.Count;
+        _vertices.Add(new VertexPositionNormalTexture(center + new Vector3(0f, yOffset, 0f), normal, new Vector2(0.5f, 0.5f)));
+        int ringStart = _vertices.Count;
+        for (int i = 0; i < sides; i++)
+        {
+            float angle = MathF.Tau * i / sides;
+            float x = MathF.Cos(angle) * radius;
+            float z = MathF.Sin(angle) * radius;
+            _vertices.Add(new VertexPositionNormalTexture(
+                center + new Vector3(x, yOffset, z),
+                normal,
+                new Vector2(0.5f + x / MathF.Max(0.001f, radius * 2f), 0.5f + z / MathF.Max(0.001f, radius * 2f))));
+        }
+
+        for (int i = 0; i < sides; i++)
+        {
+            int current = ringStart + i;
+            int next = ringStart + (i + 1) % sides;
+            if (normal.Y > 0f)
+            {
+                _indices.Add(centerIndex);
+                _indices.Add(current);
+                _indices.Add(next);
+            }
+            else
+            {
+                _indices.Add(centerIndex);
+                _indices.Add(next);
+                _indices.Add(current);
+            }
+        }
+    }
+
     public StaticMesh Build(
         GraphicsDevice graphicsDevice,
         string name,
         Texture2D texture,
         Vector3 diffuseColor,
         bool isWheelMesh = false,
+        float alpha = 1f,
         VehicleMaterial? vehicleMaterial = null,
         WheelCorner wheelCorner = WheelCorner.None,
         Vector3? localPivot = null)
@@ -142,6 +230,7 @@ internal sealed class MeshBuilder
             texture,
             diffuseColor,
             isWheelMesh,
+            alpha,
             vehicleMaterial: vehicleMaterial,
             wheelCorner: wheelCorner,
             localPivot: localPivot);

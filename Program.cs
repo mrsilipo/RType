@@ -1,5 +1,7 @@
 using RType.Core;
 
+try
+{
 if (args.Any(arg => arg.Equals("--physics-smoke-test", StringComparison.OrdinalIgnoreCase)))
 {
     PhysicsSmokeTest.Run(GameLaunchOptions.FromArgs(args));
@@ -204,6 +206,30 @@ if (args.Any(arg => arg.Equals("--classic-suspension-state-probe", StringCompari
     return;
 }
 
+if (args.Any(arg => arg.Equals("--classic-suspension-phase3a-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicSuspensionPhase3AProbe.Run();
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-suspension-phase3b-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicSuspensionPhase3BProbe.Run();
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-tyre-load-phase3c-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicTyreLoadPhase3CProbe.Run();
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-roll-audit-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicRollAuditProbe.Run();
+    return;
+}
+
 if (args.Any(arg => arg.Equals("--classic-low-speed-caster-probe", StringComparison.OrdinalIgnoreCase)))
 {
     ClassicLowSpeedCasterProbe.Run(GameLaunchOptions.FromArgs(args));
@@ -318,9 +344,69 @@ if (args.Any(arg => arg.Equals("--classic-tyre-relaxation-architecture-probe", S
     return;
 }
 
+if (args.Any(arg => arg.Equals("--classic-ff-limit-state-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicFfLimitStateProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-tyre-envelope-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicTyreEnvelopeProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-ff-rotation-chain-audit", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicFfRotationChainAuditProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-tyre-cornering-stiffness-audit", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicTyreCorneringStiffnessAuditProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-rear-yaw-assist-suppression-audit", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicRearYawAssistSuppressionAuditProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-front-path-authority-audit", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicFrontPathAuthorityAuditProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-brake-pressure-priority-audit", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicBrakePressurePriorityAuditProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-brake-stack-separation-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicBrakeStackSeparationProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--classic-contact-frame-phase2-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    ClassicContactFramePhase2Probe.Run();
+    return;
+}
+
 if (args.Any(arg => arg.Equals("--surface-probe", StringComparison.OrdinalIgnoreCase)))
 {
     SurfaceProbe.Run(GameLaunchOptions.FromArgs(args));
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--authored-surface-probe", StringComparison.OrdinalIgnoreCase)))
+{
+    AuthoredSurfaceProbe.RunProbeGame();
     return;
 }
 
@@ -400,6 +486,18 @@ if (args.Any(arg => arg.Equals("--track-editor", StringComparison.OrdinalIgnoreC
 if (args.Any(arg => arg.Equals("--track-editor-probe", StringComparison.OrdinalIgnoreCase)))
 {
     TrackEditorTool.Run();
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--export-track-blender", StringComparison.OrdinalIgnoreCase)))
+{
+    TrackBlenderExportGame.RunFromArgs(args);
+    return;
+}
+
+if (args.Any(arg => arg.Equals("--export-authored-track", StringComparison.OrdinalIgnoreCase)))
+{
+    AuthoredTrackExportTool.RunFromArgs(args);
     return;
 }
 
@@ -586,3 +684,9 @@ if (args.Any(arg => arg.Equals("--chase-camera-probe", StringComparison.OrdinalI
 
 using var game = new RacingGame(GameLaunchOptions.FromArgs(args));
 game.Run();
+}
+catch (ArgumentException ex)
+{
+    Console.Error.WriteLine(ex.Message);
+    Environment.ExitCode = 2;
+}

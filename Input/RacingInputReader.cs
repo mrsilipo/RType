@@ -6,8 +6,8 @@ namespace RType.Input;
 
 public sealed class RacingInputReader
 {
-    private const float DigitalBrakeInitialPressure = 0.35f;
-    private const float DigitalBrakeFullPressureSeconds = 0.65f;
+    private const float DigitalBrakeInitialPressure = 0.40f;
+    private const float DigitalBrakeFullPressureSeconds = 0.18f;
     private const float MaximumInputDeltaSeconds = 1f / 20f;
 
     private readonly ControlScheme _scheme;

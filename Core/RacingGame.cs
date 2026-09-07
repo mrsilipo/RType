@@ -77,6 +77,7 @@ public sealed class RacingGame : Game
     private RaceSession? _raceSession;
     private readonly RaceRunTelemetryLogger _telemetryLogger = new();
     private readonly LowSpeedJoltRecorder _lowSpeedJoltRecorder = new();
+    private readonly SceneryVisibilityRecorder _sceneryVisibilityRecorder = new();
 
     private VehicleInput _latestInput;
     private RacingControls _latestControls;
@@ -110,10 +111,28 @@ public sealed class RacingGame : Game
     private bool _mouseStateInitialized;
     private float _controllerRumbleLeft;
     private float _controllerRumbleRight;
+    private bool _sceneryScreenshotSaved;
+    private int _sceneryScreenshotSetIndex;
+    private static readonly string[] SceneryScreenshotSetViews = ["chase", "wide", "elevated", "front", "left", "right"];
 
     public RacingGame(GameLaunchOptions launchOptions)
     {
         _launchOptions = launchOptions;
+        Console.WriteLine($"Requested tyre load authority: {_launchOptions.TyreLoadAuthority}");
+        if (_launchOptions.TyreLoadAuthority == TyreLoadAuthorityMode.PhysicalFiltered)
+        {
+            Console.WriteLine(
+                $"Requested physical load filter: tau={_launchOptions.PhysicalLoadFilterTauSeconds:0.###}s, " +
+                $"recontact={_launchOptions.PhysicalLoadFilterRecontact}");
+        }
+        else if (_launchOptions.PhysicalLoadFilterRecontact != PhysicalLoadFilterRecontactMode.SeedFromRaw ||
+                 MathF.Abs(_launchOptions.PhysicalLoadFilterTauSeconds - 0.05f) > 0.000001f)
+        {
+            Console.WriteLine(
+                "Physical load filter arguments were supplied but are only used by " +
+                $"{TyreLoadAuthorityMode.PhysicalFiltered} tyre-load authority.");
+        }
+
         _inputReader = new RacingInputReader(ControlSchemeLoader.Load(_launchOptions.ControlSchemePath));
         _surfaceLibrary = SurfaceLibraryLoader.Load(_launchOptions.SurfaceDefinitionPath);
         _simulationEngine = SimulationEngineDefinitionLoader.Load(_launchOptions.SimulationEngineDefinitionPath);
@@ -150,7 +169,7 @@ public sealed class RacingGame : Game
             DepthFormat.Depth24);
 
         _textures = GeneratedTextures.Create(GraphicsDevice);
-        _sceneRenderer = new SceneRenderer(GraphicsDevice, _textures);
+        _sceneRenderer = new SceneRenderer(GraphicsDevice, Content, _textures);
         _camera = new ChaseCamera(InternalWidth / (float)InternalHeight);
         _hud = new HudRenderer(GraphicsDevice);
         _rearViewMirror = new RearViewMirrorRenderer(GraphicsDevice);
@@ -158,6 +177,16 @@ public sealed class RacingGame : Game
         _menuSounds = new MenuSoundSystem();
         _vehicleAudio = new VehicleAudioSystem();
         _engineRoom = new RTypeEngineRoomScreen(GraphicsDevice, _launchOptions);
+
+        if (!string.IsNullOrWhiteSpace(_launchOptions.SceneryScreenshotPath) ||
+            !string.IsNullOrWhiteSpace(_launchOptions.SceneryScreenshotSetPrefix) ||
+            !string.IsNullOrWhiteSpace(_launchOptions.SceneryVisibilityLogPath) ||
+            _launchOptions.SceneryInventory)
+        {
+            _trackSelection = FindTrackSelection("high_speed_ring");
+            _directionSelection = 0;
+            BeginPreRace();
+        }
     }
 
     protected override void UnloadContent()
@@ -167,6 +196,7 @@ public sealed class RacingGame : Game
         _engineRoom?.Dispose();
         _menuSounds?.Dispose();
         _telemetryLogger.Dispose();
+        _sceneryVisibilityRecorder.Dispose();
         _menu?.Dispose();
         _rearViewMirror?.Dispose();
         _hud?.Dispose();
@@ -228,6 +258,7 @@ public sealed class RacingGame : Game
         IsMouseVisible = IsMenuFlowState(_flowState) || _paused;
         UpdateVehicleAudio(dt);
         UpdateControllerRumble(dt);
+        _sceneryVisibilityRecorder.Update(_launchOptions.SceneryVisibilityLogPath, _track, _camera);
         _elapsedSinceStart += gameTime.ElapsedGameTime;
         UpdateFrameCounter(gameTime);
 
@@ -267,30 +298,35 @@ public sealed class RacingGame : Game
             _vehicle is not null &&
             _flowState is GameFlowState.PreRace or GameFlowState.Racing or GameFlowState.Results)
         {
-            _sceneRenderer.Draw(_track, _vehicle.State, _camera);
+            _sceneRenderer.Draw(_track, _vehicle.State, _camera, _showDebug);
         }
 
-        _spriteBatch.Begin(
-            SpriteSortMode.Deferred,
-            BlendState.AlphaBlend,
-            SamplerState.LinearClamp,
-            DepthStencilState.None,
-            RasterizerState.CullNone);
-        DrawNativeOverlay(_spriteBatch, _hud);
-        _spriteBatch.End();
+        bool sceneryScreenshotMode = IsSceneryScreenshotMode();
+        if (!sceneryScreenshotMode)
+        {
+            _spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.AlphaBlend,
+                SamplerState.PointClamp,
+                DepthStencilState.None,
+                RasterizerState.CullNone);
+            DrawNativeOverlay(_spriteBatch, _hud);
+            _spriteBatch.End();
 
-        _spriteBatch.Begin(
-            SpriteSortMode.Deferred,
-            BlendState.AlphaBlend,
-            SamplerState.LinearClamp,
-            DepthStencilState.None,
-            RasterizerState.CullNone,
-            transformMatrix: UiScaleMatrix);
+            _spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.AlphaBlend,
+                SamplerState.PointClamp,
+                DepthStencilState.None,
+                RasterizerState.CullNone,
+                transformMatrix: UiScaleMatrix);
 
-        DrawOverlay(_spriteBatch, _hud, _menu);
-        _spriteBatch.End();
+            DrawOverlay(_spriteBatch, _hud, _menu);
+            _spriteBatch.End();
+        }
 
         GraphicsDevice.SetRenderTarget(null);
+        SaveSceneryScreenshotIfRequested();
         GraphicsDevice.Clear(LetterboxColor);
 
         Rectangle destination = LowResolutionScaler.GetDestinationRectangle(
@@ -302,13 +338,76 @@ public sealed class RacingGame : Game
         _spriteBatch.Begin(
             SpriteSortMode.Deferred,
             BlendState.Opaque,
-            SamplerState.LinearClamp,
+            SamplerState.PointClamp,
             DepthStencilState.None,
             RasterizerState.CullNone);
         _spriteBatch.Draw(_renderTarget, destination, Color.White);
         _spriteBatch.End();
 
         base.Draw(gameTime);
+    }
+
+    private void SaveSceneryScreenshotIfRequested()
+    {
+        if (_sceneryScreenshotSaved ||
+            _renderTarget is null ||
+            !IsSceneryScreenshotMode() ||
+            _elapsedSinceStart.TotalMilliseconds < _launchOptions.SceneryScreenshotDelayMilliseconds)
+        {
+            return;
+        }
+
+        string path = Path.GetFullPath(GetCurrentSceneryScreenshotPath());
+        string? directory = Path.GetDirectoryName(path);
+        if (!string.IsNullOrWhiteSpace(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        using FileStream stream = File.Create(path);
+        _renderTarget.SaveAsPng(stream, InternalWidth, InternalHeight);
+        Console.WriteLine($"Saved scenery screenshot '{path}'.");
+        if (IsSceneryScreenshotSetMode())
+        {
+            _sceneryScreenshotSetIndex++;
+            if (_sceneryScreenshotSetIndex < SceneryScreenshotSetViews.Length)
+            {
+                return;
+            }
+        }
+
+        _sceneryScreenshotSaved = true;
+        Exit();
+    }
+
+    private bool IsSceneryScreenshotMode()
+    {
+        return !string.IsNullOrWhiteSpace(_launchOptions.SceneryScreenshotPath) ||
+            IsSceneryScreenshotSetMode();
+    }
+
+    private bool IsSceneryScreenshotSetMode()
+    {
+        return !string.IsNullOrWhiteSpace(_launchOptions.SceneryScreenshotSetPrefix);
+    }
+
+    private string GetCurrentSceneryScreenshotPath()
+    {
+        if (!IsSceneryScreenshotSetMode())
+        {
+            return _launchOptions.SceneryScreenshotPath;
+        }
+
+        string prefix = _launchOptions.SceneryScreenshotSetPrefix;
+        string directory = Path.GetDirectoryName(prefix) ?? string.Empty;
+        string fileName = Path.GetFileNameWithoutExtension(prefix);
+        if (string.IsNullOrWhiteSpace(fileName))
+        {
+            fileName = "high_speed_ring_scenery";
+        }
+
+        string view = SceneryScreenshotSetViews[Math.Clamp(_sceneryScreenshotSetIndex, 0, SceneryScreenshotSetViews.Length - 1)];
+        return Path.Combine(directory, $"{fileName}_{view}.png");
     }
 
     private void DrawNativeOverlay(SpriteBatch spriteBatch, HudRenderer hud)
@@ -635,7 +734,33 @@ public sealed class RacingGame : Game
         _track = TrackScene.Create(GraphicsDevice, _textures, trackDefinition, reverse, _surfaceLibrary);
 
         VehicleSimulationParameters parameters = LoadSelectedRaceParameters();
-        _vehicle = new ClassicFourWheelVehicleSimulator(_track, _track.StartPosition, _track.StartHeadingRadians, parameters, _simulationEngine);
+        Vector3 vehicleStartPosition = _track.ResolveVehicleStartPosition(parameters.BodyLengthMeters);
+        if (_track.VisualSource == TrackVisualSource.Authored)
+        {
+            Console.WriteLine(
+                $"{trackDefinition.DisplayName} authored pole marker front-center: {_track.StartPosition}, " +
+                $"vehicle center spawn: {vehicleStartPosition}, body length {parameters.BodyLengthMeters:0.###}m.");
+        }
+
+        _vehicle = new ClassicFourWheelVehicleSimulator(_track, vehicleStartPosition, _track.StartHeadingRadians, parameters, _simulationEngine);
+        _vehicle.TyreLoadAuthorityMode = _launchOptions.TyreLoadAuthority;
+        _vehicle.PhysicalLoadFilterRecontactMode = _launchOptions.PhysicalLoadFilterRecontact;
+        _vehicle.PhysicalLoadFilterTimeConstantSeconds = _launchOptions.PhysicalLoadFilterTauSeconds;
+        Console.WriteLine($"Tyre load authority: {_vehicle.TyreLoadAuthorityMode}");
+        if (_vehicle.TyreLoadAuthorityMode == TyreLoadAuthorityMode.PhysicalFiltered)
+        {
+            Console.WriteLine(
+                $"Physical load filter: tau={_vehicle.PhysicalLoadFilterTimeConstantSeconds:0.###}s, " +
+                $"recontact={_vehicle.PhysicalLoadFilterRecontactMode}");
+        }
+        else if (_launchOptions.PhysicalLoadFilterRecontact != PhysicalLoadFilterRecontactMode.SeedFromRaw ||
+                 MathF.Abs(_launchOptions.PhysicalLoadFilterTauSeconds - 0.05f) > 0.000001f)
+        {
+            Console.WriteLine(
+                "Physical load filter arguments were supplied but are only used by " +
+                $"{TyreLoadAuthorityMode.PhysicalFiltered} tyre-load authority.");
+        }
+
         _vehicle.SetManualTransmission(_transmissionSelection == 1);
         RpmPresentationSmoother.Update(_vehicle.State, 0f);
         RaceEnginePresentationBridge.ApplyAudioState(_vehicle.State, parameters, 0f);
@@ -649,6 +774,17 @@ public sealed class RacingGame : Game
         _raceElapsed = TimeSpan.Zero;
         _flowState = GameFlowState.PreRace;
         UpdatePreRaceCamera();
+        if (_launchOptions.SceneryInventory)
+        {
+            SceneryInventoryReporter.Report(_track, _sceneRenderer);
+            Exit();
+            return;
+        }
+
+        if (IsSceneryScreenshotMode())
+        {
+            ApplySceneryScreenshotCamera();
+        }
     }
 
     private void UpdatePreRace(TimeSpan elapsed)
@@ -666,6 +802,12 @@ public sealed class RacingGame : Game
         _vehicle?.UpdateRaceStartHold(_latestInput, dt);
         UpdateVehiclePresentation(dt);
         _preRaceElapsed += elapsed;
+        if (IsSceneryScreenshotMode())
+        {
+            ApplySceneryScreenshotCamera();
+            return;
+        }
+
         UpdatePreRaceCamera();
 
         if (_preRaceElapsed.TotalSeconds >= 3.0)
@@ -708,6 +850,59 @@ public sealed class RacingGame : Game
         {
             _camera.SetMode(CameraMode.InCar, _vehicle.State, reset: false);
         }
+    }
+
+    private void ApplySceneryScreenshotCamera()
+    {
+        if (_vehicle is null || _camera is null)
+        {
+            return;
+        }
+
+        VehicleState state = _vehicle.State;
+        Vector3 forward = GetSafeHorizontal(state.Forward, Vector3.Forward);
+        Vector3 right = GetSafeHorizontal(state.Right, Vector3.Right);
+        Vector3 target = state.Position + Vector3.Up * 1.05f + forward * 0.6f;
+        string view = IsSceneryScreenshotSetMode()
+            ? SceneryScreenshotSetViews[Math.Clamp(_sceneryScreenshotSetIndex, 0, SceneryScreenshotSetViews.Length - 1)]
+            : _launchOptions.SceneryScreenshotView.Trim().ToLowerInvariant();
+
+        _camera.SetMode(CameraMode.Chase1, state, reset: false);
+        switch (view)
+        {
+            case "front":
+                _camera.SetLookAt(state.Position + forward * 8.2f + Vector3.Up * 2.2f, target);
+                break;
+            case "left":
+                _camera.SetLookAt(state.Position - right * 7.6f + forward * 0.8f + Vector3.Up * 2.1f, target);
+                break;
+            case "right":
+                _camera.SetLookAt(state.Position + right * 7.6f + forward * 0.8f + Vector3.Up * 2.1f, target);
+                break;
+            case "elevated":
+                _camera.SetLookAt(state.Position - forward * 9.5f + right * 4.0f + Vector3.Up * 5.3f, state.Position + forward * 8.0f + Vector3.Up * 0.5f);
+                break;
+            case "wide":
+                _camera.SetLookAt(state.Position - forward * 24f + right * 13f + Vector3.Up * 9.0f, state.Position + forward * 28f + Vector3.Up * 1.2f);
+                break;
+            case "rear":
+            case "chase":
+            default:
+                _camera.SetLookAt(state.Position - forward * 8.6f + Vector3.Up * 2.35f, target + forward * 1.3f);
+                break;
+        }
+    }
+
+    private static Vector3 GetSafeHorizontal(Vector3 value, Vector3 fallback)
+    {
+        value.Y = 0f;
+        if (value.LengthSquared() <= 0.0001f)
+        {
+            fallback.Y = 0f;
+            return fallback.LengthSquared() <= 0.0001f ? Vector3.Forward : Vector3.Normalize(fallback);
+        }
+
+        return Vector3.Normalize(value);
     }
 
     private void UpdateRacing(float dt, TimeSpan elapsed)
@@ -1121,6 +1316,19 @@ public sealed class RacingGame : Game
         {
             if (PathsMatch(CarOptions[i].BuildPath, vehiclePath) ||
                 VehiclePathMigration.IsLegacyStockEk9VehicleDefinitionPath(vehiclePath))
+            {
+                return i;
+            }
+        }
+
+        return 0;
+    }
+
+    private int FindTrackSelection(string trackId)
+    {
+        for (int i = 0; i < _trackOptions.Length; i++)
+        {
+            if (_trackOptions[i].Id.Equals(trackId, StringComparison.OrdinalIgnoreCase))
             {
                 return i;
             }

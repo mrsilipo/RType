@@ -1,0 +1,9 @@
+/platform:DesktopGL
+/profile:HiDef
+/intermediateDir:obj/mgcb
+/outputDir:Assets/Shaders
+
+# Procedural, textureless racing sky.
+/importer:EffectImporter
+/processor:EffectProcessor
+/build:Assets/Shaders/ProceduralAtmosphere.fx;ProceduralAtmosphere.mgfxo

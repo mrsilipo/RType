@@ -250,6 +250,23 @@ This means the current high-speed "won't turn" feel likely comes from a combinat
 - lateral cleanup adding/removing path authority outside tyre physics,
 - missing aero-load path if we want GT-style high-speed grip.
 
+From `--classic-tyre-envelope-probe` and `--classic-ff-limit-state-probe`:
+
+- The current tyre load sensitivity is structurally present but mild.
+- A severe `90/10` left/right wheel-load split only reduces total axle lateral capacity to about `95.7%` of the `50/50` case.
+- The current post-peak tyre curve is very forgiving: front and rear tyres still retain roughly `96-97%` of peak lateral force by `20 deg` slip.
+- Ordinary lift and left-right manoeuvres do unload the inside rear, but rear axle capacity usually falls only about `5-9%`.
+- Trail braking can create much larger rear capacity loss, but then the front axle moves into a combined braking/cornering overdrive state.
+- Some hot transient cases still show cleanup/yaw recovery contribution, so assists may still be muting poor-driver consequences.
+- Diagnostic post-peak candidates with `78%` and `68%` sliding retention make the curve more believable, but they do not materially change the current FF limit-state cases because most of those cases do not push the rear tyres far enough beyond peak.
+- The immediate missing link is therefore earlier in the chain: either rear unloading/yaw balance does not create enough rear slip, or another stabilising path keeps the car inside the neat pre-peak region.
+- `--classic-ff-rotation-chain-audit` narrows that further: ordinary lift and left-right manoeuvres do unload the rear quickly, but rear capacity loss remains only about `5-9%` and rear slip remains around `5 deg`.
+- Trail braking can create a much larger rear capacity loss, but then brake regulation and cleanup/recovery terms are active enough that the pure physical sequence is still not isolated.
+- `--classic-tyre-cornering-stiffness-audit` shows the production rear tyre normalized force curve is load-invariant, but probe-only load-sensitive cornering stiffness still barely changes dynamic rear slip in lift/left-right cases.
+- That points away from tyre stiffness as the immediate cause and toward rear yaw balance or remaining stabilising/cleanup terms keeping the rear axle in a pre-limit role.
+- `--classic-rear-yaw-assist-suppression-audit` identifies lateral-velocity damping as the first major leash. Disabling it raises lift/reversal rear slip and beta, while disabling yaw recovery/body-slip/rear-follow/speed-retention individually has little effect in those clean cases.
+- All cleanup off exposes far more rotation, so the physical model has latent attitude change, but production cleanup is still too broad for threshold driving.
+
 ## Calibration Decision
 
 Before tuning, choose one target:
@@ -386,3 +403,18 @@ Expected:
 - reversal must unwind that state
 - countersteer produces restoring front yaw moment
 - response is fast enough for racing but not an instant vector flip
+
+## Assist Validation Rule
+
+Assists should not author the normal EK9 handling envelope.
+
+For ordinary steady cornering, lift-off, trail braking, and left-right transient validation, broad cleanup forces should be close to inactive unless the vehicle is clearly leaving the intended controllable range.
+
+Lateral-velocity damping in particular should behave as runaway protection:
+
+- beta below about 3-5 deg and stable: inactive
+- beta around 5-8 deg: mostly free unless beta/lateral velocity is still diverging
+- large beta or fast-growing lateral velocity: progressive bounded intervention
+- driver countersteering correctly: intervention reduced
+
+The target is not minimum beta. A healthy EK9 on AD09s should have visible beta and rear slip near the limit, then remain recoverable if the driver corrects it.

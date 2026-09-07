@@ -478,6 +478,7 @@ internal static class VehicleBuildDefinitionLoader
             ToeGainRadiansPerMeter = MathHelper.ToRadians(hardPoints.ToeGainDegreesPerMeter),
             BodyRollCamberMultiplier = hardPoints.BodyRollCamberMultiplier,
             CasterCamberGain = hardPoints.CasterCamberGain,
+            RideHeightMeters = front ? build.FrontRideHeightMeters : build.RearRideHeightMeters,
             MaxCompressionMeters = front ? build.FrontMaxCompressionMeters : build.RearMaxCompressionMeters,
             MaxDroopMeters = front ? build.FrontMaxDroopMeters : build.RearMaxDroopMeters
         };

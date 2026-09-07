@@ -69,7 +69,13 @@
     <None Update="Assets\Models\**\*.rtmesh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Assets\Tracks\HighSpeedRing\Runtime\**\*.glb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Assets\Shaders\**\*.mgfxo">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\Shaders\**\*.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Assets\Shaders\**\*.fx">
@@ -79,5 +85,25 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+
+  <PropertyGroup>
+    <ImportHighSpeedRingAuthoredTrackOnBuild Condition="'$(ImportHighSpeedRingAuthoredTrackOnBuild)' == ''">true</ImportHighSpeedRingAuthoredTrackOnBuild>
+  </PropertyGroup>
+
+  <Target Name="ImportHighSpeedRingAuthoredTrack" AfterTargets="Build" Condition="'$(ImportHighSpeedRingAuthoredTrackOnBuild)' == 'true' and '$(DesignTimeBuild)' != 'true'">
+    <Message Importance="high" Text="Importing authored High Speed Ring track for runtime build..." />
+    <Exec Command="dotnet &quot;$(TargetPath)&quot; --export-authored-track HighSpeedRing" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\Assets\Tracks\HighSpeedRing\Runtime\HighSpeedRing_Authored.glb"
+          DestinationFiles="$(TargetDir)Assets\Tracks\HighSpeedRing\Runtime\HighSpeedRing_Authored.glb"
+          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\Assets\Tracks\HighSpeedRing\Documentation\HighSpeedRing_AuthoredManifest.json"
+          DestinationFiles="$(TargetDir)Assets\Tracks\HighSpeedRing\Documentation\HighSpeedRing_AuthoredManifest.json"
+          SkipUnchangedFiles="true"
+          Condition="Exists('$(MSBuildProjectDirectory)\Assets\Tracks\HighSpeedRing\Documentation\HighSpeedRing_AuthoredManifest.json')" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\Assets\Tracks\HighSpeedRing\Documentation\HighSpeedRing_AuthoredManifest.md"
+          DestinationFiles="$(TargetDir)Assets\Tracks\HighSpeedRing\Documentation\HighSpeedRing_AuthoredManifest.md"
+          SkipUnchangedFiles="true"
+          Condition="Exists('$(MSBuildProjectDirectory)\Assets\Tracks\HighSpeedRing\Documentation\HighSpeedRing_AuthoredManifest.md')" />
+  </Target>
 
 </Project>

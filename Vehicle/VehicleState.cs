@@ -228,6 +228,20 @@ public sealed class VehicleState
 
     public float ClassicBodySlipDampingForceN { get; set; }
 
+    public float ClassicLateralVelocityDampingForceN { get; set; }
+
+    public float ClassicLateralVelocityDampingActivation { get; set; }
+
+    public float ClassicLateralVelocityDampingBetaGate { get; set; }
+
+    public float ClassicLateralVelocityDampingBetaDotGate { get; set; }
+
+    public float ClassicLateralVelocityDampingSpeedGate { get; set; }
+
+    public float ClassicLateralVelocityDampingRearSlipGate { get; set; }
+
+    public float ClassicLateralVelocityDampingDriverIntentFactor { get; set; } = 1f;
+
     public float ClassicCorneringCleanupSpeedRetentionForceN { get; set; }
 
     public float FrontAeroLoadN { get; set; }
@@ -380,6 +394,96 @@ public sealed class VehicleState
 
     public float BodyRollRadians { get; set; }
 
+    public float BodyVerticalVelocityMetersPerSecond { get; set; }
+
+    public Vector3 BodyVelocityWorldMetersPerSecond { get; set; }
+
+    public Vector3 BodyAccelerationWorldMetersPerSecondSquared { get; set; }
+
+    public Vector3 ForceGravityWorldN { get; set; }
+
+    public Vector3 ForceSuspensionSupportWorldN { get; set; }
+
+    public Vector3 ForceTyreLongitudinalWorldN { get; set; }
+
+    public Vector3 ForceTyreLateralWorldN { get; set; }
+
+    public Vector3 ForceDriveWorldN { get; set; }
+
+    public Vector3 ForceEngineBrakeWorldN { get; set; }
+
+    public Vector3 ForceServiceBrakeWorldN { get; set; }
+
+    public Vector3 ForceRollingResistanceWorldN { get; set; }
+
+    public Vector3 ForceAeroDragWorldN { get; set; }
+
+    public Vector3 ForceCleanupAssistWorldN { get; set; }
+
+    public Vector3 ForceTotalIntegratedWorldN { get; set; }
+
+    public Vector3 ForceDecompositionResidualWorldN { get; set; }
+
+    public float BodyPitchRateRadiansPerSecond { get; set; }
+
+    public float BodyRollRateRadiansPerSecond { get; set; }
+
+    public float PhysicalSuspensionVerticalAccelerationMetersPerSecondSquared { get; set; }
+
+    public float PhysicalSuspensionPitchAccelerationRadiansPerSecondSquared { get; set; }
+
+    public float PhysicalSuspensionRollAccelerationRadiansPerSecondSquared { get; set; }
+
+    public float PhysicalSuspensionTotalSupportForceN { get; set; }
+
+    public float PhysicalSuspensionTotalSupportVerticalForceN { get; set; }
+
+    public Vector3 PhysicalSuspensionTotalSupportVectorN { get; set; }
+
+    public Vector3 PhysicalSuspensionNetVerticalDynamicsForceN { get; set; }
+
+    public float PhysicalSuspensionGravityForceN { get; set; }
+
+    public float PhysicalSuspensionPitchTorqueNm { get; set; }
+
+    public float PhysicalSuspensionRollTorqueNm { get; set; }
+
+    public float PhysicalSuspensionSpringPitchTorqueNm { get; set; }
+
+    public float PhysicalSuspensionSpringRollTorqueNm { get; set; }
+
+    public float PhysicalSuspensionDamperPitchTorqueNm { get; set; }
+
+    public float PhysicalSuspensionDamperRollTorqueNm { get; set; }
+
+    public float PhysicalSuspensionBumpStopPitchTorqueNm { get; set; }
+
+    public float PhysicalSuspensionBumpStopRollTorqueNm { get; set; }
+
+    public float PhysicalSuspensionArbPitchTorqueNm { get; set; }
+
+    public float PhysicalSuspensionArbRollTorqueNm { get; set; }
+
+    public float FrontLeftTyrePitchMomentNm { get; set; }
+
+    public float FrontRightTyrePitchMomentNm { get; set; }
+
+    public float RearLeftTyrePitchMomentNm { get; set; }
+
+    public float RearRightTyrePitchMomentNm { get; set; }
+
+    public float FrontLeftTyreRollMomentNm { get; set; }
+
+    public float FrontRightTyreRollMomentNm { get; set; }
+
+    public float RearLeftTyreRollMomentNm { get; set; }
+
+    public float RearRightTyreRollMomentNm { get; set; }
+
+    public float TotalTyrePitchMomentNm { get; set; }
+
+    public float TotalTyreRollMomentNm { get; set; }
+
     public float GroundPitchRadians { get; set; }
 
     public float GroundRollRadians { get; set; }
@@ -452,6 +556,56 @@ public sealed class VehicleState
 
     public float RearRightSupportHeightMeters { get; set; }
 
+    public Vector3 FrontLeftContactPoint { get; set; }
+
+    public Vector3 FrontRightContactPoint { get; set; }
+
+    public Vector3 RearLeftContactPoint { get; set; }
+
+    public Vector3 RearRightContactPoint { get; set; }
+
+    public Vector3 FrontLeftContactNormal { get; set; } = Vector3.Up;
+
+    public Vector3 FrontRightContactNormal { get; set; } = Vector3.Up;
+
+    public Vector3 RearLeftContactNormal { get; set; } = Vector3.Up;
+
+    public Vector3 RearRightContactNormal { get; set; } = Vector3.Up;
+
+    public bool FrontLeftContactMissed { get; set; }
+
+    public bool FrontRightContactMissed { get; set; }
+
+    public bool RearLeftContactMissed { get; set; }
+
+    public bool RearRightContactMissed { get; set; }
+
+    public string FrontLeftContactSource { get; set; } = string.Empty;
+
+    public string FrontRightContactSource { get; set; } = string.Empty;
+
+    public string RearLeftContactSource { get; set; } = string.Empty;
+
+    public string RearRightContactSource { get; set; } = string.Empty;
+
+    public ShadowSuspensionCornerState FrontLeftShadowSuspension { get; set; }
+
+    public ShadowSuspensionCornerState FrontRightShadowSuspension { get; set; }
+
+    public ShadowSuspensionCornerState RearLeftShadowSuspension { get; set; }
+
+    public ShadowSuspensionCornerState RearRightShadowSuspension { get; set; }
+
+    public int AuthoredSuspensionNormalContactCount { get; set; }
+
+    public int AuthoredSuspensionAntiTunnelRecoveryCount { get; set; }
+
+    public int AuthoredSuspensionMissCount { get; set; }
+
+    public int AuthoredSuspensionBumpStopContactCount { get; set; }
+
+    public float AuthoredSuspensionMaxRecoveredPenetrationMeters { get; set; }
+
     public float AverageSlipRatio { get; set; }
 
     public float AverageSlipAngleDegrees { get; set; }
@@ -463,6 +617,76 @@ public sealed class VehicleState
     public float RearLeftLoadN { get; set; }
 
     public float RearRightLoadN { get; set; }
+
+    public TyreLoadAuthorityMode TyreLoadAuthorityMode { get; set; }
+
+    public PhysicalLoadFilterRecontactMode PhysicalLoadFilterRecontactMode { get; set; }
+
+    public float PhysicalLoadFilterTimeConstantSeconds { get; set; }
+
+    public float FrontLeftTunedTyreLoadN { get; set; }
+
+    public float FrontRightTunedTyreLoadN { get; set; }
+
+    public float RearLeftTunedTyreLoadN { get; set; }
+
+    public float RearRightTunedTyreLoadN { get; set; }
+
+    public float FrontLeftPhysicalRawTyreLoadN { get; set; }
+
+    public float FrontRightPhysicalRawTyreLoadN { get; set; }
+
+    public float RearLeftPhysicalRawTyreLoadN { get; set; }
+
+    public float RearRightPhysicalRawTyreLoadN { get; set; }
+
+    public float FrontLeftPhysicalClampedTyreLoadN { get; set; }
+
+    public float FrontRightPhysicalClampedTyreLoadN { get; set; }
+
+    public float RearLeftPhysicalClampedTyreLoadN { get; set; }
+
+    public float RearRightPhysicalClampedTyreLoadN { get; set; }
+
+    public float FrontLeftPhysicalLoadClampLossN { get; set; }
+
+    public float FrontRightPhysicalLoadClampLossN { get; set; }
+
+    public float RearLeftPhysicalLoadClampLossN { get; set; }
+
+    public float RearRightPhysicalLoadClampLossN { get; set; }
+
+    public float FrontLeftPhysicalFilteredTyreLoadN { get; set; }
+
+    public float FrontRightPhysicalFilteredTyreLoadN { get; set; }
+
+    public float RearLeftPhysicalFilteredTyreLoadN { get; set; }
+
+    public float RearRightPhysicalFilteredTyreLoadN { get; set; }
+
+    public float FrontLeftHybridRawTyreLoadN { get; set; }
+
+    public float FrontRightHybridRawTyreLoadN { get; set; }
+
+    public float RearLeftHybridRawTyreLoadN { get; set; }
+
+    public float RearRightHybridRawTyreLoadN { get; set; }
+
+    public float FrontLeftHybridUsableTyreLoadN { get; set; }
+
+    public float FrontRightHybridUsableTyreLoadN { get; set; }
+
+    public float RearLeftHybridUsableTyreLoadN { get; set; }
+
+    public float RearRightHybridUsableTyreLoadN { get; set; }
+
+    public float FrontLeftTyreLoadAuthorityInputN { get; set; }
+
+    public float FrontRightTyreLoadAuthorityInputN { get; set; }
+
+    public float RearLeftTyreLoadAuthorityInputN { get; set; }
+
+    public float RearRightTyreLoadAuthorityInputN { get; set; }
 
     public float FrontLeftGripUsage { get; set; }
 
@@ -525,6 +749,14 @@ public sealed class VehicleState
     public float RearLeftWheelOmegaRadiansPerSecond { get; set; }
 
     public float RearRightWheelOmegaRadiansPerSecond { get; set; }
+
+    public float FrontLeftWheelVisualRotationRadians { get; set; }
+
+    public float FrontRightWheelVisualRotationRadians { get; set; }
+
+    public float RearLeftWheelVisualRotationRadians { get; set; }
+
+    public float RearRightWheelVisualRotationRadians { get; set; }
 
     public float FrontLeftFrictionEllipseTotalSlip { get; set; }
 

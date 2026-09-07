@@ -9,7 +9,7 @@ internal static class FbxCarModelLoader
 {
     private const string MeshCacheExtension = ".rtmesh";
     private const string MeshCacheMagic = "RTRMESH";
-    private const int MeshCacheVersion = 14;
+    private const int MeshCacheVersion = 25;
     private const float TargetBodyLengthMeters = 4.185f;
     private const float TargetWheelbaseMeters = 2.620f;
     private const float TargetFrontWeightDistribution = 0.620f;
@@ -23,7 +23,12 @@ internal static class FbxCarModelLoader
         ".bmp"
     };
 
-    public static List<StaticMesh>? TryLoad(GraphicsDevice graphicsDevice, string path, GeneratedTextures textures)
+    public static List<StaticMesh>? TryLoad(
+        GraphicsDevice graphicsDevice,
+        string path,
+        GeneratedTextures textures,
+        bool normalizeToVehicleOrigin = true,
+        FbxVehicleAxisConvention axisConvention = FbxVehicleAxisConvention.GameZForwardYUp)
     {
         if (!File.Exists(path))
         {
@@ -38,6 +43,7 @@ internal static class FbxCarModelLoader
             {
                 FbxDocument document = FbxDocument.Load(path);
                 importedMeshes = BuildImportedMeshes(document);
+                ReorientVehicleAxes(importedMeshes, axisConvention);
             }
 
             if (importedMeshes.Count == 0)
@@ -46,9 +52,15 @@ internal static class FbxCarModelLoader
             }
 
             MeshBounds authoredBounds = CalculateBounds(importedMeshes);
-            if (!loadedFromCache)
+            if (!loadedFromCache && normalizeToVehicleOrigin)
             {
                 NormalizeToVehicleOrigin(importedMeshes);
+                DetachWheelMeshesToLocalPivots(importedMeshes);
+                TrySaveMeshCache(cachePath, importedMeshes);
+            }
+            else if (!loadedFromCache)
+            {
+                DetachWheelMeshesToLocalPivots(importedMeshes);
                 TrySaveMeshCache(cachePath, importedMeshes);
             }
 
@@ -82,7 +94,9 @@ internal static class FbxCarModelLoader
                     mesh.SpecularColor,
                     mesh.SpecularPower,
                     mesh.EmissiveColor,
-                    mesh.VehicleMaterial));
+                    mesh.VehicleMaterial,
+                    mesh.WheelCorner,
+                    mesh.LocalPivot));
             }
 
             return meshes;
@@ -699,6 +713,11 @@ internal static class FbxCarModelLoader
                 faceNormal.Normalize();
             }
 
+            if (faceNormal.Y < -0.08f)
+            {
+                faceNormal = -faceNormal;
+            }
+
             Vector3 normalA = normalLayer?.GetNormal(polygonA, faceNormal) ?? faceNormal;
             Vector3 normalB = normalLayer?.GetNormal(polygonB, faceNormal) ?? faceNormal;
             Vector3 normalC = normalLayer?.GetNormal(polygonC, faceNormal) ?? faceNormal;
@@ -817,6 +836,51 @@ internal static class FbxCarModelLoader
         AlignVisualAxlesToPhysicsOrigin(meshes);
     }
 
+    private static void ReorientVehicleAxes(
+        IReadOnlyList<ImportedMesh> meshes,
+        FbxVehicleAxisConvention axisConvention)
+    {
+        if (axisConvention == FbxVehicleAxisConvention.GameZForwardYUp)
+        {
+            return;
+        }
+
+        foreach (ImportedMesh mesh in meshes)
+        {
+            for (int i = 0; i < mesh.Vertices.Length; i++)
+            {
+                VertexPositionNormalTexture vertex = mesh.Vertices[i];
+                vertex.Position = ReorientVehicleVector(vertex.Position, axisConvention);
+                vertex.Normal = OrientNormalForVehicleLighting(
+                    Vector3.Normalize(ReorientVehicleVector(vertex.Normal, axisConvention)));
+                mesh.Vertices[i] = vertex;
+            }
+        }
+    }
+
+    private static Vector3 OrientNormalForVehicleLighting(Vector3 normal)
+    {
+        // Blender/source axis conversion can leave valid low-poly faces wound toward
+        // the lower hemisphere after their positions are reoriented into game space.
+        // The car is rendered double-sided, so keep those broad panels lit from the
+        // world sun instead of letting an inverted normal turn roof/bonnet faces black.
+        return normal.Y < -0.08f ? -normal : normal;
+    }
+
+    private static Vector3 ReorientVehicleVector(Vector3 value, FbxVehicleAxisConvention axisConvention)
+    {
+        return axisConvention switch
+        {
+            // Source: X = forward, Y = up, Z = right. Game: X = right, Y = up, Z = forward.
+            FbxVehicleAxisConvention.SourceXForwardYUpZRight => new Vector3(value.Z, value.Y, value.X),
+            // Source: X = right, Y = forward, Z = up. Game: X = right, Y = up, Z = forward.
+            FbxVehicleAxisConvention.SourceYForwardZUpXRight => new Vector3(value.X, value.Z, value.Y),
+            // Source: X = forward, Y = right, Z = up. Game: X = right, Y = up, Z = forward.
+            FbxVehicleAxisConvention.SourceXForwardZUpYRight => new Vector3(value.Y, value.Z, value.X),
+            _ => value
+        };
+    }
+
     private static void AlignVisualAxlesToPhysicsOrigin(IReadOnlyList<ImportedMesh> meshes)
     {
         if (!TryCalculateNamedWheelAxleCenterZ(meshes, frontAxle: true, out float frontAxleZ) ||
@@ -845,6 +909,57 @@ internal static class FbxCarModelLoader
                 mesh.Vertices[i] = vertex;
             }
         }
+    }
+
+    private static void DetachWheelMeshesToLocalPivots(IReadOnlyList<ImportedMesh> meshes)
+    {
+        foreach (ImportedMesh mesh in meshes)
+        {
+            if (!mesh.IsWheelMesh)
+            {
+                continue;
+            }
+
+            WheelCorner wheelCorner = ResolveWheelCorner(mesh.Name);
+            if (wheelCorner == WheelCorner.None)
+            {
+                continue;
+            }
+
+            Vector3 pivot = CalculateVertexBounds(mesh.Vertices).Center;
+            for (int i = 0; i < mesh.Vertices.Length; i++)
+            {
+                VertexPositionNormalTexture vertex = mesh.Vertices[i];
+                vertex.Position -= pivot;
+                mesh.Vertices[i] = vertex;
+            }
+
+            mesh.WheelCorner = wheelCorner;
+            mesh.LocalPivot = ResolveCanonicalEk9WheelPivot(mesh.Name, wheelCorner) ?? pivot;
+        }
+    }
+
+    private static Vector3? ResolveCanonicalEk9WheelPivot(string meshName, WheelCorner wheelCorner)
+    {
+        string normalizedName = NormalizeMaterialName(meshName);
+        if (!normalizedName.Contains("wheel ", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        const float halfTrack = 1.480f * 0.5f;
+        const float tyreRadius = 0.298f;
+        float frontAxleZ = TargetWheelbaseMeters * (1f - TargetFrontWeightDistribution);
+        float rearAxleZ = -TargetWheelbaseMeters * TargetFrontWeightDistribution;
+
+        return wheelCorner switch
+        {
+            WheelCorner.FrontLeft => new Vector3(-halfTrack, tyreRadius, frontAxleZ),
+            WheelCorner.FrontRight => new Vector3(halfTrack, tyreRadius, frontAxleZ),
+            WheelCorner.RearLeft => new Vector3(-halfTrack, tyreRadius, rearAxleZ),
+            WheelCorner.RearRight => new Vector3(halfTrack, tyreRadius, rearAxleZ),
+            _ => null
+        };
     }
 
     private static bool TryCalculateNamedWheelAxleCenterZ(
@@ -905,6 +1020,19 @@ internal static class FbxCarModelLoader
                 min = Vector3.Min(min, vertex.Position);
                 max = Vector3.Max(max, vertex.Position);
             }
+        }
+
+        return new MeshBounds(min, max);
+    }
+
+    private static MeshBounds CalculateVertexBounds(IReadOnlyList<VertexPositionNormalTexture> vertices)
+    {
+        Vector3 min = new(float.PositiveInfinity);
+        Vector3 max = new(float.NegativeInfinity);
+        foreach (VertexPositionNormalTexture vertex in vertices)
+        {
+            min = Vector3.Min(min, vertex.Position);
+            max = Vector3.Max(max, vertex.Position);
         }
 
         return new MeshBounds(min, max);
@@ -973,6 +1101,36 @@ internal static class FbxCarModelLoader
             return VehicleMaterialCategory.WheelPaintOrMetal;
         }
 
+        if (ContainsAny(normalizedName, "shinymetal", "shiny metal", "polised dark alloy", "polished dark alloy", "dark alloy"))
+        {
+            return VehicleMaterialCategory.WheelPaintOrMetal;
+        }
+
+        if (ContainsAny(normalizedName, "tail lights", "taillights", "lights tail", "light tail", "orange clear plastic"))
+        {
+            return VehicleMaterialCategory.TaillightLens;
+        }
+
+        if (ContainsAny(normalizedName, "lightglass", "light glass", "lights head", "light head", "white clear plastic", "whie clear plastic"))
+        {
+            return VehicleMaterialCategory.HeadlightLens;
+        }
+
+        if (ContainsAny(normalizedName, "glass dark", "dark glass"))
+        {
+            return VehicleMaterialCategory.Glass;
+        }
+
+        if (ContainsAny(normalizedName, "darkgrey", "dark grey", "plastic dark grey", "black plastic", " black"))
+        {
+            return VehicleMaterialCategory.BlackPlastic;
+        }
+
+        if (ContainsAny(normalizedName, "plastic white"))
+        {
+            return VehicleMaterialCategory.Paint;
+        }
+
         if (ContainsAny(normalizedName, "brembo", "brake", "caliper", "disc", "rotor"))
         {
             return VehicleMaterialCategory.Brake;
@@ -998,12 +1156,12 @@ internal static class FbxCarModelLoader
             return VehicleMaterialCategory.ClearTailLens;
         }
 
-        if (ContainsAny(normalizedName, "tailstop", "taillight", "tail light", "rear light", "lightlenses tail"))
+        if (ContainsAny(normalizedName, "tailstop", "taillight", "tail light", "rear light", "lights tail", "light tail", "lightlenses tail"))
         {
             return VehicleMaterialCategory.TaillightLens;
         }
 
-        if (ContainsAny(normalizedName, "lightlenses", "headlight lens", "headlight", "far", "sinyal", "indicator lens"))
+        if (ContainsAny(normalizedName, "lightlenses", "headlight lens", "headlight", "lights head", "light head", "far", "sinyal", "indicator lens"))
         {
             return VehicleMaterialCategory.HeadlightLens;
         }
@@ -1138,6 +1296,32 @@ internal static class FbxCarModelLoader
         return IsWheelRimName(normalizedName) || IsWheelTyreName(normalizedName);
     }
 
+    private static WheelCorner ResolveWheelCorner(string combinedName)
+    {
+        string normalizedName = NormalizeMaterialName(combinedName);
+        if (ContainsAny(normalizedName, "wheel fl", "fl tyre", "fl tire", "fl rim", "fl mag", "front left tyre", "front left tire", "front left rim", "front left mag", "lf tyre", "lf tire", "lf rim", "lf mag"))
+        {
+            return WheelCorner.FrontLeft;
+        }
+
+        if (ContainsAny(normalizedName, "wheel fr", "fr tyre", "fr tire", "fr rim", "fr mag", "front right tyre", "front right tire", "front right rim", "front right mag", "rf tyre", "rf tire", "rf rim", "rf mag"))
+        {
+            return WheelCorner.FrontRight;
+        }
+
+        if (ContainsAny(normalizedName, "wheel rl", "rl tyre", "rl tire", "rl rim", "rl mag", "rear left tyre", "rear left tire", "rear left rim", "rear left mag", "lr tyre", "lr tire", "lr rim", "lr mag"))
+        {
+            return WheelCorner.RearLeft;
+        }
+
+        if (ContainsAny(normalizedName, "wheel rr", "rr tyre", "rr tire", "rr rim", "rr mag", "rear right tyre", "rear right tire", "rear right rim", "rear right mag"))
+        {
+            return WheelCorner.RearRight;
+        }
+
+        return WheelCorner.None;
+    }
+
     private static bool IsWheelRimName(string normalizedName)
     {
         if (ContainsAny(normalizedName, "steering"))
@@ -1147,10 +1331,12 @@ internal static class FbxCarModelLoader
 
         return ContainsAny(
             normalizedName,
-            "fr rim", "rf rim", "front right rim",
-            "lf rim", "fl rim", "front left rim",
-            "lr rim", "rl rim", "rear left rim",
-            "rr rim", "rear right rim");
+            "wheel fr rim", "wheel fl rim", "wheel rl rim", "wheel rr rim",
+            "wheel fr mag", "wheel fl mag", "wheel rl mag", "wheel rr mag",
+            "fr rim", "rf rim", "front right rim", "fr mag", "rf mag", "front right mag",
+            "lf rim", "fl rim", "front left rim", "lf mag", "fl mag", "front left mag",
+            "lr rim", "rl rim", "rear left rim", "lr mag", "rl mag", "rear left mag",
+            "rr rim", "rear right rim", "rr mag", "rear right mag");
     }
 
     private static bool IsWheelTyreName(string normalizedName)
@@ -1162,6 +1348,8 @@ internal static class FbxCarModelLoader
 
         return ContainsAny(
             normalizedName,
+            "wheel fr tyre", "wheel fl tyre", "wheel rl tyre", "wheel rr tyre",
+            "wheel fr tire", "wheel fl tire", "wheel rl tire", "wheel rr tire",
             "fr tyre", "fr tire", "rf tyre", "rf tire", "front right tyre", "front right tire",
             "lf tyre", "lf tire", "fl tyre", "fl tire", "front left tyre", "front left tire",
             "lr tyre", "lr tire", "rl tyre", "rl tire", "rear left tyre", "rear left tire",
@@ -1356,6 +1544,8 @@ internal static class FbxCarModelLoader
             {
                 string name = reader.ReadString();
                 bool isWheelMesh = reader.ReadBoolean();
+                WheelCorner wheelCorner = (WheelCorner)reader.ReadInt32();
+                Vector3 localPivot = ReadVector3(reader);
                 ImportedMaterialKind materialKind = (ImportedMaterialKind)reader.ReadInt32();
                 Vector3 diffuseColor = ReadVector3(reader);
                 float alpha = reader.ReadSingle();
@@ -1398,7 +1588,9 @@ internal static class FbxCarModelLoader
                     emissiveColor,
                     texturePath,
                     vehicleMaterial,
-                    isWheelMesh || IsWheelComponentName(name)));
+                    isWheelMesh || IsWheelComponentName(name),
+                    wheelCorner,
+                    localPivot));
             }
 
             return true;
@@ -1424,6 +1616,8 @@ internal static class FbxCarModelLoader
             {
                 writer.Write(mesh.Name);
                 writer.Write(mesh.IsWheelMesh);
+                writer.Write((int)mesh.WheelCorner);
+                WriteVector3(writer, mesh.LocalPivot);
                 writer.Write((int)mesh.MaterialKind);
                 WriteVector3(writer, mesh.DiffuseColor);
                 writer.Write(mesh.Alpha);
@@ -1564,19 +1758,68 @@ internal static class FbxCarModelLoader
         public List<int> Indices { get; } = [];
     }
 
-    private sealed record ImportedMesh(
-        string Name,
-        VertexPositionNormalTexture[] Vertices,
-        int[] Indices,
-        ImportedMaterialKind MaterialKind,
-        Vector3 DiffuseColor,
-        float Alpha,
-        Vector3 SpecularColor,
-        float SpecularPower,
-        Vector3 EmissiveColor,
-        string? TexturePath,
-        VehicleMaterial VehicleMaterial,
-        bool IsWheelMesh);
+    private sealed class ImportedMesh
+    {
+        public ImportedMesh(
+            string name,
+            VertexPositionNormalTexture[] vertices,
+            int[] indices,
+            ImportedMaterialKind materialKind,
+            Vector3 diffuseColor,
+            float alpha,
+            Vector3 specularColor,
+            float specularPower,
+            Vector3 emissiveColor,
+            string? texturePath,
+            VehicleMaterial vehicleMaterial,
+            bool isWheelMesh,
+            WheelCorner wheelCorner = WheelCorner.None,
+            Vector3 localPivot = default)
+        {
+            Name = name;
+            Vertices = vertices;
+            Indices = indices;
+            MaterialKind = materialKind;
+            DiffuseColor = diffuseColor;
+            Alpha = alpha;
+            SpecularColor = specularColor;
+            SpecularPower = specularPower;
+            EmissiveColor = emissiveColor;
+            TexturePath = texturePath;
+            VehicleMaterial = vehicleMaterial;
+            IsWheelMesh = isWheelMesh;
+            WheelCorner = wheelCorner;
+            LocalPivot = localPivot;
+        }
+
+        public string Name { get; }
+
+        public VertexPositionNormalTexture[] Vertices { get; }
+
+        public int[] Indices { get; }
+
+        public ImportedMaterialKind MaterialKind { get; }
+
+        public Vector3 DiffuseColor { get; }
+
+        public float Alpha { get; }
+
+        public Vector3 SpecularColor { get; }
+
+        public float SpecularPower { get; }
+
+        public Vector3 EmissiveColor { get; }
+
+        public string? TexturePath { get; }
+
+        public VehicleMaterial VehicleMaterial { get; }
+
+        public bool IsWheelMesh { get; }
+
+        public WheelCorner WheelCorner { get; set; }
+
+        public Vector3 LocalPivot { get; set; }
+    }
 
     private enum ImportedMaterialKind
     {
@@ -1687,6 +1930,8 @@ internal static class FbxCarModelLoader
     private readonly record struct MeshBounds(Vector3 Min, Vector3 Max)
     {
         public Vector3 Size => Max - Min;
+
+        public Vector3 Center => (Min + Max) * 0.5f;
     }
 
     private sealed class FbxDocument
@@ -1844,4 +2089,12 @@ internal static class FbxCarModelLoader
             return Children.FirstOrDefault(child => child.Name == name);
         }
     }
+}
+
+internal enum FbxVehicleAxisConvention
+{
+    GameZForwardYUp,
+    SourceXForwardYUpZRight,
+    SourceYForwardZUpXRight,
+    SourceXForwardZUpYRight
 }

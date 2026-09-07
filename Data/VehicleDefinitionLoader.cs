@@ -969,6 +969,7 @@ public static class VehicleDefinitionLoader
             ToeGainRadiansPerMeter = MathHelper.ToRadians(ReadValueSingle(root, 0f, "suspension", axle, "toeGainDegreesPerMeter")),
             BodyRollCamberMultiplier = ReadValueSingle(root, 1f, "suspension", axle, "bodyRollCamberMultiplier"),
             CasterCamberGain = ReadValueSingle(root, 0.6f, "suspension", axle, "casterCamberGain"),
+            RideHeightMeters = ReadValueSingle(root, axle.Equals("front", StringComparison.OrdinalIgnoreCase) ? 0.135f : 0.140f, "suspension", axle, "rideHeightMeters"),
             MaxCompressionMeters = ReadValueSingle(root, 0.085f, "suspension", axle, "maxCompressionMeters"),
             MaxDroopMeters = ReadValueSingle(root, 0.075f, "suspension", axle, "maxDroopMeters")
         };

@@ -40,7 +40,7 @@ public readonly record struct VehicleMaterial(
         return category switch
         {
             VehicleMaterialCategory.Glass => Create(
-                category, resolvedBaseColor, 0f, 0.08f, 0.92f, 0.64f, 0.88f, 0.50f, Vector3.Zero, 0f),
+                category, resolvedBaseColor, 0f, 0.42f, 0.38f, 0.04f, 0.05f, 1f, Vector3.Zero, 0f),
             VehicleMaterialCategory.TyreRubber => Create(
                 category, resolvedBaseColor, 0f, 0.86f, 0.12f, 0.02f, 0.05f, 1f, Vector3.Zero, 0f),
             VehicleMaterialCategory.WheelPaintOrMetal => Create(
@@ -97,7 +97,7 @@ public readonly record struct VehicleMaterial(
     {
         float diffuseScale = Category switch
         {
-            VehicleMaterialCategory.Glass => 0.62f,
+            VehicleMaterialCategory.Glass => 0.72f,
             VehicleMaterialCategory.HeadlightLens => 0.38f,
             VehicleMaterialCategory.TaillightLens => 0.86f,
             VehicleMaterialCategory.ClearTailLens => 0.78f,

@@ -16,6 +16,8 @@ public sealed class SuspensionGeometryParameters
 
     public float CasterCamberGain { get; init; } = 0.6f;
 
+    public float RideHeightMeters { get; init; } = 0.135f;
+
     public float MaxCompressionMeters { get; init; } = 0.085f;
 
     public float MaxDroopMeters { get; init; } = 0.075f;

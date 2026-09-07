@@ -45,12 +45,17 @@ public sealed class VehicleRenderEffect : IDisposable
 
     public void DrawOpaqueMesh(StaticMesh mesh, Matrix world)
     {
+        DrawOpaqueMesh(mesh, world, null);
+    }
+
+    public void DrawOpaqueMesh(StaticMesh mesh, Matrix world, VehicleMaterial? materialOverride)
+    {
         if (_opaque is null)
         {
             return;
         }
 
-        VehicleMaterial material = ResolveMaterial(mesh);
+        VehicleMaterial material = ResolveMaterial(mesh, materialOverride);
         ApplyCommonMeshState(_opaque, mesh, world, material);
         _opaque.Metallic?.SetValue(material.Metallic);
         mesh.Draw(_graphicsDevice, _opaque.Effect);
@@ -58,12 +63,17 @@ public sealed class VehicleRenderEffect : IDisposable
 
     public void DrawTransparentMesh(StaticMesh mesh, Matrix world)
     {
+        DrawTransparentMesh(mesh, world, null);
+    }
+
+    public void DrawTransparentMesh(StaticMesh mesh, Matrix world, VehicleMaterial? materialOverride)
+    {
         if (_transparent is null)
         {
             return;
         }
 
-        VehicleMaterial material = ResolveMaterial(mesh);
+        VehicleMaterial material = ResolveMaterial(mesh, materialOverride);
         ApplyCommonMeshState(_transparent, mesh, world, material);
         _transparent.Opacity?.SetValue(material.Opacity);
         _transparent.LensDetailStrength?.SetValue(CalculateLensDetailStrength(material.Category));
@@ -84,16 +94,16 @@ public sealed class VehicleRenderEffect : IDisposable
         }
 
         state.CameraPosition.SetValue(_cameraPosition);
-        state.AmbientLightColor?.SetValue(new Vector3(0.25f, 0.26f, 0.27f));
-        state.LightDirection0?.SetValue(Vector3.Normalize(new Vector3(-0.52f, -1.0f, -0.30f)));
-        state.LightColor0?.SetValue(new Vector3(0.86f, 0.88f, 0.90f));
-        state.LightSpecularColor0?.SetValue(new Vector3(0.88f, 0.92f, 0.96f));
-        state.LightDirection1?.SetValue(Vector3.Normalize(new Vector3(0.22f, -0.38f, 0.92f)));
-        state.LightColor1?.SetValue(new Vector3(0.18f, 0.20f, 0.23f));
-        state.LightSpecularColor1?.SetValue(new Vector3(0.54f, 0.60f, 0.68f));
-        state.FogColor?.SetValue(SceneRenderer.FogColor.ToVector3());
-        state.FogStart?.SetValue(78f);
-        state.FogEnd?.SetValue(280f);
+        state.AmbientLightColor?.SetValue(SceneRenderer.AfternoonAmbientColor);
+        state.LightDirection0?.SetValue(SceneRenderer.AfternoonSunDirection);
+        state.LightColor0?.SetValue(SceneRenderer.AfternoonSunDiffuseColor);
+        state.LightSpecularColor0?.SetValue(SceneRenderer.AfternoonSunSpecularColor);
+        state.LightDirection1?.SetValue(SceneRenderer.AfternoonSunDirection);
+        state.LightColor1?.SetValue(Vector3.Zero);
+        state.LightSpecularColor1?.SetValue(Vector3.Zero);
+        state.FogColor?.SetValue(Vector3.Zero);
+        state.FogStart?.SetValue(100000f);
+        state.FogEnd?.SetValue(100001f);
     }
 
     private void ApplyCommonMeshState(EffectState state, StaticMesh mesh, Matrix world, VehicleMaterial material)
@@ -110,9 +120,9 @@ public sealed class VehicleRenderEffect : IDisposable
         state.EmissiveStrength.SetValue(material.EmissiveStrength);
     }
 
-    private static VehicleMaterial ResolveMaterial(StaticMesh mesh)
+    private static VehicleMaterial ResolveMaterial(StaticMesh mesh, VehicleMaterial? materialOverride)
     {
-        return mesh.VehicleMaterial ?? VehicleMaterial.FromBasicEffect(
+        return materialOverride ?? mesh.VehicleMaterial ?? VehicleMaterial.FromBasicEffect(
             mesh.DiffuseColor,
             mesh.Alpha,
             mesh.SpecularColor,

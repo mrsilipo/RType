@@ -13,6 +13,7 @@ public sealed class TrackScene : ITrackSurfaceSampler, ITrackProgressSampler, ID
     private const float CurbInnerOffsetFromRoadEdgeMeters = 0.20f;
     private const float CurbOuterOffsetFromRoadEdgeMeters = 1.10f;
     private const float CurbGrassBlendZoneMeters = 0.75f;
+    private const float FieldTreeScale = 2.25f;
     private static readonly ProfilePoint[] LakesideBankProfileDegrees =
     [
         new(0.00f, 0.0f),
@@ -38,6 +39,8 @@ public sealed class TrackScene : ITrackSurfaceSampler, ITrackProgressSampler, ID
     private readonly float _startDistanceMeters;
     private readonly float _roadHalfWidth;
     private readonly List<StaticMesh> _meshes;
+    private readonly AuthoredTrackVisualStats? _authoredVisualStats;
+    private readonly AuthoredTrackSurfaceSampler? _authoredSurfaceSampler;
 
     private TrackScene(
         TrackDefinition definition,
@@ -50,6 +53,9 @@ public sealed class TrackScene : ITrackSurfaceSampler, ITrackProgressSampler, ID
         float startDistanceMeters,
         float roadHalfWidth,
         List<StaticMesh> meshes,
+        TrackVisualSource visualSource,
+        AuthoredTrackVisualStats? authoredVisualStats,
+        AuthoredTrackSurfaceSampler? authoredSurfaceSampler,
         Vector3 startPosition,
         float startHeadingRadians,
         bool isReverse)
@@ -64,6 +70,9 @@ public sealed class TrackScene : ITrackSurfaceSampler, ITrackProgressSampler, ID
         _startDistanceMeters = startDistanceMeters;
         _roadHalfWidth = roadHalfWidth;
         _meshes = meshes;
+        VisualSource = visualSource;
+        _authoredVisualStats = authoredVisualStats;
+        _authoredSurfaceSampler = authoredSurfaceSampler;
         StartPosition = startPosition;
         StartHeadingRadians = startHeadingRadians;
         IsReverse = isReverse;
@@ -73,9 +82,21 @@ public sealed class TrackScene : ITrackSurfaceSampler, ITrackProgressSampler, ID
 
     public IReadOnlyList<StaticMesh> Meshes => _meshes;
 
+    public TrackVisualSource VisualSource { get; }
+
+    public AuthoredTrackVisualStats? AuthoredVisualStats => _authoredVisualStats;
+
+    public AuthoredTrackSurfaceSampler? AuthoredSurfaceSampler => _authoredSurfaceSampler;
+
+    public bool HasAuthoredSurfaceContact => _authoredSurfaceSampler?.HasDriveableSurface == true;
+
+    public bool DrawProceduralBackdrop => VisualSource == TrackVisualSource.Generated;
+
     public Vector3 StartPosition { get; }
 
     public float StartHeadingRadians { get; }
+
+    public Vector3 StartForward => new(MathF.Sin(StartHeadingRadians), 0f, MathF.Cos(StartHeadingRadians));
 
     public bool IsReverse { get; }
 
@@ -119,7 +140,8 @@ public sealed class TrackScene : ITrackSurfaceSampler, ITrackProgressSampler, ID
         GeneratedTextures textures,
         TrackDefinition definition,
         bool reverse,
-        SurfaceLibrary surfaceLibrary)
+        SurfaceLibrary surfaceLibrary,
+        TrackVisualMode visualMode = TrackVisualMode.Auto)
     {
         Vector3[] centerLine = BuildCenterLine(definition);
         float[] bankRadians = BuildBankRadians(definition, centerLine);
@@ -141,9 +163,59 @@ public sealed class TrackScene : ITrackSurfaceSampler, ITrackProgressSampler, ID
         float loopLengthMeters = cumulativeDistances[^1];
         float startDistanceMeters = cumulativeDistances[startIndex];
 
-        List<StaticMesh> meshes = BuildTrackMeshes(graphicsDevice, textures, definition, centerLine, bankRadians, widthSamples, roadHalfWidth);
+        TrackVisualSource visualSource = ResolveVisualSource(definition, visualMode);
+        AuthoredTrackVisualStats? authoredVisualStats = null;
+        AuthoredTrackSurfaceSampler? authoredSurfaceSampler = null;
+        List<StaticMesh> meshes;
+        if (visualSource == TrackVisualSource.Authored)
+        {
+            string authoredVisualPath = GetAuthoredVisualPath(definition);
+            AuthoredTrackVisualLoadResult authored = AuthoredTrackGltfLoader.Load(graphicsDevice, authoredVisualPath);
+            meshes = authored.Meshes.ToList();
+            authoredVisualStats = authored.Stats;
+            authoredSurfaceSampler = new AuthoredTrackSurfaceSampler(authored.DriveableTriangles);
+            if (authoredSurfaceSampler.HasDriveableSurface)
+            {
+                AuthoredTrackSurfaceStats surfaceStats = authoredSurfaceSampler.Stats;
+                Console.WriteLine(
+                    $"{definition.DisplayName} authored driveable surface: nodes {surfaceStats.DriveableNodeCount}, " +
+                    $"triangles {surfaceStats.TriangleCount}, grid {surfaceStats.GridWidth}x{surfaceStats.GridDepth}, " +
+                    $"cell {surfaceStats.CellSizeMeters:0.#}m, occupied cells {surfaceStats.OccupiedCellCount}, " +
+                    $"avg candidates {surfaceStats.AverageTrianglesPerOccupiedCell:0.##}, worst {surfaceStats.WorstCaseTrianglesInCell}, " +
+                    $"bounds min {FormatVector(surfaceStats.Bounds.Min)}, max {FormatVector(surfaceStats.Bounds.Max)}.");
+            }
+            else
+            {
+                Console.WriteLine(
+                    $"{definition.DisplayName} authored driveable surface: no nodes ending exactly `_Driveable` were found. " +
+                    "Vehicle ground contact will report misses and use the temporary procedural fallback until driveable meshes are authored.");
+            }
+        }
+        else
+        {
+            Console.WriteLine($"{definition.DisplayName} visual source: Generated");
+            meshes = BuildTrackMeshes(graphicsDevice, textures, definition, centerLine, bankRadians, widthSamples, roadHalfWidth);
+        }
+
         Vector3 startPosition = new(start.X, start.Y, start.Z);
         float startHeadingRadians = MathF.Atan2(tangent.X, tangent.Y);
+        if (visualSource == TrackVisualSource.Authored &&
+            authoredVisualStats?.StartMarkers.Count > 0)
+        {
+            AuthoredTrackStartMarker authoredStart = authoredVisualStats.StartMarkers
+                .FirstOrDefault(marker => marker.GridIndex == 6)
+                ?? authoredVisualStats.StartMarkers.OrderBy(marker => marker.GridIndex).First();
+            startPosition = authoredStart.Position;
+            float authoredHeadingRadians = MathHelper.WrapAngle(authoredStart.HeadingRadians + MathF.PI);
+            startHeadingRadians = reverse
+                ? MathHelper.WrapAngle(authoredHeadingRadians + MathF.PI)
+                : authoredHeadingRadians;
+            Console.WriteLine(
+                $"{definition.DisplayName} authored start marker: {authoredStart.Name} " +
+                $"front-center at {FormatVector(startPosition)} heading {MathHelper.ToDegrees(startHeadingRadians):0.#}deg.");
+        }
+
+        ValidateVisualBounds(definition, visualSource, meshes, startPosition, authoredVisualStats);
         return new TrackScene(
             definition,
             surfaceLibrary,
@@ -155,9 +227,96 @@ public sealed class TrackScene : ITrackSurfaceSampler, ITrackProgressSampler, ID
             startDistanceMeters,
             roadHalfWidth,
             meshes,
+            visualSource,
+            authoredVisualStats,
+            authoredSurfaceSampler,
             startPosition,
             startHeadingRadians,
             reverse);
+    }
+
+    public Vector3 ResolveVehicleStartPosition(float bodyLengthMeters)
+    {
+        if (VisualSource != TrackVisualSource.Authored)
+        {
+            return StartPosition;
+        }
+
+        float frontToCenterMeters = MathF.Max(0f, bodyLengthMeters) * 0.5f;
+        return StartPosition - StartForward * frontToCenterMeters;
+    }
+
+    private static TrackVisualSource ResolveVisualSource(TrackDefinition definition, TrackVisualMode visualMode)
+    {
+        return visualMode switch
+        {
+            TrackVisualMode.Generated => TrackVisualSource.Generated,
+            TrackVisualMode.Authored => TrackVisualSource.Authored,
+            _ when IsAuthoredVisualTrack(definition) => TrackVisualSource.Authored,
+            _ => TrackVisualSource.Generated
+        };
+    }
+
+    private static bool IsAuthoredVisualTrack(TrackDefinition definition)
+    {
+        return definition.Id.Equals("high_speed_ring", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string GetAuthoredVisualPath(TrackDefinition definition)
+    {
+        if (!definition.Id.Equals("high_speed_ring", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException($"No authored visual package is configured for track `{definition.Id}`.");
+        }
+
+        return Path.Combine("Assets", "Tracks", "HighSpeedRing", "Runtime", "HighSpeedRing_Authored.glb");
+    }
+
+    private static void ValidateVisualBounds(
+        TrackDefinition definition,
+        TrackVisualSource visualSource,
+        IReadOnlyList<StaticMesh> meshes,
+        Vector3 startPosition,
+        AuthoredTrackVisualStats? authoredVisualStats)
+    {
+        if (meshes.Count == 0)
+        {
+            throw new InvalidOperationException($"{definition.DisplayName} {visualSource} visual scene contains no meshes.");
+        }
+
+        BoundingBox bounds = authoredVisualStats?.Bounds ?? CalculateMeshBounds(meshes);
+        bool startInsideXZ =
+            startPosition.X >= bounds.Min.X - 25f &&
+            startPosition.X <= bounds.Max.X + 25f &&
+            startPosition.Z >= bounds.Min.Z - 25f &&
+            startPosition.Z <= bounds.Max.Z + 25f;
+        bool plausibleHeight = bounds.Max.Y - bounds.Min.Y < 250f && bounds.Max.Y > -25f && bounds.Min.Y < 75f;
+        if (!startInsideXZ || !plausibleHeight)
+        {
+            throw new InvalidOperationException(
+                $"{definition.DisplayName} {visualSource} visual bounds failed plausibility check. " +
+                $"Start {FormatVector(startPosition)}, bounds min {FormatVector(bounds.Min)}, max {FormatVector(bounds.Max)}.");
+        }
+
+        Console.WriteLine(
+            $"{definition.DisplayName} visual bounds validated: start {FormatVector(startPosition)}, " +
+            $"bounds min {FormatVector(bounds.Min)}, max {FormatVector(bounds.Max)}.");
+    }
+
+    private static BoundingBox CalculateMeshBounds(IReadOnlyList<StaticMesh> meshes)
+    {
+        BoundingBox bounds = meshes[0].Bounds;
+        for (int i = 1; i < meshes.Count; i++)
+        {
+            bounds = BoundingBox.CreateMerged(bounds, meshes[i].Bounds);
+        }
+
+        return bounds;
+    }
+
+    private static string FormatVector(Vector3 value)
+    {
+        return $"({value.X:0.###}, {value.Y:0.###}, {value.Z:0.###})";
     }
 
     private static List<StaticMesh> BuildTrackMeshes(
@@ -183,7 +342,7 @@ public sealed class TrackScene : ITrackSurfaceSampler, ITrackProgressSampler, ID
         Vector3 terrainCenter = new((minX + maxX) * 0.5f, minY - 0.075f, (minZ + maxZ) * 0.5f);
         Vector3 wallGrey = new(0.54f, 0.56f, 0.55f);
 
-        return
+        List<StaticMesh> meshes =
         [
             MeshFactory.CreatePlane(graphicsDevice, terrainCenter, terrainWidth, terrainDepth, textures.Grass, 9f, Vector3.One, "track grass field"),
             MeshFactory.CreateBankedOffsetRibbon(graphicsDevice, centerLine, bankRadians, offsets.LeftGrassInner, offsets.LeftGrassOuter, -0.026f, textures.Grass, 8.5f, "left grass shoulder"),
@@ -194,10 +353,1787 @@ public sealed class TrackScene : ITrackSurfaceSampler, ITrackProgressSampler, ID
             MeshFactory.CreateOffsetWall(graphicsDevice, centerLine, offsets.LeftWall, WallHeightMeters, 0.02f, textures.White, 6.0f, wallGrey, "left grey wall"),
             MeshFactory.CreateOffsetWall(graphicsDevice, centerLine, offsets.RightWall, WallHeightMeters, 0.02f, textures.White, 6.0f, wallGrey, "right grey wall")
         ];
+        AddRaceCircuitFurniture(meshes, graphicsDevice, textures, definition, centerLine, offsets);
+        AddRollingBackgroundTerrain(meshes, graphicsDevice, textures, terrainCenter, terrainWidth, terrainDepth);
+        AddPatchworkFieldParcels(meshes, graphicsDevice, textures, terrainCenter, terrainWidth, terrainDepth);
+        AddChalkDownlandFieldBands(meshes, graphicsDevice, textures, terrainCenter, terrainWidth, terrainDepth);
+        AddMidFieldHedgerows(meshes, graphicsDevice, textures, terrainCenter, terrainWidth, terrainDepth);
+        AddSalisburyPlainLandmarks(meshes, graphicsDevice, textures, terrainCenter, terrainWidth, terrainDepth);
+        AddProceduralTreeClumps(meshes, graphicsDevice, textures, terrainCenter, terrainWidth, terrainDepth);
+        return meshes;
+    }
+
+    private static void AddRaceCircuitFurniture(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        TrackDefinition definition,
+        IReadOnlyList<Vector3> centerLine,
+        TrackOffsetProfiles offsets)
+    {
+        AddCornerChevronSigns(meshes, graphicsDevice, textures, centerLine, offsets);
+        AddCornerApproachFurniture(meshes, graphicsDevice, textures, centerLine, offsets);
+        AddTireStackSafetyFurniture(meshes, graphicsDevice, textures, centerLine, offsets);
+        AddStartLineGrandstands(meshes, graphicsDevice, textures, definition, centerLine, offsets);
+        AddStartAreaAirfield(meshes, graphicsDevice, textures, definition, centerLine, offsets);
+        AddTracksideRailwayAndUnderpass(meshes, graphicsDevice, textures, definition, centerLine, offsets);
+    }
+
+    private static void AddCornerChevronSigns(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        IReadOnlyList<Vector3> centerLine,
+        TrackOffsetProfiles offsets)
+    {
+        int signIndex = 0;
+        int step = Math.Max(1, centerLine.Count / 42);
+        for (int i = 0; i < centerLine.Count; i += step)
+        {
+            int previousIndex = (i - step + centerLine.Count) % centerLine.Count;
+            int nextIndex = (i + step) % centerLine.Count;
+            Vector2 previous = ToXZ(centerLine[previousIndex]);
+            Vector2 current = ToXZ(centerLine[i]);
+            Vector2 next = ToXZ(centerLine[nextIndex]);
+            Vector2 incoming = Vector2.Normalize(current - previous);
+            Vector2 outgoing = Vector2.Normalize(next - current);
+            float curvature = incoming.X * outgoing.Y - incoming.Y * outgoing.X;
+            if (MathF.Abs(curvature) < 0.070f)
+            {
+                continue;
+            }
+
+            Vector2 left = GetTrackLeftNormal(centerLine, i);
+            float sideOffset = curvature > 0f
+                ? SampleOffsetValue(offsets.RightWall, i) - 1.45f
+                : SampleOffsetValue(offsets.LeftWall, i) + 1.45f;
+            Vector3 ground = OffsetTrackPoint(centerLine[i], left * sideOffset, 0.10f);
+            Vector2 tangent = Vector2.Normalize(outgoing + incoming);
+            float yaw = MathF.Atan2(tangent.Y, tangent.X);
+            Vector3 signCenter = ground + Vector3.Up * 1.25f;
+            meshes.Add(MeshFactory.CreateVerticalPlane(
+                graphicsDevice,
+                signCenter,
+                3.4f,
+                1.05f,
+                yaw,
+                textures.ChevronSign,
+                Vector3.One,
+                $"Japanese circuit chevron board {signIndex:00}",
+                uvRepeatX: 1f,
+                uvRepeatY: 1f));
+
+            meshes.Add(MeshFactory.CreateBox(
+                graphicsDevice,
+                ground + Vector3.Up * 0.34f,
+                new Vector3(4.2f, 0.68f, 0.48f),
+                textures.White,
+                new Vector3(0.48f, 0.50f, 0.49f),
+                $"angular concrete chevron barrier {signIndex:00}"));
+            signIndex++;
+        }
+    }
+
+    private static void AddCornerApproachFurniture(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        IReadOnlyList<Vector3> centerLine,
+        TrackOffsetProfiles offsets)
+    {
+        int markerIndex = 0;
+        int step = Math.Max(1, centerLine.Count / 18);
+        int preview = Math.Max(2, centerLine.Count / 74);
+        for (int i = 0; i < centerLine.Count && markerIndex < 8; i += step)
+        {
+            int previousIndex = (i - preview + centerLine.Count) % centerLine.Count;
+            int nextIndex = (i + preview) % centerLine.Count;
+            Vector2 previous = ToXZ(centerLine[previousIndex]);
+            Vector2 current = ToXZ(centerLine[i]);
+            Vector2 next = ToXZ(centerLine[nextIndex]);
+            Vector2 incoming = SafeNormalize(current - previous, Vector2.UnitX);
+            Vector2 outgoing = SafeNormalize(next - current, incoming);
+            float curvature = incoming.X * outgoing.Y - incoming.Y * outgoing.X;
+            if (MathF.Abs(curvature) < 0.045f)
+            {
+                continue;
+            }
+
+            Vector2 left = GetTrackLeftNormal(centerLine, i);
+            Vector2 forward = new(left.Y, -left.X);
+            float wallOffset = curvature > 0f
+                ? SampleOffsetValue(offsets.RightWall, i) - 4.2f
+                : SampleOffsetValue(offsets.LeftWall, i) + 4.2f;
+            float yaw = MathF.Atan2(left.Y, left.X);
+            for (int board = 0; board < 3; board++)
+            {
+                Vector2 approachOffset = left * wallOffset - forward * (18f + board * 16f);
+                Vector3 ground = OffsetTrackPoint(centerLine[i], approachOffset, 0.12f);
+                meshes.Add(MeshFactory.CreateVerticalPlane(
+                    graphicsDevice,
+                    ground + Vector3.Up * 1.05f,
+                    1.10f,
+                    1.65f,
+                    yaw,
+                    textures.BrakeMarkerSign,
+                    Vector3.One,
+                    $"corner approach brake marker {markerIndex:00}-{board:00}",
+                    uvRepeatX: 1f,
+                    uvRepeatY: 1f));
+                meshes.Add(MeshFactory.CreateBox(
+                    graphicsDevice,
+                    ground + Vector3.Up * 0.52f,
+                    new Vector3(0.14f, 1.04f, 0.14f),
+                    textures.White,
+                    new Vector3(0.12f, 0.13f, 0.12f),
+                    $"corner approach brake marker post {markerIndex:00}-{board:00}"));
+            }
+
+            if ((markerIndex & 1) == 0)
+            {
+                AddMarshalPost(meshes, graphicsDevice, textures, centerLine[i], left, wallOffset + MathF.CopySign(3.6f, wallOffset), markerIndex);
+            }
+
+            markerIndex++;
+        }
+    }
+
+    private static void AddMarshalPost(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        Vector3 trackPoint,
+        Vector2 left,
+        float offset,
+        int index)
+    {
+        Vector3 center = OffsetTrackPoint(trackPoint, left * offset, 0.18f);
+        Vector3 timber = new(0.34f, 0.25f, 0.18f);
+        Vector3 roof = new(0.09f, 0.095f, 0.09f);
+        Vector3 hiVis = new(0.93f, 0.62f, 0.08f);
+        Vector3 flagRed = new(0.78f, 0.04f, 0.04f);
+
+        meshes.Add(MeshFactory.CreateBox(graphicsDevice, center + Vector3.Up * 0.72f, new Vector3(2.3f, 1.10f, 1.7f), textures.White, timber, $"corner marshal timber shelter {index:00}"));
+        meshes.Add(MeshFactory.CreateBox(graphicsDevice, center + Vector3.Up * 1.38f, new Vector3(2.7f, 0.22f, 2.0f), textures.White, roof, $"corner marshal shelter roof {index:00}"));
+        meshes.Add(MeshFactory.CreateBox(graphicsDevice, center + new Vector3(0.96f, 0.85f, -0.36f), new Vector3(0.22f, 0.72f, 0.16f), textures.White, hiVis, $"corner marshal figure {index:00}"));
+        meshes.Add(MeshFactory.CreateVerticalPlane(
+            graphicsDevice,
+            center + new Vector3(0.06f, 1.55f, 1.16f),
+            0.95f,
+            0.62f,
+            0f,
+            textures.White,
+            flagRed,
+            $"corner marshal red flag {index:00}"));
+    }
+
+    private static void AddTireStackSafetyFurniture(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        IReadOnlyList<Vector3> centerLine,
+        TrackOffsetProfiles offsets)
+    {
+        int stackIndex = 0;
+        int step = Math.Max(1, centerLine.Count / 16);
+        int preview = Math.Max(2, centerLine.Count / 64);
+        for (int i = 0; i < centerLine.Count && stackIndex < 7; i += step)
+        {
+            int previousIndex = (i - preview + centerLine.Count) % centerLine.Count;
+            int nextIndex = (i + preview) % centerLine.Count;
+            Vector2 previous = ToXZ(centerLine[previousIndex]);
+            Vector2 current = ToXZ(centerLine[i]);
+            Vector2 next = ToXZ(centerLine[nextIndex]);
+            Vector2 incoming = SafeNormalize(current - previous, Vector2.UnitX);
+            Vector2 outgoing = SafeNormalize(next - current, incoming);
+            float curvature = incoming.X * outgoing.Y - incoming.Y * outgoing.X;
+            if (MathF.Abs(curvature) < 0.038f)
+            {
+                continue;
+            }
+
+            Vector2 left = GetTrackLeftNormal(centerLine, i);
+            Vector2 forward = new(left.Y, -left.X);
+            float offset = curvature > 0f
+                ? SampleOffsetValue(offsets.RightWall, i) - 7.6f
+                : SampleOffsetValue(offsets.LeftWall, i) + 7.6f;
+            Vector3 anchor = OffsetTrackPoint(centerLine[i], left * offset - forward * 6.5f, 0.12f);
+            AddTireStackBundle(meshes, graphicsDevice, textures, anchor, left, forward, stackIndex);
+            AddRedWhiteBarrierBundle(meshes, graphicsDevice, textures, anchor + new Vector3(0f, 0f, 0f), left, forward, stackIndex);
+            stackIndex++;
+        }
+    }
+
+    private static void AddTireStackBundle(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        Vector3 anchor,
+        Vector2 left,
+        Vector2 forward,
+        int index)
+    {
+        Vector3 tireTint = new(0.018f, 0.019f, 0.018f);
+        Vector3 tireHighlight = new(0.045f, 0.047f, 0.044f);
+        for (int column = 0; column < 3; column++)
+        {
+            for (int layer = 0; layer < 3; layer++)
+            {
+                Vector2 local = left * ((column - 1) * 0.72f) + forward * (column % 2 == 0 ? 0.0f : 0.42f);
+                Vector3 center = OffsetTrackPoint(anchor, local, 0.30f + layer * 0.36f);
+                Vector3 tint = layer == 2 ? tireHighlight : tireTint;
+                meshes.Add(MeshFactory.CreateCylinderY(
+                    graphicsDevice,
+                    center,
+                    0.42f,
+                    0.28f,
+                    12,
+                    textures.Tire,
+                    tint,
+                    $"corner safety tire stack {index:00}-{column:00}-{layer:00}"));
+            }
+        }
+    }
+
+    private static void AddRedWhiteBarrierBundle(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        Vector3 anchor,
+        Vector2 left,
+        Vector2 forward,
+        int index)
+    {
+        Vector3 red = new(0.70f, 0.05f, 0.045f);
+        Vector3 white = new(0.86f, 0.84f, 0.74f);
+        Vector3 baseCenter = OffsetTrackPoint(anchor, -forward * 1.35f, 0.36f);
+        for (int block = 0; block < 4; block++)
+        {
+            Vector2 offset = left * ((block - 1.5f) * 1.18f);
+            meshes.Add(MeshFactory.CreateBox(
+                graphicsDevice,
+                OffsetTrackPoint(baseCenter, offset, 0f),
+                new Vector3(1.04f, 0.72f, 0.42f),
+                textures.White,
+                (block & 1) == 0 ? red : white,
+                $"corner red white barrier bundle {index:00}-{block:00}"));
+        }
+    }
+
+    private static void AddStartLineGrandstands(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        TrackDefinition definition,
+        IReadOnlyList<Vector3> centerLine,
+        TrackOffsetProfiles offsets)
+    {
+        int startIndex = GetStartIndex(definition.Layout, centerLine);
+        Vector3 start = centerLine[startIndex];
+        Vector2 left = GetTrackLeftNormal(centerLine, startIndex);
+        Vector2 forward = new(left.Y, -left.X);
+        AddStartLineRoadMarkings(meshes, graphicsDevice, textures, start, left, offsets, startIndex);
+        AddGrandstand(meshes, graphicsDevice, textures, start, left, SampleOffsetValue(offsets.LeftWall, startIndex) + 16f, "left");
+        AddGrandstand(meshes, graphicsDevice, textures, start, left, SampleOffsetValue(offsets.RightWall, startIndex) - 16f, "right");
+        AddSpectatorTerrace(meshes, graphicsDevice, textures, start, left, forward, SampleOffsetValue(offsets.LeftWall, startIndex) + 24f, 28f, "left forward");
+        AddSpectatorTerrace(meshes, graphicsDevice, textures, start, left, forward, SampleOffsetValue(offsets.LeftWall, startIndex) + 22f, -30f, "left rear");
+        AddSpectatorTerrace(meshes, graphicsDevice, textures, start, left, forward, SampleOffsetValue(offsets.LeftWall, startIndex) + 38f, 58f, "left outer forward");
+        AddSpectatorTerrace(meshes, graphicsDevice, textures, start, left, forward, SampleOffsetValue(offsets.RightWall, startIndex) - 23f, 24f, "right forward");
+        AddSpectatorTerrace(meshes, graphicsDevice, textures, start, left, forward, SampleOffsetValue(offsets.RightWall, startIndex) - 23f, -30f, "right rear");
+        AddSpectatorTerrace(meshes, graphicsDevice, textures, start, left, forward, SampleOffsetValue(offsets.RightWall, startIndex) - 39f, 56f, "right outer forward");
+        AddStartFinishGantry(meshes, graphicsDevice, textures, start, left, offsets, startIndex);
+        AddRaceControlHut(meshes, graphicsDevice, textures, start, left, SampleOffsetValue(offsets.RightWall, startIndex) - 23f);
+        AddPaddockServiceArea(meshes, graphicsDevice, textures, start, left, SampleOffsetValue(offsets.RightWall, startIndex) - 34f, "right");
+        AddPaddockServiceArea(meshes, graphicsDevice, textures, start, left, SampleOffsetValue(offsets.LeftWall, startIndex) + 30f, "left");
+    }
+
+    private static void AddStartLineRoadMarkings(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        Vector3 trackPoint,
+        Vector2 left,
+        TrackOffsetProfiles offsets,
+        int startIndex)
+    {
+        Vector2 forward = new(left.Y, -left.X);
+        float leftRoad = SampleOffsetValue(offsets.LeftRoadEdge, startIndex);
+        float rightRoad = SampleOffsetValue(offsets.RightRoadEdge, startIndex);
+        float roadWidth = MathF.Max(3f, leftRoad - rightRoad);
+        Vector3 white = new(0.92f, 0.90f, 0.78f);
+        Vector3 yellow = new(0.88f, 0.68f, 0.10f);
+        Vector3 dark = new(0.06f, 0.065f, 0.06f);
+        float tileWidth = roadWidth / 12f;
+        float tileDepth = 0.72f;
+        Vector3 lineCenter = trackPoint + Vector3.Up * 0.032f;
+
+        for (int row = 0; row < 2; row++)
+        {
+            for (int col = 0; col < 12; col++)
+            {
+                Vector2 lateralOffset = left * (rightRoad + tileWidth * (col + 0.5f));
+                Vector2 forwardOffset = forward * ((row - 0.5f) * tileDepth);
+                Vector3 center = OffsetTrackPoint(lineCenter, lateralOffset + forwardOffset, 0f);
+                meshes.Add(MeshFactory.CreateGroundRectangle(
+                    graphicsDevice,
+                    center,
+                    left,
+                    tileWidth * 0.94f,
+                    forward,
+                    tileDepth * 0.92f,
+                    textures.White,
+                    ((row + col) & 1) == 0 ? white : dark,
+                    $"start finish checker tile {row:00}-{col:00}"));
+            }
+        }
+
+        for (int slot = 0; slot < 8; slot++)
+        {
+            float rowOffset = 8f + slot * 7.2f;
+            float side = slot % 2 == 0 ? -0.26f : 0.26f;
+            Vector2 slotCenterOffset = forward * rowOffset + left * (side * roadWidth);
+            Vector3 center = OffsetTrackPoint(lineCenter, slotCenterOffset, 0.003f);
+            meshes.Add(MeshFactory.CreateGroundRectangle(
+                graphicsDevice,
+                center,
+                left,
+                roadWidth * 0.34f,
+                forward,
+                0.28f,
+                textures.White,
+                white,
+                $"start grid box crossbar {slot:00}"));
+            meshes.Add(MeshFactory.CreateGroundRectangle(
+                graphicsDevice,
+                OffsetTrackPoint(center, left * (-roadWidth * 0.17f), 0.002f),
+                left,
+                0.24f,
+                forward,
+                4.8f,
+                textures.White,
+                white,
+                $"start grid box inner rail {slot:00}"));
+            meshes.Add(MeshFactory.CreateGroundRectangle(
+                graphicsDevice,
+                OffsetTrackPoint(center, left * (roadWidth * 0.17f), 0.002f),
+                left,
+                0.24f,
+                forward,
+                4.8f,
+                textures.White,
+                white,
+                $"start grid box outer rail {slot:00}"));
+            meshes.Add(MeshFactory.CreateGroundRectangle(
+                graphicsDevice,
+                OffsetTrackPoint(center, forward * 2.65f, 0.002f),
+                left,
+                roadWidth * 0.20f,
+                forward,
+                0.22f,
+                textures.White,
+                yellow,
+                $"start grid yellow nose marker {slot:00}"));
+        }
+    }
+
+    private static void AddGrandstand(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        Vector3 trackPoint,
+        Vector2 left,
+        float offset,
+        string side)
+    {
+        Vector3 baseCenter = OffsetTrackPoint(trackPoint, left * offset, 0.15f);
+        Vector3 concrete = new(0.54f, 0.55f, 0.52f);
+        Vector3 seatRed = new(0.64f, 0.10f, 0.09f);
+        Vector3 seatWhite = new(0.86f, 0.84f, 0.76f);
+        Vector3 seatBlue = new(0.08f, 0.18f, 0.42f);
+        Vector3 crowdDark = new(0.12f, 0.11f, 0.09f);
+        Vector3 crowdYellow = new(0.84f, 0.62f, 0.14f);
+        Vector3 dark = new(0.12f, 0.13f, 0.13f);
+
+        meshes.Add(MeshFactory.CreateBox(
+            graphicsDevice,
+            baseCenter + Vector3.Up * 0.32f,
+            new Vector3(17.8f, 0.64f, 5.4f),
+            textures.White,
+            concrete,
+            $"start finish {side} grandstand concrete base"));
+
+        for (int row = 0; row < 7; row++)
+        {
+            Vector3 rowCenter = baseCenter + new Vector3(0f, 0.78f + row * 0.33f, -2.30f + row * 0.64f);
+            Vector3 seatTint = row % 3 == 0 ? seatRed : row % 3 == 1 ? seatWhite : seatBlue;
+            meshes.Add(MeshFactory.CreateBox(
+                graphicsDevice,
+                rowCenter,
+                new Vector3(16.7f, 0.22f, 0.42f),
+                textures.White,
+                seatTint,
+                $"start finish {side} grandstand seat row {row:00}"));
+
+            if (row > 0)
+            {
+                for (int person = 0; person < 8; person++)
+                {
+                    float x = -7.25f + person * 2.05f + ((row + person) % 2) * 0.22f;
+                    Vector3 crowdTint = (row + person) % 3 == 0 ? crowdYellow : crowdDark;
+                    meshes.Add(MeshFactory.CreateBox(
+                        graphicsDevice,
+                        rowCenter + new Vector3(x, 0.28f, -0.02f),
+                        new Vector3(0.42f, 0.42f, 0.28f),
+                        textures.White,
+                        crowdTint,
+                        $"start finish {side} grandstand crowd block {row:00}-{person:00}"));
+                }
+            }
+        }
+
+        meshes.Add(MeshFactory.CreateBox(
+            graphicsDevice,
+            baseCenter + new Vector3(-9.25f, 1.28f, 0.0f),
+            new Vector3(0.24f, 2.55f, 5.8f),
+            textures.White,
+            dark,
+            $"start finish {side} grandstand left frame"));
+        meshes.Add(MeshFactory.CreateBox(
+            graphicsDevice,
+            baseCenter + new Vector3(9.25f, 1.28f, 0.0f),
+            new Vector3(0.24f, 2.55f, 5.8f),
+            textures.White,
+            dark,
+            $"start finish {side} grandstand right frame"));
+    }
+
+    private static void AddSpectatorTerrace(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        Vector3 trackPoint,
+        Vector2 left,
+        Vector2 forward,
+        float offset,
+        float forwardOffset,
+        string label)
+    {
+        Vector3 baseCenter = OffsetTrackPoint(trackPoint, left * offset + forward * forwardOffset, 0.13f);
+        Vector3 concrete = new(0.48f, 0.49f, 0.46f);
+        Vector3 rail = new(0.10f, 0.11f, 0.10f);
+        Vector3 red = new(0.62f, 0.08f, 0.07f);
+        Vector3 white = new(0.83f, 0.82f, 0.74f);
+        Vector3 yellow = new(0.82f, 0.58f, 0.11f);
+
+        meshes.Add(MeshFactory.CreateBox(
+            graphicsDevice,
+            baseCenter + Vector3.Up * 0.22f,
+            new Vector3(11.0f, 0.44f, 3.2f),
+            textures.White,
+            concrete,
+            $"start spectator terrace {label} base"));
+
+        for (int row = 0; row < 4; row++)
+        {
+            Vector3 rowCenter = baseCenter + new Vector3(0f, 0.58f + row * 0.28f, -1.18f + row * 0.54f);
+            meshes.Add(MeshFactory.CreateBox(
+                graphicsDevice,
+                rowCenter,
+                new Vector3(10.2f, 0.18f, 0.34f),
+                textures.White,
+                row % 2 == 0 ? red : white,
+                $"start spectator terrace {label} seat row {row:00}"));
+
+            for (int person = 0; person < 5; person++)
+            {
+                float x = -4.0f + person * 2.0f;
+                meshes.Add(MeshFactory.CreateBox(
+                    graphicsDevice,
+                    rowCenter + new Vector3(x, 0.23f, 0.0f),
+                    new Vector3(0.34f, 0.34f, 0.24f),
+                    textures.White,
+                    (row + person) % 2 == 0 ? yellow : rail,
+                    $"start spectator terrace {label} crowd block {row:00}-{person:00}"));
+            }
+        }
+
+        meshes.Add(MeshFactory.CreateBox(
+            graphicsDevice,
+            baseCenter + new Vector3(0f, 1.24f, 1.52f),
+            new Vector3(11.4f, 0.10f, 0.12f),
+            textures.White,
+            rail,
+            $"start spectator terrace {label} back rail"));
+    }
+
+    private static void AddStartFinishGantry(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        Vector3 trackPoint,
+        Vector2 left,
+        TrackOffsetProfiles offsets,
+        int startIndex)
+    {
+        float leftWall = SampleOffsetValue(offsets.LeftWall, startIndex);
+        float rightWall = SampleOffsetValue(offsets.RightWall, startIndex);
+        Vector3 leftBase = OffsetTrackPoint(trackPoint, left * (leftWall + 2.2f), 0.12f);
+        Vector3 rightBase = OffsetTrackPoint(trackPoint, left * (rightWall - 2.2f), 0.12f);
+        Vector3 gantryCenter = Vector3.Lerp(leftBase, rightBase, 0.5f);
+        float span = Vector2.Distance(left * (leftWall + 2.2f), left * (rightWall - 2.2f));
+        float boardYaw = MathF.Atan2(left.Y, left.X);
+
+        Vector3 black = new(0.05f, 0.055f, 0.052f);
+        Vector3 steel = new(0.48f, 0.50f, 0.48f);
+        Vector3 lampRed = new(0.80f, 0.03f, 0.025f);
+        Vector3 lampAmber = new(0.92f, 0.58f, 0.06f);
+        Vector3 lampGreen = new(0.04f, 0.78f, 0.20f);
+
+        meshes.Add(MeshFactory.CreateBox(graphicsDevice, leftBase + Vector3.Up * 3.55f, new Vector3(0.45f, 7.1f, 0.45f), textures.White, steel, "start finish gantry left upright"));
+        meshes.Add(MeshFactory.CreateBox(graphicsDevice, rightBase + Vector3.Up * 3.55f, new Vector3(0.45f, 7.1f, 0.45f), textures.White, steel, "start finish gantry right upright"));
+        meshes.Add(MeshFactory.CreateBox(graphicsDevice, gantryCenter + Vector3.Up * 7.10f, new Vector3(0.62f, 0.42f, span), textures.White, black, "start finish gantry top beam"));
+        meshes.Add(MeshFactory.CreateVerticalPlane(
+            graphicsDevice,
+            gantryCenter + Vector3.Up * 6.82f,
+            MathF.Max(8f, span - 2.6f),
+            1.05f,
+            boardYaw,
+            textures.StartBoard,
+            Vector3.One,
+            "start finish high speed circuit board",
+            uvRepeatX: 1f,
+            uvRepeatY: 1f));
+
+        for (int i = 0; i < 5; i++)
+        {
+            float offset = -2.4f + i * 1.2f;
+            Vector3 tint = i switch
+            {
+                0 or 1 => lampRed,
+                2 => lampAmber,
+                _ => lampGreen
+            };
+            meshes.Add(MeshFactory.CreateBox(
+                graphicsDevice,
+                gantryCenter + new Vector3(0.40f, 6.10f, offset),
+                new Vector3(0.16f, 0.30f, 0.30f),
+                textures.White,
+                tint,
+                $"start finish signal lamp {i:00}"));
+        }
+    }
+
+    private static void AddRaceControlHut(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        Vector3 trackPoint,
+        Vector2 left,
+        float offset)
+    {
+        Vector3 baseCenter = OffsetTrackPoint(trackPoint, left * offset, 0.18f) + new Vector3(10.5f, 0f, 0f);
+        Vector3 concrete = new(0.50f, 0.51f, 0.48f);
+        Vector3 dark = new(0.08f, 0.085f, 0.08f);
+        Vector3 glass = new(0.14f, 0.22f, 0.22f);
+
+        meshes.Add(MeshFactory.CreateBox(graphicsDevice, baseCenter + Vector3.Up * 1.25f, new Vector3(5.2f, 2.5f, 3.6f), textures.White, concrete, "start finish race control hut"));
+        meshes.Add(MeshFactory.CreateBox(graphicsDevice, baseCenter + new Vector3(0f, 2.62f, 0f), new Vector3(5.9f, 0.34f, 4.1f), textures.White, dark, "start finish race control flat roof"));
+        meshes.Add(MeshFactory.CreateBox(graphicsDevice, baseCenter + new Vector3(-2.64f, 1.55f, 0f), new Vector3(0.08f, 0.85f, 2.4f), textures.White, glass, "start finish race control glass strip"));
+        meshes.Add(MeshFactory.CreateBox(graphicsDevice, baseCenter + new Vector3(0.2f, 0.12f, -2.3f), new Vector3(6.2f, 0.24f, 0.34f), textures.White, new Vector3(0.54f, 0.54f, 0.49f), "start finish race control service curb"));
+    }
+
+    private static void AddPaddockServiceArea(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        Vector3 trackPoint,
+        Vector2 left,
+        float offset,
+        string side)
+    {
+        Vector2 forward = new(left.Y, -left.X);
+        Vector3 origin = OffsetTrackPoint(trackPoint, left * offset - forward * 8f, 0.16f);
+        float sideSign = MathF.Sign(offset);
+        if (sideSign == 0f)
+        {
+            sideSign = 1f;
+        }
+
+        Vector3 concrete = new(0.46f, 0.47f, 0.44f);
+        Vector3 dark = new(0.06f, 0.065f, 0.06f);
+        Vector3 red = new(0.68f, 0.05f, 0.04f);
+        Vector3 cream = new(0.83f, 0.80f, 0.66f);
+        Vector3 blue = new(0.08f, 0.18f, 0.34f);
+        Vector3 yellow = new(0.90f, 0.66f, 0.08f);
+
+        for (int i = 0; i < 6; i++)
+        {
+            Vector3 bay = OffsetTrackPoint(origin, forward * (i * 5.6f), 0f);
+            meshes.Add(MeshFactory.CreateBox(graphicsDevice, bay + Vector3.Up * 0.42f, new Vector3(0.38f, 0.84f, 3.2f), textures.White, concrete, $"start paddock {side} low pit wall block {i:00}"));
+            meshes.Add(MeshFactory.CreateBox(graphicsDevice, bay + new Vector3(0f, 1.08f, 0f), new Vector3(0.26f, 0.44f, 2.2f), textures.White, dark, $"start paddock {side} timing screen frame {i:00}"));
+            meshes.Add(MeshFactory.CreateBox(graphicsDevice, bay + new Vector3(-0.03f, 1.09f, 0f), new Vector3(0.08f, 0.26f, 1.68f), textures.White, i % 2 == 0 ? yellow : red, $"start paddock {side} timing screen panel {i:00}"));
+        }
+
+        for (int i = 0; i < 4; i++)
+        {
+            Vector2 local = forward * (5f + i * 8.6f) + left * (sideSign * 8.2f);
+            Vector3 tent = OffsetTrackPoint(origin, local, 0f);
+            Vector3 roofTint = i switch
+            {
+                0 => red,
+                1 => cream,
+                2 => blue,
+                _ => new Vector3(0.18f, 0.40f, 0.22f)
+            };
+            meshes.Add(MeshFactory.CreateBox(graphicsDevice, tent + Vector3.Up * 0.96f, new Vector3(4.8f, 1.26f, 3.4f), textures.White, cream * 0.86f, $"start paddock {side} tent body {i:00}"));
+            meshes.Add(MeshFactory.CreateBox(graphicsDevice, tent + Vector3.Up * 1.72f, new Vector3(5.4f, 0.42f, 4.0f), textures.White, roofTint, $"start paddock {side} canvas roof {i:00}"));
+            meshes.Add(MeshFactory.CreateBox(graphicsDevice, tent + new Vector3(0f, 0.22f, -2.26f), new Vector3(5.8f, 0.16f, 0.26f), textures.White, dark, $"start paddock {side} tent shadow rail {i:00}"));
+        }
+
+        Vector3 truck = OffsetTrackPoint(origin, forward * 34f + left * (sideSign * 7.6f), 0f);
+        meshes.Add(MeshFactory.CreateBox(graphicsDevice, truck + Vector3.Up * 0.72f, new Vector3(6.4f, 1.44f, 2.25f), textures.White, new Vector3(0.82f, 0.80f, 0.70f), $"start paddock {side} box truck cargo"));
+        meshes.Add(MeshFactory.CreateBox(graphicsDevice, truck + new Vector3(3.75f, 0.55f, 0f), new Vector3(1.45f, 1.10f, 2.0f), textures.White, red, $"start paddock {side} box truck cab"));
+        meshes.Add(MeshFactory.CreateBox(graphicsDevice, truck + new Vector3(-2.1f, 0.20f, -1.22f), new Vector3(0.92f, 0.40f, 0.16f), textures.White, dark, $"start paddock {side} box truck rear wheel shadow"));
+        meshes.Add(MeshFactory.CreateBox(graphicsDevice, truck + new Vector3(3.45f, 0.20f, -1.22f), new Vector3(0.92f, 0.40f, 0.16f), textures.White, dark, $"start paddock {side} box truck front wheel shadow"));
+    }
+
+    private static void AddStartAreaAirfield(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        TrackDefinition definition,
+        IReadOnlyList<Vector3> centerLine,
+        TrackOffsetProfiles offsets)
+    {
+        int startIndex = GetStartIndex(definition.Layout, centerLine);
+        Vector3 start = centerLine[startIndex];
+        Vector2 left = GetTrackLeftNormal(centerLine, startIndex);
+        Vector2 forward = new(left.Y, -left.X);
+        float rightWall = SampleOffsetValue(offsets.RightWall, startIndex);
+        Vector3 apronCenter = OffsetTrackPoint(start, left * (rightWall - 72f) + forward * 64f, 0.055f);
+        Vector3 runwayTint = new(0.35f, 0.36f, 0.34f);
+        Vector3 chalkEdge = new(0.74f, 0.72f, 0.55f);
+        Vector3 hangarWall = new(0.56f, 0.58f, 0.54f);
+        Vector3 hangarRoof = new(0.20f, 0.22f, 0.22f);
+        Vector3 dark = new(0.055f, 0.060f, 0.056f);
+
+        meshes.Add(MeshFactory.CreateGroundRectangle(
+            graphicsDevice,
+            apronCenter,
+            left,
+            28f,
+            forward,
+            62f,
+            textures.Road,
+            runwayTint,
+            "start area old airfield apron",
+            uvRepeatX: 2.5f,
+            uvRepeatY: 4.5f));
+        meshes.Add(MeshFactory.CreateGroundRectangle(
+            graphicsDevice,
+            OffsetTrackPoint(apronCenter, -left * 16.0f, 0.002f),
+            left,
+            2.0f,
+            forward,
+            66f,
+            textures.White,
+            chalkEdge,
+            "start area chalk airfield apron edge"));
+
+        for (int i = 0; i < 3; i++)
+        {
+            Vector3 hangar = OffsetTrackPoint(apronCenter, forward * (-21f + i * 18f) + left * 22f, 0.95f);
+            meshes.Add(MeshFactory.CreateBox(
+                graphicsDevice,
+                hangar,
+                new Vector3(9.4f, 1.9f, 6.2f),
+                textures.White,
+                hangarWall,
+                $"start area airfield hangar body {i:00}"));
+            meshes.Add(MeshFactory.CreateBox(
+                graphicsDevice,
+                hangar + Vector3.Up * 1.25f,
+                new Vector3(10.4f, 0.54f, 7.2f),
+                textures.White,
+                hangarRoof,
+                $"start area airfield hangar roof {i:00}"));
+            meshes.Add(MeshFactory.CreateBox(
+                graphicsDevice,
+                hangar + new Vector3(-4.78f, -0.12f, 0f),
+                new Vector3(0.14f, 1.30f, 4.8f),
+                textures.White,
+                dark,
+                $"start area airfield hangar opening {i:00}"));
+        }
+
+        Vector3 hut = OffsetTrackPoint(apronCenter, -forward * 34f + left * 15f, 0.74f);
+        meshes.Add(MeshFactory.CreateBox(
+            graphicsDevice,
+            hut,
+            new Vector3(4.2f, 1.48f, 3.4f),
+            textures.White,
+            new Vector3(0.58f, 0.54f, 0.42f),
+            "start area airfield control hut"));
+        meshes.Add(MeshFactory.CreateBox(
+            graphicsDevice,
+            hut + Vector3.Up * 1.04f,
+            new Vector3(4.8f, 0.36f, 4.0f),
+            textures.White,
+            hangarRoof * 0.95f,
+            "start area airfield control hut roof"));
+        meshes.Add(MeshFactory.CreateBox(
+            graphicsDevice,
+            hut + new Vector3(-2.12f, 0.18f, 0f),
+            new Vector3(0.10f, 0.54f, 2.0f),
+            textures.White,
+            new Vector3(0.13f, 0.18f, 0.18f),
+            "start area airfield control glass strip"));
+
+        Vector3 windsockBase = OffsetTrackPoint(apronCenter, -forward * 18f - left * 16f, 0.0f);
+        meshes.Add(MeshFactory.CreateBox(
+            graphicsDevice,
+            windsockBase + Vector3.Up * 2.0f,
+            new Vector3(0.16f, 4.0f, 0.16f),
+            textures.White,
+            new Vector3(0.17f, 0.17f, 0.15f),
+            "start area airfield windsock pole"));
+        meshes.Add(MeshFactory.CreateVerticalPlane(
+            graphicsDevice,
+            windsockBase + Vector3.Up * 3.75f,
+            2.1f,
+            0.62f,
+            MathF.Atan2(forward.Y, forward.X),
+            textures.White,
+            new Vector3(0.82f, 0.12f, 0.08f),
+            "start area red windsock"));
+
+        Vector3 plane = OffsetTrackPoint(apronCenter, forward * 19f - left * 5.2f, 0.42f);
+        Vector3 planeBody = new(0.78f, 0.78f, 0.68f);
+        Vector3 planeNose = new(0.10f, 0.16f, 0.22f);
+        meshes.Add(MeshFactory.CreateBox(
+            graphicsDevice,
+            plane,
+            new Vector3(5.6f, 0.52f, 0.82f),
+            textures.White,
+            planeBody,
+            "start area parked light aircraft fuselage"));
+        meshes.Add(MeshFactory.CreateBox(
+            graphicsDevice,
+            plane + new Vector3(-0.1f, 0.04f, 0f),
+            new Vector3(0.70f, 0.12f, 7.6f),
+            textures.White,
+            planeBody * 0.94f,
+            "start area parked light aircraft wing"));
+        meshes.Add(MeshFactory.CreateBox(
+            graphicsDevice,
+            plane + new Vector3(2.65f, 0.04f, 0f),
+            new Vector3(0.30f, 0.36f, 1.1f),
+            textures.White,
+            planeNose,
+            "start area parked light aircraft nose"));
+    }
+
+    private static Vector2 GetTrackLeftNormal(IReadOnlyList<Vector3> centerLine, int index)
+    {
+        Vector2 previous = ToXZ(centerLine[(index - 1 + centerLine.Count) % centerLine.Count]);
+        Vector2 next = ToXZ(centerLine[(index + 1) % centerLine.Count]);
+        Vector2 tangent = next - previous;
+        if (tangent.LengthSquared() <= 0.0001f)
+        {
+            return Vector2.UnitX;
+        }
+
+        tangent.Normalize();
+        return new Vector2(-tangent.Y, tangent.X);
+    }
+
+    private static Vector2 SafeNormalize(Vector2 value, Vector2 fallback)
+    {
+        return value.LengthSquared() <= 0.0001f ? fallback : Vector2.Normalize(value);
+    }
+
+    private static Vector3 OffsetTrackPoint(Vector3 center, Vector2 offset, float yOffset)
+    {
+        return new Vector3(center.X + offset.X, center.Y + yOffset, center.Z + offset.Y);
+    }
+
+    private static float SampleOffsetValue(IReadOnlyList<float> offsets, int index)
+    {
+        return offsets.Count == 0 ? 0f : offsets[Math.Clamp(index, 0, offsets.Count - 1)];
+    }
+
+    private static void AddChalkDownlandFieldBands(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        Vector3 terrainCenter,
+        float terrainWidth,
+        float terrainDepth)
+    {
+        float halfWidth = terrainWidth * 0.5f;
+        float halfDepth = terrainDepth * 0.5f;
+        Vector3 paleChalkGrass = new(1.00f, 0.96f, 0.70f);
+        Vector3 dryOlive = new(0.74f, 0.78f, 0.48f);
+        float y = terrainCenter.Y + 0.052f;
+
+        meshes.Add(MeshFactory.CreatePlane(
+            graphicsDevice,
+            terrainCenter + new Vector3(-halfWidth * 0.34f, y, -halfDepth * 0.30f),
+            terrainWidth * 0.34f,
+            terrainDepth * 0.055f,
+            textures.Grass,
+            6f,
+            paleChalkGrass,
+            "Salisbury chalk grass field band north west"));
+        meshes.Add(MeshFactory.CreatePlane(
+            graphicsDevice,
+            terrainCenter + new Vector3(halfWidth * 0.30f, y, halfDepth * 0.32f),
+            terrainWidth * 0.38f,
+            terrainDepth * 0.050f,
+            textures.Grass,
+            6f,
+            paleChalkGrass,
+            "Salisbury chalk grass field band south east"));
+        meshes.Add(MeshFactory.CreatePlane(
+            graphicsDevice,
+            terrainCenter + new Vector3(-halfWidth * 0.44f, y + 0.002f, halfDepth * 0.08f),
+            terrainWidth * 0.13f,
+            terrainDepth * 0.42f,
+            textures.Grass,
+            7f,
+            dryOlive,
+            "Wiltshire dry downland side field west"));
+        meshes.Add(MeshFactory.CreatePlane(
+            graphicsDevice,
+            terrainCenter + new Vector3(halfWidth * 0.43f, y + 0.002f, -halfDepth * 0.04f),
+            terrainWidth * 0.12f,
+            terrainDepth * 0.38f,
+            textures.Grass,
+            7f,
+            dryOlive,
+            "Wiltshire dry downland side field east"));
+    }
+
+    private static void AddPatchworkFieldParcels(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        Vector3 terrainCenter,
+        float terrainWidth,
+        float terrainDepth)
+    {
+        float halfWidth = terrainWidth * 0.5f;
+        float halfDepth = terrainDepth * 0.5f;
+        AddFieldParcel(meshes, graphicsDevice, textures, terrainCenter, terrainWidth, terrainDepth, -0.54f, -0.40f, 0.22f, 0.14f, -8f, new Vector3(0.67f, 0.73f, 0.38f), "north west pale pasture parcel");
+        AddFieldParcel(meshes, graphicsDevice, textures, terrainCenter, terrainWidth, terrainDepth, -0.10f, -0.46f, 0.36f, 0.13f, 4f, new Vector3(0.78f, 0.76f, 0.48f), "north dry chalk crop parcel");
+        AddFieldParcel(meshes, graphicsDevice, textures, terrainCenter, terrainWidth, terrainDepth, 0.34f, -0.38f, 0.28f, 0.18f, 11f, new Vector3(0.45f, 0.59f, 0.31f), "north east muted meadow parcel");
+        AddFieldParcel(meshes, graphicsDevice, textures, terrainCenter, terrainWidth, terrainDepth, -0.48f, 0.30f, 0.24f, 0.26f, 13f, new Vector3(0.52f, 0.66f, 0.36f), "south west rolling pasture parcel");
+        AddFieldParcel(meshes, graphicsDevice, textures, terrainCenter, terrainWidth, terrainDepth, -0.06f, 0.43f, 0.33f, 0.14f, -5f, new Vector3(0.82f, 0.80f, 0.55f), "south pale harvest strip parcel");
+        AddFieldParcel(meshes, graphicsDevice, textures, terrainCenter, terrainWidth, terrainDepth, 0.38f, 0.33f, 0.30f, 0.21f, -12f, new Vector3(0.39f, 0.54f, 0.29f), "south east deep field parcel");
+
+        for (int i = 0; i < 9; i++)
+        {
+            float t = (i + 0.5f) / 9f;
+            float x = MathHelper.Lerp(-halfWidth * 0.58f, halfWidth * 0.56f, t);
+            float z = terrainCenter.Z + halfDepth * (i % 2 == 0 ? -0.52f : 0.52f);
+            float y = SampleBackgroundTerrainY(terrainCenter, terrainWidth, terrainDepth, terrainCenter.X + x, z) + 0.084f;
+            float angle = MathHelper.ToRadians(i % 2 == 0 ? -7f : 9f);
+            Vector2 axisA = new(MathF.Cos(angle), MathF.Sin(angle));
+            Vector2 axisB = new(-axisA.Y, axisA.X);
+            meshes.Add(MeshFactory.CreateGroundRectangle(
+                graphicsDevice,
+                new Vector3(terrainCenter.X + x, y, z),
+                axisA,
+                terrainWidth * 0.055f,
+                axisB,
+                terrainDepth * 0.012f,
+                textures.White,
+                new Vector3(0.76f, 0.74f, 0.55f),
+                $"patchwork far chalk field cut {i:00}"));
+        }
+    }
+
+    private static void AddFieldParcel(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        Vector3 terrainCenter,
+        float terrainWidth,
+        float terrainDepth,
+        float normalizedX,
+        float normalizedZ,
+        float normalizedWidth,
+        float normalizedDepth,
+        float rotationDegrees,
+        Vector3 tint,
+        string name)
+    {
+        Vector3 center = new(
+            terrainCenter.X + terrainWidth * normalizedX,
+            0f,
+            terrainCenter.Z + terrainDepth * normalizedZ);
+        center.Y = SampleBackgroundTerrainY(terrainCenter, terrainWidth, terrainDepth, center.X, center.Z) + 0.070f;
+        float angle = MathHelper.ToRadians(rotationDegrees);
+        Vector2 axisA = new(MathF.Cos(angle), MathF.Sin(angle));
+        Vector2 axisB = new(-axisA.Y, axisA.X);
+        meshes.Add(MeshFactory.CreateGroundRectangle(
+            graphicsDevice,
+            center,
+            axisA,
+            terrainWidth * normalizedWidth,
+            axisB,
+            terrainDepth * normalizedDepth,
+            textures.Grass,
+            tint,
+            name,
+            uvRepeatX: MathF.Max(1f, normalizedWidth * 8f),
+            uvRepeatY: MathF.Max(1f, normalizedDepth * 8f)));
+    }
+
+    private static void AddMidFieldHedgerows(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        Vector3 terrainCenter,
+        float terrainWidth,
+        float terrainDepth)
+    {
+        float halfWidth = terrainWidth * 0.5f;
+        float halfDepth = terrainDepth * 0.5f;
+        AddHedgerowLine(
+            meshes,
+            graphicsDevice,
+            textures,
+            terrainCenter,
+            terrainWidth,
+            terrainDepth,
+            new Vector3(terrainCenter.X - halfWidth * 0.53f, 0f, terrainCenter.Z - halfDepth * 0.28f),
+            new Vector3(terrainCenter.X - halfWidth * 0.12f, 0f, terrainCenter.Z - halfDepth * 0.18f),
+            14,
+            "north west field boundary");
+        AddHedgerowLine(
+            meshes,
+            graphicsDevice,
+            textures,
+            terrainCenter,
+            terrainWidth,
+            terrainDepth,
+            new Vector3(terrainCenter.X + halfWidth * 0.11f, 0f, terrainCenter.Z - halfDepth * 0.12f),
+            new Vector3(terrainCenter.X + halfWidth * 0.55f, 0f, terrainCenter.Z - halfDepth * 0.18f),
+            16,
+            "north east broken hedge");
+        AddHedgerowLine(
+            meshes,
+            graphicsDevice,
+            textures,
+            terrainCenter,
+            terrainWidth,
+            terrainDepth,
+            new Vector3(terrainCenter.X - halfWidth * 0.60f, 0f, terrainCenter.Z + halfDepth * 0.18f),
+            new Vector3(terrainCenter.X - halfWidth * 0.22f, 0f, terrainCenter.Z + halfDepth * 0.34f),
+            13,
+            "south west diagonal hedge");
+        AddHedgerowLine(
+            meshes,
+            graphicsDevice,
+            textures,
+            terrainCenter,
+            terrainWidth,
+            terrainDepth,
+            new Vector3(terrainCenter.X + halfWidth * 0.22f, 0f, terrainCenter.Z + halfDepth * 0.24f),
+            new Vector3(terrainCenter.X + halfWidth * 0.62f, 0f, terrainCenter.Z + halfDepth * 0.32f),
+            15,
+            "south east chalk boundary");
+    }
+
+    private static void AddHedgerowLine(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        Vector3 terrainCenter,
+        float terrainWidth,
+        float terrainDepth,
+        Vector3 start,
+        Vector3 end,
+        int clumpCount,
+        string label)
+    {
+        Vector3 direction = end - start;
+        float yaw = MathF.Atan2(direction.Z, direction.X);
+        Vector3 hedgeTintA = new(0.24f, 0.36f, 0.20f);
+        Vector3 hedgeTintB = new(0.38f, 0.52f, 0.29f);
+        Vector3 chalkFlint = new(0.52f, 0.51f, 0.43f);
+
+        for (int i = 0; i < clumpCount; i++)
+        {
+            int seed = Hash(StableTextSeed(label), i * 97);
+            float t = (i + 0.35f + ((seed % 1000) / 1000f - 0.5f) * 0.35f) / clumpCount;
+            if (Hash(seed, i) % 7 == 0)
+            {
+                continue;
+            }
+
+            Vector3 basePosition = Vector3.Lerp(start, end, MathHelper.Clamp(t, 0f, 1f));
+            float lateralJitter = ((Hash(seed, i * 31) % 1000) / 1000f - 0.5f) * 5.5f;
+            Vector3 side = Vector3.Normalize(Vector3.Cross(Vector3.Up, direction.LengthSquared() <= 0.0001f ? Vector3.Forward : direction));
+            Vector3 position = basePosition + side * lateralJitter;
+            position.Y = SampleBackgroundTerrainY(terrainCenter, terrainWidth, terrainDepth, position.X, position.Z) + 0.04f;
+
+            float width = 5.4f + (Hash(seed, 17) % 1000) / 1000f * 4.8f;
+            float height = 3.0f + (Hash(seed, 29) % 1000) / 1000f * 3.2f;
+            Texture2D texture = Hash(seed, 41) % 3 == 0 ? textures.ReferenceTreeBroad : textures.ReferenceTreeShrub;
+            Vector3 tint = Vector3.Lerp(hedgeTintA, hedgeTintB, (Hash(seed, 53) % 1000) / 1000f);
+            meshes.Add(MeshFactory.CreateCrossBillboard(
+                graphicsDevice,
+                position,
+                width,
+                height,
+                texture,
+                tint,
+                $"mid-field {label} shrub clump {i:00}",
+                alpha: 0.99f));
+
+            if (i % 4 == 0)
+            {
+                meshes.Add(MeshFactory.CreateBox(
+                    graphicsDevice,
+                    position + new Vector3(0f, 0.18f, 0f),
+                    new Vector3(width * 0.86f, 0.24f, 0.18f),
+                    textures.White,
+                    chalkFlint,
+                    $"mid-field {label} low flint wall hint {i:00}"));
+            }
+        }
+
+        Vector3 midpoint = Vector3.Lerp(start, end, 0.5f);
+        midpoint.Y = SampleBackgroundTerrainY(terrainCenter, terrainWidth, terrainDepth, midpoint.X, midpoint.Z) + 0.055f;
+        meshes.Add(MeshFactory.CreateVerticalPlane(
+            graphicsDevice,
+            midpoint,
+            direction.Length() * 0.80f,
+            0.90f,
+            yaw,
+            textures.ReferenceTreeShrub,
+            new Vector3(0.20f, 0.30f, 0.16f),
+            $"mid-field {label} dark hedge underlayer",
+            alpha: 0.72f,
+            uvRepeatX: 5f,
+            uvRepeatY: 1f));
+    }
+
+    private static int StableTextSeed(string text)
+    {
+        int hash = 17;
+        for (int i = 0; i < text.Length; i++)
+        {
+            hash = hash * 31 + text[i];
+        }
+
+        return hash;
+    }
+
+    private static void AddSalisburyPlainLandmarks(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        Vector3 terrainCenter,
+        float terrainWidth,
+        float terrainDepth)
+    {
+        AddDistantStoneCircle(meshes, graphicsDevice, textures, terrainCenter, terrainWidth, terrainDepth);
+        AddFarmStoneWalls(meshes, graphicsDevice, textures, terrainCenter, terrainWidth, terrainDepth);
+        AddFarmFenceLines(meshes, graphicsDevice, textures, terrainCenter, terrainWidth, terrainDepth);
+        AddDistantFarmsteads(meshes, graphicsDevice, textures, terrainCenter, terrainWidth, terrainDepth);
+        AddChalkStream(meshes, graphicsDevice, textures, terrainCenter, terrainWidth, terrainDepth);
+    }
+
+    private static void AddDistantStoneCircle(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        Vector3 terrainCenter,
+        float terrainWidth,
+        float terrainDepth)
+    {
+        Vector3 stone = new(0.58f, 0.56f, 0.48f);
+        Vector3 center = terrainCenter + new Vector3(-terrainWidth * 0.30f, 0.42f, terrainDepth * 0.39f);
+        float radius = 13f;
+        for (int i = 0; i < 10; i++)
+        {
+            float angle = MathF.Tau * i / 10f;
+            Vector3 position = center + new Vector3(MathF.Cos(angle) * radius, 0f, MathF.Sin(angle) * radius);
+            float height = i % 3 == 0 ? 3.7f : 3.0f;
+            meshes.Add(MeshFactory.CreateBox(
+                graphicsDevice,
+                position + Vector3.Up * (height * 0.5f),
+                new Vector3(1.0f, height, 1.35f),
+                textures.White,
+                stone,
+                $"distant Salisbury standing stone {i:00}"));
+
+            if (i % 2 == 0)
+            {
+                Vector3 next = center + new Vector3(MathF.Cos(angle + MathF.Tau / 10f) * radius, 0f, MathF.Sin(angle + MathF.Tau / 10f) * radius);
+                Vector3 lintelCenter = Vector3.Lerp(position, next, 0.5f) + Vector3.Up * (height + 0.45f);
+                meshes.Add(MeshFactory.CreateBox(
+                    graphicsDevice,
+                    lintelCenter,
+                    new Vector3(3.2f, 0.55f, 1.15f),
+                    textures.White,
+                    stone * 0.96f,
+                    $"distant Salisbury lintel {i:00}"));
+            }
+        }
+    }
+
+    private static void AddFarmStoneWalls(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        Vector3 terrainCenter,
+        float terrainWidth,
+        float terrainDepth)
+    {
+        Vector3 wall = new(0.49f, 0.48f, 0.43f);
+        float y = terrainCenter.Y + 0.30f;
+        float halfWidth = terrainWidth * 0.5f;
+        float halfDepth = terrainDepth * 0.5f;
+        AddWall(meshes, graphicsDevice, textures, terrainCenter + new Vector3(-halfWidth * 0.34f, y, -halfDepth * 0.23f), terrainWidth * 0.28f, 0.38f, wall, "north west flint farm wall");
+        AddWall(meshes, graphicsDevice, textures, terrainCenter + new Vector3(halfWidth * 0.29f, y, halfDepth * 0.25f), terrainWidth * 0.30f, 0.38f, wall, "south east flint farm wall");
+        AddWall(meshes, graphicsDevice, textures, terrainCenter + new Vector3(-halfWidth * 0.47f, y, halfDepth * 0.05f), 0.42f, terrainDepth * 0.34f, wall * 0.92f, "west chalk field division wall");
+        AddWall(meshes, graphicsDevice, textures, terrainCenter + new Vector3(halfWidth * 0.46f, y, -halfDepth * 0.08f), 0.42f, terrainDepth * 0.32f, wall * 0.92f, "east chalk field division wall");
+    }
+
+    private static void AddFarmFenceLines(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        Vector3 terrainCenter,
+        float terrainWidth,
+        float terrainDepth)
+    {
+        float halfWidth = terrainWidth * 0.5f;
+        float halfDepth = terrainDepth * 0.5f;
+        AddFenceLine(
+            meshes,
+            graphicsDevice,
+            textures,
+            terrainCenter,
+            terrainWidth,
+            terrainDepth,
+            terrainCenter + new Vector3(-halfWidth * 0.22f, 0f, -halfDepth * 0.43f),
+            terrainCenter + new Vector3(halfWidth * 0.28f, 0f, -halfDepth * 0.36f),
+            18,
+            "north chalk paddock fence");
+        AddFenceLine(
+            meshes,
+            graphicsDevice,
+            textures,
+            terrainCenter,
+            terrainWidth,
+            terrainDepth,
+            terrainCenter + new Vector3(-halfWidth * 0.58f, 0f, halfDepth * 0.42f),
+            terrainCenter + new Vector3(-halfWidth * 0.08f, 0f, halfDepth * 0.50f),
+            16,
+            "south west open sheep fence");
+        AddFenceLine(
+            meshes,
+            graphicsDevice,
+            textures,
+            terrainCenter,
+            terrainWidth,
+            terrainDepth,
+            terrainCenter + new Vector3(halfWidth * 0.35f, 0f, halfDepth * 0.06f),
+            terrainCenter + new Vector3(halfWidth * 0.50f, 0f, halfDepth * 0.42f),
+            13,
+            "east service field fence");
+    }
+
+    private static void AddFenceLine(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        Vector3 terrainCenter,
+        float terrainWidth,
+        float terrainDepth,
+        Vector3 start,
+        Vector3 end,
+        int postCount,
+        string label)
+    {
+        Vector3 direction = end - start;
+        float length = direction.Length();
+        if (length <= 0.001f)
+        {
+            return;
+        }
+
+        Vector3 tangent = direction / length;
+        Vector3 postTint = new(0.34f, 0.28f, 0.18f);
+        Vector3 railTint = new(0.40f, 0.34f, 0.23f);
+        float postSpacing = length / Math.Max(1, postCount - 1);
+
+        for (int i = 0; i < postCount; i++)
+        {
+            if (i is 6 or 7)
+            {
+                continue;
+            }
+
+            Vector3 position = Vector3.Lerp(start, end, i / MathF.Max(1f, postCount - 1f));
+            position.Y = SampleBackgroundTerrainY(terrainCenter, terrainWidth, terrainDepth, position.X, position.Z) + 0.42f;
+            meshes.Add(MeshFactory.CreateBox(
+                graphicsDevice,
+                position,
+                new Vector3(0.18f, 0.84f, 0.18f),
+                textures.White,
+                postTint,
+                $"field {label} timber post {i:00}"));
+        }
+
+        for (int i = 0; i < postCount - 1; i++)
+        {
+            if (i is 5 or 6 or 7)
+            {
+                continue;
+            }
+
+            Vector3 railCenter = Vector3.Lerp(start, end, (i + 0.5f) / MathF.Max(1f, postCount - 1f));
+            railCenter.Y = SampleBackgroundTerrainY(terrainCenter, terrainWidth, terrainDepth, railCenter.X, railCenter.Z) + 0.66f;
+            Vector3 size = new(
+                MathF.Max(0.24f, MathF.Abs(tangent.X) * postSpacing + 0.16f),
+                0.10f,
+                MathF.Max(0.24f, MathF.Abs(tangent.Z) * postSpacing + 0.16f));
+            meshes.Add(MeshFactory.CreateBox(
+                graphicsDevice,
+                railCenter,
+                size,
+                textures.White,
+                railTint,
+                $"field {label} upper rail {i:00}"));
+            meshes.Add(MeshFactory.CreateBox(
+                graphicsDevice,
+                railCenter - Vector3.Up * 0.24f,
+                size,
+                textures.White,
+                railTint * 0.92f,
+                $"field {label} lower rail {i:00}"));
+        }
+
+        Vector3 gateCenter = Vector3.Lerp(start, end, 6.5f / MathF.Max(1f, postCount - 1f));
+        gateCenter.Y = SampleBackgroundTerrainY(terrainCenter, terrainWidth, terrainDepth, gateCenter.X, gateCenter.Z) + 0.54f;
+        meshes.Add(MeshFactory.CreateBox(
+            graphicsDevice,
+            gateCenter,
+            new Vector3(MathF.Max(0.42f, MathF.Abs(tangent.X) * postSpacing * 1.65f), 0.16f, MathF.Max(0.42f, MathF.Abs(tangent.Z) * postSpacing * 1.65f)),
+            textures.White,
+            railTint * 1.12f,
+            $"field {label} open gate rail"));
+    }
+
+    private static void AddDistantFarmsteads(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        Vector3 terrainCenter,
+        float terrainWidth,
+        float terrainDepth)
+    {
+        float halfWidth = terrainWidth * 0.5f;
+        float halfDepth = terrainDepth * 0.5f;
+        AddFarmsteadCluster(
+            meshes,
+            graphicsDevice,
+            textures,
+            terrainCenter,
+            terrainWidth,
+            terrainDepth,
+            terrainCenter + new Vector3(-halfWidth * 0.42f, 0f, -halfDepth * 0.34f),
+            "north west chalk farm");
+        AddFarmsteadCluster(
+            meshes,
+            graphicsDevice,
+            textures,
+            terrainCenter,
+            terrainWidth,
+            terrainDepth,
+            terrainCenter + new Vector3(halfWidth * 0.38f, 0f, halfDepth * 0.31f),
+            "south east ridge farm");
+        AddFarmsteadCluster(
+            meshes,
+            graphicsDevice,
+            textures,
+            terrainCenter,
+            terrainWidth,
+            terrainDepth,
+            terrainCenter + new Vector3(halfWidth * 0.18f, 0f, -halfDepth * 0.47f),
+            "north service farm");
+    }
+
+    private static void AddFarmsteadCluster(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        Vector3 terrainCenter,
+        float terrainWidth,
+        float terrainDepth,
+        Vector3 basePosition,
+        string label)
+    {
+        float groundY = SampleBackgroundTerrainY(terrainCenter, terrainWidth, terrainDepth, basePosition.X, basePosition.Z);
+        Vector3 chalkWall = new(0.68f, 0.66f, 0.54f);
+        Vector3 brick = new(0.44f, 0.31f, 0.24f);
+        Vector3 roof = new(0.18f, 0.16f, 0.13f);
+        Vector3 barn = new(0.34f, 0.28f, 0.19f);
+        Vector3 darkDoor = new(0.08f, 0.07f, 0.055f);
+        Vector3 silo = new(0.56f, 0.56f, 0.51f);
+
+        Vector3 farmhouse = new(basePosition.X, groundY + 0.95f, basePosition.Z);
+        meshes.Add(MeshFactory.CreateBox(
+            graphicsDevice,
+            farmhouse,
+            new Vector3(4.4f, 1.9f, 3.2f),
+            textures.White,
+            chalkWall,
+            $"distant {label} farmhouse"));
+        meshes.Add(MeshFactory.CreateBox(
+            graphicsDevice,
+            farmhouse + new Vector3(0f, 1.15f, 0f),
+            new Vector3(5.0f, 0.55f, 3.8f),
+            textures.White,
+            roof,
+            $"distant {label} dark roof"));
+        meshes.Add(MeshFactory.CreateBox(
+            graphicsDevice,
+            farmhouse + new Vector3(-1.3f, -0.22f, -1.63f),
+            new Vector3(0.52f, 0.75f, 0.10f),
+            textures.White,
+            darkDoor,
+            $"distant {label} front door"));
+
+        Vector3 barnCenter = basePosition + new Vector3(5.8f, 0f, 2.0f);
+        barnCenter.Y = SampleBackgroundTerrainY(terrainCenter, terrainWidth, terrainDepth, barnCenter.X, barnCenter.Z) + 0.86f;
+        meshes.Add(MeshFactory.CreateBox(
+            graphicsDevice,
+            barnCenter,
+            new Vector3(6.2f, 1.72f, 3.8f),
+            textures.White,
+            barn,
+            $"distant {label} timber barn"));
+        meshes.Add(MeshFactory.CreateBox(
+            graphicsDevice,
+            barnCenter + new Vector3(0f, 1.10f, 0f),
+            new Vector3(6.8f, 0.48f, 4.4f),
+            textures.White,
+            roof * 1.12f,
+            $"distant {label} barn roof"));
+        meshes.Add(MeshFactory.CreateBox(
+            graphicsDevice,
+            barnCenter + new Vector3(0f, -0.24f, -1.96f),
+            new Vector3(1.5f, 0.92f, 0.12f),
+            textures.White,
+            darkDoor,
+            $"distant {label} barn opening"));
+
+        Vector3 shedCenter = basePosition + new Vector3(-4.9f, 0f, 1.8f);
+        shedCenter.Y = SampleBackgroundTerrainY(terrainCenter, terrainWidth, terrainDepth, shedCenter.X, shedCenter.Z) + 0.55f;
+        meshes.Add(MeshFactory.CreateBox(
+            graphicsDevice,
+            shedCenter,
+            new Vector3(3.2f, 1.1f, 2.5f),
+            textures.White,
+            brick,
+            $"distant {label} brick outbuilding"));
+        meshes.Add(MeshFactory.CreateBox(
+            graphicsDevice,
+            shedCenter + new Vector3(0f, 0.78f, 0f),
+            new Vector3(3.7f, 0.36f, 2.9f),
+            textures.White,
+            roof * 0.9f,
+            $"distant {label} outbuilding roof"));
+
+        Vector3 siloCenter = basePosition + new Vector3(9.1f, 0f, -1.9f);
+        siloCenter.Y = SampleBackgroundTerrainY(terrainCenter, terrainWidth, terrainDepth, siloCenter.X, siloCenter.Z) + 1.18f;
+        meshes.Add(MeshFactory.CreateCylinderY(
+            graphicsDevice,
+            siloCenter,
+            0.70f,
+            2.35f,
+            10,
+            textures.White,
+            silo,
+            $"distant {label} pale silo"));
+        meshes.Add(MeshFactory.CreateBox(
+            graphicsDevice,
+            siloCenter + new Vector3(0f, 1.34f, 0f),
+            new Vector3(1.65f, 0.28f, 1.65f),
+            textures.White,
+            roof * 1.16f,
+            $"distant {label} silo cap"));
+
+        for (int i = 0; i < 5; i++)
+        {
+            float x = -5.4f + i * 2.1f;
+            Vector3 sheep = basePosition + new Vector3(x, 0f, -4.6f - (i % 2) * 1.1f);
+            sheep.Y = SampleBackgroundTerrainY(terrainCenter, terrainWidth, terrainDepth, sheep.X, sheep.Z) + 0.18f;
+            meshes.Add(MeshFactory.CreateBox(
+                graphicsDevice,
+                sheep,
+                new Vector3(0.55f, 0.36f, 0.40f),
+                textures.White,
+                new Vector3(0.82f, 0.80f, 0.68f),
+                $"distant {label} sheep block {i:00}"));
+        }
+    }
+
+    private static void AddTracksideRailwayAndUnderpass(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        TrackDefinition definition,
+        IReadOnlyList<Vector3> centerLine,
+        TrackOffsetProfiles offsets)
+    {
+        int startIndex = GetStartIndex(definition.Layout, centerLine);
+        Vector3 start = centerLine[startIndex];
+        Vector2 left = GetTrackLeftNormal(centerLine, startIndex);
+        float railOffset = SampleOffsetValue(offsets.RightWall, startIndex) - 38f;
+        Vector3 railwayCenter = OffsetTrackPoint(start, left * railOffset, 0.10f);
+
+        Vector3 rail = new(0.18f, 0.17f, 0.15f);
+        Vector3 sleeper = new(0.34f, 0.25f, 0.17f);
+        float z = railwayCenter.Z;
+        float y = railwayCenter.Y + 0.10f;
+        float length = 92f;
+        float centerX = railwayCenter.X + 18f;
+        meshes.Add(MeshFactory.CreateBox(graphicsDevice, new Vector3(centerX, y + 0.05f, z - 0.72f), new Vector3(length, 0.10f, 0.10f), textures.White, rail, "far railway rail near"));
+        meshes.Add(MeshFactory.CreateBox(graphicsDevice, new Vector3(centerX, y + 0.05f, z + 0.72f), new Vector3(length, 0.10f, 0.10f), textures.White, rail, "far railway rail far"));
+        for (int i = 0; i < 22; i++)
+        {
+            float t = (i + 0.5f) / 22f - 0.5f;
+            meshes.Add(MeshFactory.CreateBox(
+                graphicsDevice,
+                new Vector3(centerX + t * length, y, z),
+                new Vector3(1.0f, 0.08f, 1.95f),
+                textures.White,
+                sleeper,
+                $"far railway sleeper {i:00}"));
+        }
+
+        Vector3 brick = new(0.42f, 0.35f, 0.29f);
+        Vector3 tunnelCenter = new(centerX + length * 0.34f, railwayCenter.Y + 1.15f, z);
+        meshes.Add(MeshFactory.CreateBox(graphicsDevice, tunnelCenter + new Vector3(-3.2f, 0f, 0f), new Vector3(1.0f, 2.4f, 5.8f), textures.White, brick, "brick underpass left pier"));
+        meshes.Add(MeshFactory.CreateBox(graphicsDevice, tunnelCenter + new Vector3(3.2f, 0f, 0f), new Vector3(1.0f, 2.4f, 5.8f), textures.White, brick, "brick underpass right pier"));
+        meshes.Add(MeshFactory.CreateBox(graphicsDevice, tunnelCenter + new Vector3(0f, 1.35f, 0f), new Vector3(7.4f, 0.85f, 5.8f), textures.White, brick * 1.08f, "brick underpass lintel"));
+        meshes.Add(MeshFactory.CreateBox(graphicsDevice, tunnelCenter + new Vector3(0f, -0.15f, 0f), new Vector3(5.1f, 1.45f, 5.2f), textures.White, new Vector3(0.035f, 0.033f, 0.030f), "brick underpass dark opening"));
+    }
+
+    private static void AddChalkStream(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        Vector3 terrainCenter,
+        float terrainWidth,
+        float terrainDepth)
+    {
+        Vector3 water = new(0.54f, 0.68f, 0.68f);
+        Vector3 chalkBank = new(0.78f, 0.76f, 0.58f);
+        float z = terrainCenter.Z + terrainDepth * 0.35f;
+        float y = terrainCenter.Y + 0.065f;
+        meshes.Add(MeshFactory.CreatePlane(graphicsDevice, terrainCenter + new Vector3(terrainWidth * 0.22f, y, z), terrainWidth * 0.34f, terrainDepth * 0.020f, textures.White, 1f, chalkBank, "pale chalk stream bank"));
+        meshes.Add(MeshFactory.CreatePlane(graphicsDevice, terrainCenter + new Vector3(terrainWidth * 0.22f, y + 0.004f, z), terrainWidth * 0.31f, terrainDepth * 0.010f, textures.White, 1f, water, "clear chalk stream water"));
+    }
+
+    private static void AddWall(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        Vector3 center,
+        float width,
+        float depth,
+        Vector3 tint,
+        string name)
+    {
+        meshes.Add(MeshFactory.CreateBox(
+            graphicsDevice,
+            center,
+            new Vector3(width, 0.42f, depth),
+            textures.White,
+            tint,
+            name));
+    }
+
+    private static void AddRollingBackgroundTerrain(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        Vector3 terrainCenter,
+        float terrainWidth,
+        float terrainDepth)
+    {
+        float halfWidth = terrainWidth * 0.5f;
+        float halfDepth = terrainDepth * 0.5f;
+        Vector3 tint = new(0.93f, 0.91f, 0.70f);
+        meshes.Add(MeshFactory.CreateRollingTerrainPatch(
+            graphicsDevice,
+            terrainCenter + new Vector3(0f, 0.035f, -halfDepth * 0.42f),
+            terrainWidth * 0.92f,
+            terrainDepth * 0.24f,
+            1.20f,
+            18,
+            6,
+            textures.Grass,
+            10f,
+            tint,
+            "background rolling field north",
+            0.3f));
+        meshes.Add(MeshFactory.CreateRollingTerrainPatch(
+            graphicsDevice,
+            terrainCenter + new Vector3(0f, 0.030f, halfDepth * 0.42f),
+            terrainWidth * 0.92f,
+            terrainDepth * 0.24f,
+            1.05f,
+            18,
+            6,
+            textures.Grass,
+            10f,
+            tint,
+            "background rolling field south",
+            1.8f));
+        meshes.Add(MeshFactory.CreateRollingTerrainPatch(
+            graphicsDevice,
+            terrainCenter + new Vector3(-halfWidth * 0.42f, 0.025f, 0f),
+            terrainWidth * 0.24f,
+            terrainDepth * 0.82f,
+            0.85f,
+            6,
+            18,
+            textures.Grass,
+            10f,
+            tint,
+            "background rolling field west",
+            3.1f));
+        meshes.Add(MeshFactory.CreateRollingTerrainPatch(
+            graphicsDevice,
+            terrainCenter + new Vector3(halfWidth * 0.42f, 0.025f, 0f),
+            terrainWidth * 0.24f,
+            terrainDepth * 0.82f,
+            0.95f,
+            6,
+            18,
+            textures.Grass,
+            10f,
+            tint,
+            "background rolling field east",
+            4.2f));
+    }
+
+    private static void AddProceduralTreeClumps(
+        List<StaticMesh> meshes,
+        GraphicsDevice graphicsDevice,
+        GeneratedTextures textures,
+        Vector3 terrainCenter,
+        float terrainWidth,
+        float terrainDepth)
+    {
+        float halfWidth = terrainWidth * 0.5f;
+        float halfDepth = terrainDepth * 0.5f;
+        int count = 144;
+        for (int i = 0; i < count; i++)
+        {
+            int seed = Hash(i * 17, 91);
+            bool horizontalSide = i % 2 == 0;
+            float side = (i / 2) % 2 == 0 ? -1f : 1f;
+            float t = ((seed % 1000) + 0.5f) / 1000f;
+            float jitter = ((Hash(i, seed) % 1000) / 1000f - 0.5f) * 18f;
+            Vector3 position = horizontalSide
+                ? new Vector3(terrainCenter.X + MathHelper.Lerp(-halfWidth * 0.82f, halfWidth * 0.82f, t), terrainCenter.Y + 0.02f, terrainCenter.Z + side * (halfDepth * 0.42f + 10f + jitter))
+                : new Vector3(terrainCenter.X + side * (halfWidth * 0.42f + 10f + jitter), terrainCenter.Y + 0.02f, terrainCenter.Z + MathHelper.Lerp(-halfDepth * 0.82f, halfDepth * 0.82f, t));
+            position.Y = SampleBackgroundTerrainY(terrainCenter, terrainWidth, terrainDepth, position.X, position.Z) + 0.02f;
+            float size = (3.0f + (Hash(seed, i * 31) % 1000) / 1000f * 3.8f) * FieldTreeScale;
+            Vector3 tint = Vector3.Lerp(new Vector3(0.58f, 0.70f, 0.42f), new Vector3(0.33f, 0.48f, 0.29f), (Hash(seed, i) % 1000) / 1000f);
+            Texture2D texture = (Hash(i, seed + 7) % 6) switch
+            {
+                0 => textures.ReferenceTreePines,
+                1 => textures.ReferenceTreePinesAlt,
+                2 => textures.ReferenceTreeBroad,
+                3 => textures.ReferenceTreeBroadAlt,
+                4 => textures.ReferenceTreeShrub,
+                _ => textures.ReferenceTreeShrubAlt
+            };
+            bool isPine = texture == textures.ReferenceTreePines || texture == textures.ReferenceTreePinesAlt;
+            float widthMultiplier = isPine ? 0.72f : 0.92f;
+            float heightMultiplier = isPine ? 1.45f : 1f;
+            meshes.Add(MeshFactory.CreateCrossBillboard(
+                graphicsDevice,
+                position,
+                size * widthMultiplier,
+                size * heightMultiplier,
+                texture,
+                tint,
+                $"procedural tree clump {i:00}",
+                alpha: 0.99f));
+        }
+
+        int clusterCount = 26;
+        int meshIndex = count;
+        for (int cluster = 0; cluster < clusterCount; cluster++)
+        {
+            int clusterSeed = Hash(cluster * 43, 517);
+            bool horizontalSide = cluster % 2 == 0;
+            float side = (cluster / 2) % 2 == 0 ? -1f : 1f;
+            float along = ((clusterSeed % 1000) + 0.5f) / 1000f;
+            Vector3 clusterCenter = horizontalSide
+                ? new Vector3(
+                    terrainCenter.X + MathHelper.Lerp(-halfWidth * 0.78f, halfWidth * 0.78f, along),
+                    terrainCenter.Y + 0.025f,
+                    terrainCenter.Z + side * (halfDepth * 0.34f + 16f + (Hash(cluster, clusterSeed) % 1000 / 1000f) * 22f))
+                : new Vector3(
+                    terrainCenter.X + side * (halfWidth * 0.34f + 16f + (Hash(cluster, clusterSeed) % 1000 / 1000f) * 22f),
+                    terrainCenter.Y + 0.025f,
+                    terrainCenter.Z + MathHelper.Lerp(-halfDepth * 0.78f, halfDepth * 0.78f, along));
+
+            int treesInCluster = 10 + Hash(clusterSeed, cluster * 9) % 10;
+            float clusterRadius = 12f + (Hash(clusterSeed, 29) % 1000) / 1000f * 16f;
+            Vector3 understoryCenter = clusterCenter;
+            understoryCenter.Y = SampleBackgroundTerrainY(terrainCenter, terrainWidth, terrainDepth, understoryCenter.X, understoryCenter.Z) + 0.074f;
+            Vector3 understoryTint = Vector3.Lerp(
+                new Vector3(0.24f, 0.35f, 0.18f),
+                new Vector3(0.14f, 0.23f, 0.13f),
+                (Hash(clusterSeed, 811) % 1000) / 1000f);
+            meshes.Add(MeshFactory.CreateGroundRectangle(
+                graphicsDevice,
+                understoryCenter,
+                Vector2.UnitX,
+                clusterRadius * 1.85f,
+                Vector2.UnitY,
+                clusterRadius * 1.28f,
+                textures.Grass,
+                understoryTint,
+                $"procedural forest understory patch {cluster:00}",
+                uvRepeatX: 2.8f,
+                uvRepeatY: 2.0f));
+
+            for (int j = 0; j < treesInCluster; j++)
+            {
+                int treeSeed = Hash(clusterSeed + j * 71, cluster * 31);
+                float angle = MathF.Tau * ((treeSeed % 1000) / 1000f);
+                float distance = clusterRadius * MathF.Sqrt((Hash(treeSeed, j * 13) % 1000) / 1000f);
+                Vector3 position = clusterCenter + new Vector3(MathF.Cos(angle) * distance, 0f, MathF.Sin(angle) * distance);
+                position.Y = SampleBackgroundTerrainY(terrainCenter, terrainWidth, terrainDepth, position.X, position.Z) + 0.02f;
+                float size = (3.4f + (Hash(treeSeed, j * 47) % 1000) / 1000f * 4.2f) * FieldTreeScale;
+                Texture2D texture = (Hash(j, treeSeed + 7) % 8) switch
+                {
+                    0 => textures.ReferenceTreePines,
+                    1 => textures.ReferenceTreePinesAlt,
+                    2 => textures.ReferenceTreeBroad,
+                    3 => textures.ReferenceTreeBroadAlt,
+                    4 => textures.ReferenceTreeBroad,
+                    5 => textures.ReferenceTreeBroadAlt,
+                    6 => textures.ReferenceTreeShrub,
+                    _ => textures.ReferenceTreeShrubAlt
+                };
+                bool isPine = texture == textures.ReferenceTreePines || texture == textures.ReferenceTreePinesAlt;
+                float widthMultiplier = isPine ? 0.70f : 0.98f;
+                float heightMultiplier = isPine ? 1.55f : 1.05f;
+                float tintAmount = (Hash(treeSeed, j) % 1000) / 1000f;
+                Vector3 tint = Vector3.Lerp(new Vector3(0.43f, 0.60f, 0.32f), new Vector3(0.22f, 0.34f, 0.18f), tintAmount);
+                meshes.Add(MeshFactory.CreateCrossBillboard(
+                    graphicsDevice,
+                    position,
+                    size * widthMultiplier,
+                    size * heightMultiplier,
+                    texture,
+                    tint,
+                    $"procedural forest tree {meshIndex++:000}",
+                    alpha: 0.99f));
+            }
+        }
+    }
+
+    private static float SampleBackgroundTerrainY(
+        Vector3 terrainCenter,
+        float terrainWidth,
+        float terrainDepth,
+        float x,
+        float z)
+    {
+        float halfWidth = terrainWidth * 0.5f;
+        float halfDepth = terrainDepth * 0.5f;
+        float northSouth = SampleRollingPatchY(
+            terrainCenter + new Vector3(0f, 0.035f, -halfDepth * 0.42f),
+            terrainWidth * 0.92f,
+            terrainDepth * 0.24f,
+            1.20f,
+            x,
+            z,
+            0.3f);
+        northSouth = MathF.Max(
+            northSouth,
+            SampleRollingPatchY(
+                terrainCenter + new Vector3(0f, 0.030f, halfDepth * 0.42f),
+                terrainWidth * 0.92f,
+                terrainDepth * 0.24f,
+                1.05f,
+                x,
+                z,
+                1.8f));
+        float eastWest = SampleRollingPatchY(
+            terrainCenter + new Vector3(-halfWidth * 0.42f, 0.025f, 0f),
+            terrainWidth * 0.24f,
+            terrainDepth * 0.82f,
+            0.85f,
+            x,
+            z,
+            3.1f);
+        eastWest = MathF.Max(
+            eastWest,
+            SampleRollingPatchY(
+                terrainCenter + new Vector3(halfWidth * 0.42f, 0.025f, 0f),
+                terrainWidth * 0.24f,
+                terrainDepth * 0.82f,
+                0.95f,
+                x,
+                z,
+                4.2f));
+
+        return MathF.Max(terrainCenter.Y, MathF.Max(northSouth, eastWest));
+    }
+
+    private static float SampleRollingPatchY(
+        Vector3 center,
+        float width,
+        float depth,
+        float height,
+        float x,
+        float z,
+        float phase)
+    {
+        float xT = (x - center.X) / MathF.Max(0.001f, width) + 0.5f;
+        float zT = (z - center.Z) / MathF.Max(0.001f, depth) + 0.5f;
+        if (xT is < 0f or > 1f || zT is < 0f or > 1f)
+        {
+            return float.NegativeInfinity;
+        }
+
+        float edgeFadeX = MathF.Sin(xT * MathF.PI);
+        float edgeFadeZ = MathF.Sin(zT * MathF.PI);
+        float edgeFade = MathHelper.Clamp(edgeFadeX * edgeFadeZ, 0f, 1f);
+        float broad =
+            MathF.Sin(xT * MathF.Tau * 1.15f + phase) * 0.48f +
+            MathF.Sin(zT * MathF.Tau * 1.45f + phase * 0.71f) * 0.36f +
+            MathF.Sin((xT + zT) * MathF.Tau * 0.82f + phase * 1.6f) * 0.22f;
+        return center.Y + height * broad * edgeFade;
     }
 
     public SurfaceSample Sample(Vector3 position)
     {
+        if (_authoredSurfaceSampler is not null &&
+            _authoredSurfaceSampler.TryGetContact(position + Vector3.Up * 1.5f, 4.0f, out _))
+        {
+            return _surfaceLibrary.Road;
+        }
+
         CenterLineProjection projection = ProjectToCenterLine(new Vector2(position.X, position.Z));
         TrackWidthSample width = GetProjectionWidthSample(projection);
         float roadWidth = width.RoadWidthForSignedDistance(projection.SignedDistance);
@@ -222,8 +2158,50 @@ public sealed class TrackScene : ITrackSurfaceSampler, ITrackProgressSampler, ID
         return _surfaceLibrary.Grass;
     }
 
+    public bool TryGetSurfaceContact(Vector3 queryPosition, float downwardRangeMeters, out TrackSurfaceContact contact)
+    {
+        if (_authoredSurfaceSampler is not null &&
+            _authoredSurfaceSampler.TryGetContact(queryPosition, downwardRangeMeters, out contact))
+        {
+            return true;
+        }
+
+        contact = default;
+        return false;
+    }
+
+    public bool TryGetSurfaceContactRay(Vector3 origin, Vector3 direction, float maxDistanceMeters, out TrackSurfaceContact contact)
+    {
+        if (_authoredSurfaceSampler is not null &&
+            _authoredSurfaceSampler.TryGetContactRay(origin, direction, maxDistanceMeters, out contact))
+        {
+            return true;
+        }
+
+        contact = default;
+        return false;
+    }
+
+    public bool TryGetSurfaceContact(Vector2 position, out TrackSurfaceContact contact)
+    {
+        if (_authoredSurfaceSampler is not null &&
+            _authoredSurfaceSampler.TryGetContact(position, out contact))
+        {
+            return true;
+        }
+
+        contact = default;
+        return false;
+    }
+
     public float GetElevation(Vector2 position)
     {
+        if (_authoredSurfaceSampler is not null &&
+            _authoredSurfaceSampler.TryGetContact(position, out TrackSurfaceContact contact))
+        {
+            return contact.Position.Y;
+        }
+
         CenterLineProjection projection = ProjectToCenterLine(position);
         TrackWidthSample width = GetProjectionWidthSample(projection);
         float roadWidth = width.RoadWidthForSignedDistance(projection.SignedDistance);
@@ -1185,6 +3163,16 @@ public sealed class TrackScene : ITrackSurfaceSampler, ITrackProgressSampler, ID
     {
         value %= 1f;
         return value < 0f ? value + 1f : value;
+    }
+
+    private static int Hash(int x, int y)
+    {
+        unchecked
+        {
+            int h = x * 374761393 + y * 668265263;
+            h = (h ^ (h >> 13)) * 1274126177;
+            return (h ^ (h >> 16)) & int.MaxValue;
+        }
     }
 
     private readonly record struct SegmentProjection(float Distance, float T, Vector2 Point);

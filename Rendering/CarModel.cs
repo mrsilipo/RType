@@ -30,6 +30,24 @@ public sealed class CarModel : IDisposable
 
     public static CarModel Create(GraphicsDevice graphicsDevice, GeneratedTextures textures)
     {
+        string legoEk9Path = ResolveExistingModelPath("Assets/Models/LegoEk9/Block_EK.fbx");
+        if (File.Exists(legoEk9Path))
+        {
+            List<StaticMesh>? legoMeshes = FbxCarModelLoader.TryLoad(
+                graphicsDevice,
+                legoEk9Path,
+                textures,
+                normalizeToVehicleOrigin: true,
+                axisConvention: FbxVehicleAxisConvention.SourceYForwardZUpXRight);
+            if (legoMeshes is not null)
+            {
+                Console.WriteLine("Using Lego EK9 Block_EK model.");
+                PrintWheelRigSummary(legoMeshes);
+                PrintMaterialRigSummary(legoMeshes);
+                return new CarModel(legoMeshes);
+            }
+        }
+
         if (Directory.Exists(ResolveExistingModelDirectory("Assets/Models/GeneratedEK9")))
         {
             Console.WriteLine("Using generated EK9 reference model.");
@@ -135,6 +153,31 @@ public sealed class CarModel : IDisposable
         if (seen.Add(outputDirectoryPath))
         {
             yield return outputDirectoryPath;
+        }
+    }
+
+    private static void PrintWheelRigSummary(IReadOnlyList<StaticMesh> meshes)
+    {
+        foreach (IGrouping<WheelCorner, StaticMesh> group in meshes
+                     .Where(mesh => mesh.WheelCorner != WheelCorner.None)
+                     .GroupBy(mesh => mesh.WheelCorner)
+                     .OrderBy(group => group.Key))
+        {
+            Vector3 pivot = group.Aggregate(Vector3.Zero, (sum, mesh) => sum + mesh.LocalPivot) / group.Count();
+            Console.WriteLine(
+                $"  {group.Key} wheel meshes={group.Count()} pivot=({pivot.X:0.000},{pivot.Y:0.000},{pivot.Z:0.000})");
+        }
+    }
+
+    private static void PrintMaterialRigSummary(IReadOnlyList<StaticMesh> meshes)
+    {
+        foreach (IGrouping<VehicleMaterialCategory, StaticMesh> group in meshes
+                     .Where(mesh => mesh.VehicleMaterial is not null)
+                     .GroupBy(mesh => mesh.VehicleMaterial!.Value.Category)
+                     .OrderBy(group => group.Key))
+        {
+            string names = string.Join(", ", group.Select(mesh => mesh.Name));
+            Console.WriteLine($"  {group.Key}: {names}");
         }
     }
 }

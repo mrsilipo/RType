@@ -6,12 +6,13 @@ namespace RType.Camera;
 
 public sealed class ChaseCamera
 {
+    private const float MainFarClipMeters = 1400f;
     private const float StationarySettleSpeedMetersPerSecond = 0.50f;
     private const float StationarySettleYawRateRadiansPerSecond = 0.04f;
     private const float PowertrainPresentationShakeScale = 0.50f;
 
     private static readonly ChaseCameraProfile Chase1Profile = new(
-        Distance: 4.05f,
+        Distance: 4.55f,
         Height: 2.05f,
         TargetDistance: 2.1f,
         TargetHeight: 1.05f,
@@ -64,7 +65,7 @@ public sealed class ChaseCamera
             MathHelper.ToRadians(62f),
             aspectRatio,
             0.1f,
-            360f);
+            MainFarClipMeters);
     }
 
     public Vector3 Position { get; private set; }
@@ -323,7 +324,7 @@ public sealed class ChaseCamera
             MathHelper.ToRadians(MathHelper.Clamp(fovDegrees, 42f, 74f)),
             _aspectRatio,
             0.1f,
-            360f);
+            MainFarClipMeters);
     }
 
     private static Vector3 SmoothDirection(Vector3 current, Vector3 target, float blend)
